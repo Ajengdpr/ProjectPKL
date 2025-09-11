@@ -6,7 +6,7 @@
 
   {{-- Hero --}}
   <div class="text-center my-3">
-    <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
+    <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="small text-secondary mt-2">POINT</div>
   </div>
 
