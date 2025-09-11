@@ -9,5 +9,5 @@ class Absensi extends Model
     protected $fillable = ['user_id','tanggal','jam','status','alasan'];
     public $timestamps = false;
 
-    public function user() { return $this->belongsTo(User::class,'user_id'); }
+    public function user(){ return $this->belongsTo(User::class,'user_id'); }
 }

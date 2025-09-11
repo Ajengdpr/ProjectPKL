@@ -1,43 +1,86 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreAbsensiRequest;
 use App\Models\Absensi;
+use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 class AbsensiController extends Controller
 {
+    private const STATUS_LABELS = [
+        'hadir'       => 'Hadir',
+        'izin'        => 'Izin',
+        'cuti'        => 'Cuti',
+        'sakit'       => 'Sakit',
+        'terlambat'   => 'Terlambat',
+        'tugas-luar'  => 'Tugas Luar',
+    ];
+
     public function index()
     {
-        // contoh: tampilkan 30 log terakhir user & total per status
-        $user = auth()->user();
-
-        $log = Absensi::with('user')
-            ->where('user_id',$user->id)
+        $user = User::findOrFail(auth()->id()); // ambil fresh dari DB
+        $log = Absensi::where('user_id', $user->id)
             ->orderByDesc('tanggal')->orderByDesc('jam')
-            ->limit(30)->get();
+            ->limit(50)->get();
 
-        $rekap = Absensi::selectRaw("status, COUNT(*) as total")
-            ->where('user_id',$user->id)
-            ->groupBy('status')->pluck('total','status');
+        $rekap = Absensi::selectRaw('status, COUNT(*) total')
+            ->where('user_id', $user->id)
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        return view('dashboard', compact('log','rekap','user'));
+        return view('dashboard', compact('user','log','rekap'));
     }
 
-    public function store(Request $request)
+
+    // (opsional) jika kamu masih punya halaman form per status:
+    public function create(string $status)
     {
-        $data = $request->validate([
-            'status' => 'required|in:Hadir,Izin,Sakit,Terlambat,Tugas Luar',
-            'alasan' => 'nullable|string|max:500',
-        ]);
+        $label = self::STATUS_LABELS[$status] ?? null;
+        abort_unless($label, 404);
+        return view('absensi.form', ['preset' => $label, 'required' => $label === 'Terlambat']);
+    }
 
-        Absensi::create([
-            'user_id' => auth()->user()->id,       // penting: jangan pakai auth()->id() kalau intelephense rewel
-            'tanggal' => now()->toDateString(),
+    public function store(StoreAbsensiRequest $request)
+    {
+        $userId = auth()->id();
+        $today  = now()->toDateString();
+
+        // Blokir absen ganda di hari yang sama (status apa pun)
+        $sudahAda = Absensi::where('user_id', $userId)
+            ->where('tanggal', $today)
+            ->exists();
+
+        if ($sudahAda) {
+            return back()->withErrors(['msg' => 'Anda sudah absen hari ini, data tidak bisa diubah.']);
+        }
+
+        // Simpan absensi
+        $absen = Absensi::create([
+            'user_id' => $userId,
+            'tanggal' => $today,
             'jam'     => now()->toTimeString(),
-            'status'  => $data['status'],
-            'alasan'  => $data['alasan'] ?? null,
+            'status'  => $request->status,
+            'alasan'  => $request->alasan ?: null,
         ]);
 
-        return redirect()->route('dashboard')->with('ok','Absensi berhasil dicatat.');
+        // === Hitung & terapkan poin ===
+        $delta = 0;
+        if ($request->status === 'Hadir') {
+            $delta = +1;
+        } elseif ($request->status === 'Terlambat') {
+            $delta = trim((string)$request->alasan) === '' ? -5 : -3;
+        }
+
+        if ($delta !== 0) {
+            $user = User::find($userId); // ambil ulang user dari DB
+            $user->point = $user->point + $delta;
+            $user->save();
+        }
+        // ==============================
+
+
+        return redirect()->route('dashboard')->with('ok', "Absensi {$absen->status} tersimpan.");
     }
 }

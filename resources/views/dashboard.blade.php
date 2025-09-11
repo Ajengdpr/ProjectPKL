@@ -4,10 +4,23 @@
 @section('content')
 <div class="container">
 
+  {{-- Alerts --}}
+  @if(session('ok'))
+    <div class="alert alert-success">{{ session('ok') }}</div>
+  @endif
+  @if($errors->any())
+    <div class="alert alert-danger">{{ $errors->first() }}</div>
+  @endif
+
   {{-- Hero --}}
   <div class="text-center my-3">
     <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
-    <div class="small text-secondary mt-2">POINT</div>
+    <div class="mt-2">
+  <span class="badge rounded-pill text-bg-primary px-3 py-2">
+    POINT: <strong>{{ $user->point ?? 0 }}</strong>
+  </span>
+</div>
+
   </div>
 
   {{-- Tiles --}}
@@ -40,7 +53,7 @@
     </div>
     <div class="col-12 col-md-4">
       <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
-        <i class="bi bi-phone"></i><h6>Ijin Tidak Masuk</h6>
+        <i class="bi bi-phone"></i><h6>Izin Tidak Masuk</h6>
       </a>
     </div>
   </div>
@@ -56,7 +69,7 @@
           <li>Tugas Luar <span class="text-secondary">+0</span></li>
           <li>Sakit <span class="text-secondary">+0</span></li>
           <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
-          <li>Ijin tidak masuk kantor <span class="text-secondary">+0</span></li>
+          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
         </ul>
       </div>
     </div>
@@ -75,11 +88,10 @@
                 <th class="text-center">Sakit</th>
                 <th class="text-center">Tugas Luar</th>
                 <th class="text-center">Terlambat</th>
-                <th class="text-center">Ijin</th>
+                <th class="text-center">Izin</th>
               </tr>
             </thead>
             <tbody>
-              {{-- contoh statis; ganti dengan data real bila ada --}}
               @php
                 $rekapBidang = [
                   ['KPPI',13], ['PHL',11], ['PPKLH',15], ['SEKRETARIAT',38], ['TALING',17]
@@ -147,7 +159,7 @@
 <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="POST" action="{{ route('absen.store') }}">
+      <form method="POST" action="{{ route('absen.store') }}" onsubmit="return lockSubmit(this)">
         @csrf
         <div class="modal-header">
           <h5 class="modal-title">Input Absensi</h5>
@@ -155,18 +167,26 @@
         </div>
         <div class="modal-body">
           <input type="hidden" id="statusField" name="status" value="Hadir">
+
           <div class="mb-3">
             <label class="form-label">Status</label>
             <input class="form-control" id="statusPreview" value="Hadir" disabled>
           </div>
+
           <div class="mb-2">
-            <label class="form-label">Alasan (opsional)</label>
-            <input class="form-control" name="alasan" placeholder="Tulis alasan bila diperlukan">
+            <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
+            <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan">
+            <div class="form-text d-none" id="terlambatHint">
+              Untuk <b>Terlambat</b>: alasan <b>wajib</b>. Poin <b>-3</b> jika ada alasan, <b>-5</b> jika kosong.
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Batal</button>
-          <button class="btn btn-brand" type="submit">Simpan</button>
+          <button class="btn btn-brand" id="submitBtn" type="submit">
+            <span class="btn-text">Simpan</span>
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+          </button>
         </div>
       </form>
     </div>
@@ -176,8 +196,35 @@
 @push('scripts')
 <script>
   function setStatus(s){
-    document.getElementById('statusField').value = s;
-    document.getElementById('statusPreview').value = s;
+    const field   = document.getElementById('statusField');
+    const preview = document.getElementById('statusPreview');
+    const alasan  = document.getElementById('alasanInput');
+    const label   = document.getElementById('alasanLabel');
+    const hint    = document.getElementById('terlambatHint');
+
+    field.value = s;
+    preview.value = s;
+
+    if (s === 'Terlambat') {
+      alasan.setAttribute('required','required');
+      label.textContent = 'Alasan (wajib untuk Terlambat)';
+      hint.classList.remove('d-none');
+      alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
+    } else {
+      alasan.removeAttribute('required');
+      label.textContent = 'Alasan (opsional)';
+      hint.classList.add('d-none');
+      alasan.placeholder = 'Tulis alasan bila diperlukan';
+    }
+  }
+
+  // cegah double submit
+  function lockSubmit(form){
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').classList.add('d-none');
+    btn.querySelector('.spinner-border').classList.remove('d-none');
+    return true;
   }
 </script>
 @endpush
