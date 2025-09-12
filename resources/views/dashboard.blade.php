@@ -14,13 +14,8 @@
 
   {{-- Hero --}}
   <div class="text-center my-3">
-    <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
-    <div class="mt-2">
-  <span class="badge rounded-pill text-bg-primary px-3 py-2">
-    POINT: <strong>{{ $user->point ?? 0 }}</strong>
-  </span>
-</div>
-
+    <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
+    <div class="small text-secondary mt-2">POINT</div>
   </div>
 
   {{-- Tiles --}}
