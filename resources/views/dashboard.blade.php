@@ -30,8 +30,13 @@
       </a>
     </div>
     <div class="col-12 col-md-4">
-      <a class="tile yellow w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Cuti')">
-        <i class="bi bi-x-circle"></i><h6>Cuti</h6>
+      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
+        <i class="bi bi-phone"></i><h6>Izin</h6>
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
+        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -39,10 +44,9 @@
         <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
       </a>
     </div>
-
     <div class="col-12 col-md-4">
-      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
-        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
+      <a class="tile yellow w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Cuti')">
+        <i class="bi bi-x-circle"></i><h6>Cuti</h6>
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -50,11 +54,7 @@
         <i class="bi bi-alarm"></i><h6>Terlambat</h6>
       </a>
     </div>
-    <div class="col-12 col-md-4">
-      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
-        <i class="bi bi-phone"></i><h6>Izin Tidak Masuk</h6>
-      </a>
-    </div>
+    
   </div>
 
   {{-- Keterangan Poin --}}
