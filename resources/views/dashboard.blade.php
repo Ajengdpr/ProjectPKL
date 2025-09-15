@@ -15,7 +15,11 @@
   {{-- Hero --}}
   <div class="text-center my-3">
     <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
-    <div class="small text-secondary mt-2">POINT</div>
+    <div class="mt-2">
+  <span class="badge rounded-pill text-bg-primary px-3 py-2">
+    POINT: <strong>{{ $user->point ?? 0 }}</strong>
+  </span>
+</div>
   </div>
 
   {{-- Tiles --}}
@@ -87,24 +91,21 @@
               </tr>
             </thead>
             <tbody>
-              @php
-                $rekapBidang = [
-                  ['KPPI',13], ['PHL',11], ['PPKLH',15], ['SEKRETARIAT',38], ['TALING',17]
-                ];
-              @endphp
-              @foreach($rekapBidang as [$nama,$jumlah])
+              @foreach($daftarBidang as $b)
+                @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
                 <tr>
-                  <td>{{ $nama }}</td>
-                  <td class="text-center">{{ $jumlah }}</td>
-                  <td class="text-center">{{ $rekap['Hadir'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Cuti'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Sakit'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Tugas Luar'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Terlambat'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Izin'] ?? 0 }}</td>
+                  <td>{{ $b->bidang }}</td>
+                  <td class="text-center">{{ $b->jumlah_pegawai }}</td>
+                  <td class="text-center">{{ $r->hadir ?? 0 }}</td>
+                  <td class="text-center">{{ $r->cuti ?? 0 }}</td>
+                  <td class="text-center">{{ $r->sakit ?? 0 }}</td>
+                  <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
+                  <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
+                  <td class="text-center">{{ $r->izin ?? 0 }}</td>
                 </tr>
               @endforeach
             </tbody>
+
           </table>
         </div>
       </div>

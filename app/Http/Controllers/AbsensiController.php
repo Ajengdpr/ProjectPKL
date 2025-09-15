@@ -2,85 +2,127 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreAbsensiRequest;
-use App\Models\Absensi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use Illuminate\Support\Facades\Schema;
 
 class AbsensiController extends Controller
 {
-    private const STATUS_LABELS = [
-        'hadir'       => 'Hadir',
-        'izin'        => 'Izin',
-        'cuti'        => 'Cuti',
-        'sakit'       => 'Sakit',
-        'terlambat'   => 'Terlambat',
-        'tugas-luar'  => 'Tugas Luar',
-    ];
-
-    public function index()
+    public function __construct()
     {
-        $user = User::findOrFail(auth()->id()); // ambil fresh dari DB
-        $log = Absensi::where('user_id', $user->id)
-            ->orderByDesc('tanggal')->orderByDesc('jam')
-            ->limit(50)->get();
+        $this->middleware('auth');
+    }
 
-        $rekap = Absensi::selectRaw('status, COUNT(*) total')
+    /**
+     * Dashboard
+     */
+    public function index(Request $request)
+    {
+        $user    = $request->user();                       // user yang login
+        $tanggal = $request->input('tanggal', now()->toDateString());
+
+        // ----- LOG ABSENSI USER (terbaru)
+        $log = DB::table('absensi')
+            ->where('user_id', $user->id)
+            ->orderByDesc('tanggal')
+            ->orderByDesc('jam')
+            ->limit(50)
+            ->get();
+
+        // ----- REKAP PER STATUS UNTUK USER (opsional; jaga kompatibilitas)
+        $rekapUser = DB::table('absensi')
+            ->selectRaw('status, COUNT(*) AS total')
             ->where('user_id', $user->id)
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('dashboard', compact('user','log','rekap'));
+        // ----- DAFTAR BIDANG & JUMLAH PEGAWAI
+        $daftarBidang = DB::table('users as u')
+            ->select('u.bidang', DB::raw('COUNT(*) AS jumlah_pegawai'))
+            ->whereNotNull('u.bidang')
+            ->groupBy('u.bidang')
+            ->orderBy('u.bidang')
+            ->get();
+
+        // ----- REKAP ABSENSI PER BIDANG (HARIAN)
+        $rekapPerBidang = DB::table('users as u')
+            ->leftJoin('absensi as a', function ($join) use ($tanggal) {
+                $join->on('a.user_id', '=', 'u.id')
+                     ->whereDate('a.tanggal', $tanggal);   // filter per hari
+            })
+            ->select(
+                'u.bidang',
+                DB::raw("SUM(CASE WHEN a.status = 'Hadir'       THEN 1 ELSE 0 END) AS hadir"),
+                DB::raw("SUM(CASE WHEN a.status = 'Cuti'        THEN 1 ELSE 0 END) AS cuti"),
+                DB::raw("SUM(CASE WHEN a.status = 'Sakit'       THEN 1 ELSE 0 END) AS sakit"),
+                DB::raw("SUM(CASE WHEN a.status = 'Tugas Luar'  THEN 1 ELSE 0 END) AS tugas_luar"),
+                DB::raw("SUM(CASE WHEN a.status = 'Terlambat'   THEN 1 ELSE 0 END) AS terlambat"),
+                DB::raw("SUM(CASE WHEN a.status = 'Izin'        THEN 1 ELSE 0 END) AS izin")
+            )
+            ->groupBy('u.bidang')
+            ->get()
+            ->keyBy('bidang'); // akses di blade: $rekapPerBidang[$bidang]
+
+        return view('dashboard', [
+            'user'           => $user,
+            'log'            => $log,
+            'tanggal'        => $tanggal,
+            'daftarBidang'   => $daftarBidang,
+            'rekapPerBidang' => $rekapPerBidang,
+            'rekap'          => $rekapUser, // kalau blade lama masih pakai $rekap
+        ]);
     }
 
-
-    // (opsional) jika kamu masih punya halaman form per status:
-    public function create(string $status)
+    /**
+     * Simpan absensi (1x per hari per user)
+     */
+    public function store(Request $request)
     {
-        $label = self::STATUS_LABELS[$status] ?? null;
-        abort_unless($label, 404);
-        return view('absensi.form', ['preset' => $label, 'required' => $label === 'Terlambat']);
-    }
+        $request->validate([
+            'status' => 'required|string',   // Hadir / Izin / Cuti / Sakit / Terlambat / Tugas Luar
+            'alasan' => 'nullable|string',
+        ]);
 
-    public function store(StoreAbsensiRequest $request)
-    {
-        $userId = auth()->id();
+        $userId = $request->user()->id;
         $today  = now()->toDateString();
+        $nowT   = now()->format('H:i:s');
 
-        // Blokir absen ganda di hari yang sama (status apa pun)
-        $sudahAda = Absensi::where('user_id', $userId)
-            ->where('tanggal', $today)
+        // ---- blokir absen ganda (hari yang sama, status apa pun)
+        $sudahAda = DB::table('absensi')
+            ->where('user_id', $userId)
+            ->whereDate('tanggal', $today)
             ->exists();
 
         if ($sudahAda) {
-            return back()->withErrors(['msg' => 'Anda sudah absen hari ini, data tidak bisa diubah.']);
+            return back()->withErrors(['msg' => 'Anda sudah absen hari ini.']);
         }
 
-        // Simpan absensi
-        $absen = Absensi::create([
-            'user_id' => $userId,
-            'tanggal' => $today,
-            'jam'     => now()->toTimeString(),
-            'status'  => $request->status,
-            'alasan'  => $request->alasan ?: null,
+        // ---- simpan absensi
+        DB::table('absensi')->insert([
+            'user_id'    => $userId,
+            'tanggal'    => $today,
+            'jam'        => $nowT,                         // jam sekarang
+            'status'     => $request->input('status'),
+            'alasan'     => $request->input('alasan') ?: null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // === Hitung & terapkan poin ===
+        // ---- hitung & terapkan poin
         $delta = 0;
-        if ($request->status === 'Hadir') {
+        $status = $request->input('status');
+        if ($status === 'Hadir') {
             $delta = +1;
-        } elseif ($request->status === 'Terlambat') {
-            $delta = trim((string)$request->alasan) === '' ? -5 : -3;
+        } elseif ($status === 'Terlambat') {
+            $delta = trim((string)$request->input('alasan')) === '' ? -5 : -3;
         }
 
         if ($delta !== 0) {
-            $user = User::find($userId); // ambil ulang user dari DB
-            $user->point = $user->point + $delta;
-            $user->save();
+            DB::table('users')->where('id', $userId)->update([
+                'point' => DB::raw("COALESCE(point,0) + ($delta)")
+            ]);
         }
-        // ==============================
 
-
-        return redirect()->route('dashboard')->with('ok', "Absensi {$absen->status} tersimpan.");
+        return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
     }
 }
