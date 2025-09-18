@@ -138,14 +138,25 @@
   </div>
 </div>
 
-{{-- Bottom nav --}}
+{{-- Bottom Nav --}}
 <nav class="bottom-nav mt-4">
   <div class="container">
     <ul class="nav justify-content-around py-2">
-      <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door me-1"></i> Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up me-1"></i> Statistik</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-bell me-1"></i> Notifikasi</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person me-1"></i> Account</a></li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+          <i class="bi bi-house-door me-1"></i> Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="bi bi-graph-up me-1"></i> Statistik
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
+          <i class="bi bi-person me-1"></i> Account
+        </a>
+      </li>
     </ul>
   </div>
 </nav>
