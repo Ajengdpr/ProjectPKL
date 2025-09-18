@@ -14,25 +14,34 @@
 
   {{-- Hero --}}
   <div class="text-center my-3">
-    <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
+    <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="mt-2">
   <span class="badge rounded-pill text-bg-primary px-3 py-2">
     POINT: <strong>{{ $user->point ?? 0 }}</strong>
   </span>
 </div>
-
   </div>
 
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
-      <a id="btnHadir"
-        class="tile cyan w-100 text-decoration-none disabled"
-        style="pointer-events:none; opacity:.5"
-        data-bs-toggle="modal"
-        data-bs-target="#absenModal"
-        onclick="setStatus('Hadir')">
+      <a class="tile cyan w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')">
         <i class="bi bi-person"></i><h6>Hadir</h6>
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
+        <i class="bi bi-phone"></i><h6>Izin</h6>
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
+        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a class="tile green w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Tugas Luar')">
+        <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -41,26 +50,11 @@
       </a>
     </div>
     <div class="col-12 col-md-4">
-      <a class="tile green w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Tugas Luar')">
-        <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
-      </a>
-    </div>
-
-    <div class="col-12 col-md-4">
-      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
-        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
-      </a>
-    </div>
-    <div class="col-12 col-md-4">
       <a class="tile red w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Terlambat')">
         <i class="bi bi-alarm"></i><h6>Terlambat</h6>
       </a>
     </div>
-    <div class="col-12 col-md-4">
-      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
-        <i class="bi bi-phone"></i><h6>Izin Tidak Masuk</h6>
-      </a>
-    </div>
+    
   </div>
 
   {{-- Keterangan Poin --}}
@@ -97,24 +91,21 @@
               </tr>
             </thead>
             <tbody>
-              @php
-                $rekapBidang = [
-                  ['KPPI',13], ['PHL',11], ['PPKLH',15], ['SEKRETARIAT',38], ['TALING',17]
-                ];
-              @endphp
-              @foreach($rekapBidang as [$nama,$jumlah])
+              @foreach($daftarBidang as $b)
+                @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
                 <tr>
-                  <td>{{ $nama }}</td>
-                  <td class="text-center">{{ $jumlah }}</td>
-                  <td class="text-center">{{ $rekap['Hadir'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Cuti'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Sakit'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Tugas Luar'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Terlambat'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Izin'] ?? 0 }}</td>
+                  <td>{{ $b->bidang }}</td>
+                  <td class="text-center">{{ $b->jumlah_pegawai }}</td>
+                  <td class="text-center">{{ $r->hadir ?? 0 }}</td>
+                  <td class="text-center">{{ $r->cuti ?? 0 }}</td>
+                  <td class="text-center">{{ $r->sakit ?? 0 }}</td>
+                  <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
+                  <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
+                  <td class="text-center">{{ $r->izin ?? 0 }}</td>
                 </tr>
               @endforeach
             </tbody>
+
           </table>
         </div>
       </div>
@@ -148,25 +139,14 @@
   </div>
 </div>
 
-{{-- Bottom Nav --}}
+{{-- Bottom nav --}}
 <nav class="bottom-nav mt-4">
   <div class="container">
     <ul class="nav justify-content-around py-2">
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-          <i class="bi bi-house-door me-1"></i> Home
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <i class="bi bi-graph-up me-1"></i> Statistik
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
-          <i class="bi bi-person me-1"></i> Account
-        </a>
-      </li>
+      <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door me-1"></i> Home</a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up me-1"></i> Statistik</a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-bell me-1"></i> Notifikasi</a></li>
+      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person me-1"></i> Account</a></li>
     </ul>
   </div>
 </nav>
@@ -234,6 +214,7 @@
     }
   }
 
+  // cegah double submit
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
@@ -241,52 +222,6 @@
     btn.querySelector('.spinner-border').classList.remove('d-none');
     return true;
   }
-
-  const officeLat = {{ $office['lat'] }};
-  const officeLng = {{ $office['lng'] }};
-  const officeRadius = {{ $office['radius'] }}; 
-
-  // Fungsi hitung jarak 2 koordinat (Haversine)
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000; 
-    const dLat = (lat2 - lat1) * Math.PI/180;
-    const dLon = (lon2 - lon1) * Math.PI/180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const dist = getDistance(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          officeLat,
-          officeLng
-        );
-
-        if (dist <= officeRadius) {
-          // Aktifkan tombol Hadir
-          const btn = document.getElementById("btnHadir");
-          btn.classList.remove("disabled");
-          btn.style.pointerEvents = "auto";
-          btn.style.opacity = 1;
-        } else {
-          alert("Anda berada di luar area kantor (jarak " + Math.round(dist) + " m). Tidak bisa absen Hadir.");
-        }
-      },
-      err => {
-        alert("Tidak bisa mengambil lokasi: " + err.message);
-      }
-    );
-  } else {
-    alert("Browser tidak mendukung geolocation.");
-  }
-
 </script>
-
 @endpush
 @endsection
