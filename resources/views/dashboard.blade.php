@@ -14,7 +14,7 @@
 
   {{-- Hero --}}
   <div class="text-center my-3">
-    <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
+    <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="mt-2">
   <span class="badge rounded-pill text-bg-primary px-3 py-2">
     POINT: <strong>{{ $user->point ?? 0 }}</strong>
@@ -25,7 +25,12 @@
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
-      <a class="tile cyan w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')">
+      <a id="btnHadir"
+        class="tile cyan w-100 text-decoration-none disabled"
+        style="pointer-events:none; opacity:.5"
+        data-bs-toggle="modal"
+        data-bs-target="#absenModal"
+        onclick="setStatus('Hadir')">
         <i class="bi bi-person"></i><h6>Hadir</h6>
       </a>
     </div>
@@ -139,14 +144,25 @@
   </div>
 </div>
 
-{{-- Bottom nav --}}
+{{-- Bottom Nav --}}
 <nav class="bottom-nav mt-4">
   <div class="container">
     <ul class="nav justify-content-around py-2">
-      <li class="nav-item"><a class="nav-link active" href="#"><i class="bi bi-house-door me-1"></i> Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up me-1"></i> Statistik</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-bell me-1"></i> Notifikasi</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person me-1"></i> Account</a></li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+          <i class="bi bi-house-door me-1"></i> Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="bi bi-graph-up me-1"></i> Statistik
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
+          <i class="bi bi-person me-1"></i> Account
+        </a>
+      </li>
     </ul>
   </div>
 </nav>
@@ -214,13 +230,101 @@
     }
   }
 
-  // cegah double submit
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.querySelector('.btn-text').classList.add('d-none');
     btn.querySelector('.spinner-border').classList.remove('d-none');
     return true;
+  }
+
+  const officeLat    = {{ $office['lat'] }};
+  const officeLng    = {{ $office['lng'] }};
+  const officeRadius = {{ $office['radius'] }}; // meter
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon/2)**2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function enableHadir() {
+    const btn = document.getElementById('btnHadir');
+    if (!btn) return;
+    btn.classList.remove('disabled');
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = 1;
+  }
+  function disableHadir() {
+    const btn = document.getElementById('btnHadir');
+    if (!btn) return;
+    btn.classList.add('disabled');
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = .5;
+  }
+
+  // Tampilkan info debug sederhana di UI (opsional, bisa dihapus)
+  function showDebug(lat, lng, acc, dist) {
+    let box = document.getElementById('geoDebug');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'geoDebug';
+      box.style.cssText = 'position:fixed;right:8px;bottom:68px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);font:12px/1.4 system-ui,Arial;';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = `
+      <div><b>Office</b> : ${officeLat.toFixed(6)}, ${officeLng.toFixed(6)} (R:${officeRadius}m)</div>
+      <div><b>User</b>   : ${lat?.toFixed(6)}, ${lng?.toFixed(6)}</div>
+      <div><b>Accuracy</b>: ${Math.round(acc)} m</div>
+      <div><b>Distance</b>: ${Math.round(dist)} m</div>
+    `;
+  }
+
+  // Logika keputusan dengan mempertimbangkan akurasi:
+  // terima jika (jarak ≤ radius + accuracy)
+  function decide(lat, lng, acc) {
+    const dist = getDistance(lat, lng, officeLat, officeLng);
+    showDebug(lat, lng, acc, dist);
+    console.log({userLat:lat, userLng:lng, accuracy_m:acc, dist_m:Math.round(dist), officeLat, officeLng, officeRadius});
+
+    if (dist <= officeRadius + acc) {
+      enableHadir();
+    } else {
+      disableHadir();
+      alert('Anda berada di luar area kantor (jarak ~' + Math.round(dist) + ' m).');
+    }
+  }
+
+  function handlePos(pos) {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const acc = pos.coords.accuracy; // meter (semakin kecil semakin baik)
+    decide(lat, lng, acc);
+  }
+
+  function handleErr(err) {
+    console.warn('Geolocation error:', err);
+    alert('Tidak bisa mengambil lokasi: ' + err.message);
+    disableHadir();
+  }
+
+  if (navigator.geolocation) {
+    const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+
+    // Ambil posisi sekali (cepat)
+    navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
+
+    // Pantau beberapa detik — biasanya akurasi akan membaik setelah 5–15 dtk
+    const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
+    setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
+  } else {
+    alert('Browser tidak mendukung geolocation.');
+    disableHadir();
   }
 </script>
 @endpush
