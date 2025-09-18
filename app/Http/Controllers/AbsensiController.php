@@ -18,23 +18,29 @@ class AbsensiController extends Controller
         'tugas-luar'  => 'Tugas Luar',
     ];
 
-    public function index()
-    {
-        $user = User::findOrFail(auth()->id()); // ambil fresh dari DB
-        $log = Absensi::where('user_id', $user->id)
-            ->orderByDesc('tanggal')->orderByDesc('jam')
-            ->limit(50)->get();
+public function index()
+{
+    $user = auth()->user(); 
 
-        $rekap = Absensi::selectRaw('status, COUNT(*) total')
-            ->where('user_id', $user->id)
-            ->groupBy('status')
-            ->pluck('total', 'status');
+    $log = Absensi::where('user_id', $user->id)
+        ->orderByDesc('tanggal')->orderByDesc('jam')
+        ->limit(10)
+        ->get();
 
-        return view('dashboard', compact('user','log','rekap'));
-    }
+    $rekap = Absensi::selectRaw('status, COUNT(*) as total')
+        ->where('user_id', $user->id)
+        ->groupBy('status')
+        ->pluck('total', 'status'); 
 
+    $office = [
+        'lat'    => (float) env('OFFICE_LAT', -3.319437),
+        'lng'    => (float) env('OFFICE_LNG', 114.590844),
+        'radius' => (int)   env('OFFICE_RADIUS', 200), // meter
+    ];
 
-    // (opsional) jika kamu masih punya halaman form per status:
+    return view('dashboard', compact('user', 'log', 'rekap', 'office'));
+}
+
     public function create(string $status)
     {
         $label = self::STATUS_LABELS[$status] ?? null;
