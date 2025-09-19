@@ -50,6 +50,13 @@
     .bottom-nav .nav-link{color:#4b5563; font-weight:600}
     .bottom-nav .nav-link.active{color:var(--brand)}
     table thead th{font-weight:700}
+
+    .form-control:disabled,
+    .form-control[readonly] {
+      background: #f7f9fc;
+      color: #111827;
+      opacity: 1;
+    }
   </style>
 
   @stack('head')
@@ -58,23 +65,48 @@
 
   {{-- Topbar (tampilkan saat sudah login) --}}
   @auth
+  @php
+    $u = auth()->user();
+    $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
+    $notifCount = 3; // nanti diganti query notifikasi asli
+  @endphp
+
   <nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(90deg,var(--brand),var(--brand-900))">
     <div class="container">
       <a class="navbar-brand" href="{{ route('dashboard') }}">ABSENSI</a>
       <div class="ms-auto d-flex align-items-center gap-3">
-        <div class="text-white-50 small text-end d-none d-md-block">
-          <div class="fw-semibold text-white">{{ auth()->user()->nama }}</div>
-          <div>{{ auth()->user()->bidang }}</div>
+
+        {{-- Notifikasi --}}
+        <a href="{{ route('notifications') }}" class="position-relative text-white fs-5">
+          <i class="bi bi-bell"></i>
+          @if($notifCount > 0)
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ $notifCount }}
+          </span>
+          @endif
+        </a>
+
+        {{-- Info User --}}
+        <div class="d-flex align-items-center gap-2 text-white">
+          <div class="text-end d-none d-md-block">
+            <div class="fw-semibold">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
+            <div class="small text-white-50">{{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}</div>
+          </div>
+          <a href="{{ route('account') }}">
+            <img src="{{ $avatar }}" alt="avatar"
+                 class="rounded-circle border border-light-subtle"
+                 style="width:36px;height:36px;object-fit:cover;">
+          </a>
         </div>
-        <a class="btn btn-sm btn-light" href="/logout"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
+
       </div>
     </div>
   </nav>
   @endauth
 
-<main class="{{ request()->routeIs('login') ? 'p-0' : 'py-4' }}">
-  @yield('content')
-</main>
+  <main class="{{ request()->routeIs('login') ? 'p-0' : 'py-4' }}">
+    @yield('content')
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   @stack('scripts')
