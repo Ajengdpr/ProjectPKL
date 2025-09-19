@@ -11,6 +11,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Dashboard
     Route::get('/dashboard', [AbsensiController::class, 'index'])->name('dashboard');
 
     // Account (profil)
@@ -25,6 +26,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/absen', [AbsensiController::class, 'store'])->name('absen.store');
 
+    // Statistik absensi
+    Route::get('/statistik', [AbsensiController::class, 'statistik'])->name('statistik');
+    Route::get('/rekap-absensi', [AbsensiController::class, 'rekap'])->name('rekap.absensi');
+    Route::get('/statistik/rekap', [AbsensiController::class, 'rekapHarian'])->name('statistik.rekapHarian');
     // Notifications (sementara dummy data)
     Route::get('/notifications', function () {
         $items = [

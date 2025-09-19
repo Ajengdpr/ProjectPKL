@@ -18,11 +18,20 @@
     <div class="small text-secondary mt-2">POINT</div>
   </div>
 
+  @php
+    $now = now('Asia/Makassar')->format('H:i');
+    $hadirDisabled = $now > '08:00';
+    $terlambatDisabled = $now > '16:00';
+  @endphp
+
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
-      <a class="tile cyan w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')">
+      <a class="tile cyan w-100 text-decoration-none {{ $hadirDisabled ? 'disabled' : '' }}"
+         data-bs-toggle="modal" data-bs-target="#absenModal"
+         onclick="setStatus('Hadir')">
         <i class="bi bi-person"></i><h6>Hadir</h6>
+        @if($hadirDisabled) @endif
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -42,8 +51,11 @@
       </a>
     </div>
     <div class="col-12 col-md-4">
-      <a class="tile red w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Terlambat')">
+      <a class="tile red w-100 text-decoration-none {{ $terlambatDisabled ? 'disabled' : '' }}"
+         data-bs-toggle="modal" data-bs-target="#absenModal"
+         onclick="setStatus('Terlambat')">
         <i class="bi bi-alarm"></i><h6>Terlambat</h6>
+        @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -63,12 +75,14 @@
           <li>Cuti <span class="text-secondary">+0</span></li>
           <li>Tugas Luar <span class="text-secondary">+0</span></li>
           <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
+          <li>Terlambat <span class="text-danger">-3</span></li>
+          <li>Tidak absen sama sekali <span class="text-danger">-5</span></li>
           <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
         </ul>
       </div>
     </div>
 
+    {{-- Rekap bidang --}}
     <div class="col-12 col-lg-7">
       <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Rekap per Bidang</h6>
@@ -148,7 +162,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
           <i class="bi bi-graph-up me-1"></i> Statistik
         </a>
       </li>
@@ -182,9 +196,6 @@
           <div class="mb-2">
             <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
             <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan">
-            <div class="form-text d-none" id="terlambatHint">
-              Untuk <b>Terlambat</b>: alasan <b>wajib</b>. Poin <b>-3</b> jika ada alasan, <b>-5</b> jika kosong.
-            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -206,7 +217,6 @@
     const preview = document.getElementById('statusPreview');
     const alasan  = document.getElementById('alasanInput');
     const label   = document.getElementById('alasanLabel');
-    const hint    = document.getElementById('terlambatHint');
 
     field.value = s;
     preview.value = s;
@@ -214,12 +224,10 @@
     if (s === 'Terlambat') {
       alasan.setAttribute('required','required');
       label.textContent = 'Alasan (wajib untuk Terlambat)';
-      hint.classList.remove('d-none');
       alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
     } else {
       alasan.removeAttribute('required');
       label.textContent = 'Alasan (opsional)';
-      hint.classList.add('d-none');
       alasan.placeholder = 'Tulis alasan bila diperlukan';
     }
   }
