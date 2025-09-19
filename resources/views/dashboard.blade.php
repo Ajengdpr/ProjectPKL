@@ -4,13 +4,17 @@
 @section('content')
 <div class="container">
 
-  {{-- Alerts --}}
+    {{-- Alerts --}}
   @if(session('ok'))
     <div class="alert alert-success">{{ session('ok') }}</div>
+  @endif
+  @if(session('err'))
+    <div class="alert alert-danger">{{ session('err') }}</div>
   @endif
   @if($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
+
 
   {{-- Hero --}}
   <div class="text-center my-3">
@@ -268,7 +272,7 @@
     btn.style.opacity = .5;
   }
 
-  // Tampilkan info debug sederhana di UI (opsional, bisa dihapus)
+
   function showDebug(lat, lng, acc, dist) {
     let box = document.getElementById('geoDebug');
     if (!box) {

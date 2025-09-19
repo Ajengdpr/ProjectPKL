@@ -3,19 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AbsensiController extends Controller
 {
-    private const STATUS_LABELS = [
-        'hadir'      => 'Hadir',
-        'izin'       => 'Izin',
-        'cuti'       => 'Cuti',
-        'sakit'      => 'Sakit',
-        'terlambat'  => 'Terlambat',
-        'tugas-luar' => 'Tugas Luar',
+    // mapping untuk penamaan konsisten
+    private const ALLOWED_STATUSES = [
+        'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
     public function index(Request $request)
@@ -81,5 +76,62 @@ class AbsensiController extends Controller
             'rekap'          => $rekapUser,
             'office'         => $office,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        // validasi input dari form modal
+        $data = $request->validate([
+            'status' => ['required', 'string'],
+            'alasan' => ['nullable', 'string', 'max:255'],
+            // jika kamu kirim lat/lng dari frontend, bisa divalidasi juga:
+            // 'lat' => ['nullable','numeric'],
+            // 'lng' => ['nullable','numeric'],
+        ]);
+
+        // samakan kapitalisasi agar sesuai yang tersimpan di DB/rekap
+        $status = trim($data['status']);
+        // izinkan hanya status yang kita kenal
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            return back()->withErrors('Status tidak valid.');
+        }
+
+        // Cegah absen ganda di hari yang sama
+        $today = now()->toDateString();
+        $sudah = Absensi::where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->exists();
+
+        if ($sudah) {
+            return redirect()->route('dashboard')
+                ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
+        }
+    
+
+        // Simpan absensi
+        $absen = new Absensi();
+        $absen->user_id = $user->id;
+        $absen->tanggal = $today;
+        $absen->jam     = now()->toTimeString();
+        $absen->status  = $status;
+        $absen->alasan  = $data['alasan'] ?? null;
+        $absen->save();
+
+        // Update point user
+        $delta = 0;
+        if ($status === 'Hadir') {
+            $delta = 1;
+        } elseif ($status === 'Terlambat') {
+            $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
+        }
+        if ($delta !== 0) {
+            DB::table('users')->where('id', $user->id)
+                ->update(['point' => DB::raw("point + ($delta)")]);
+        }
+
+        return redirect()->route('dashboard')
+            ->with('ok', "Absensi {$status} tersimpan.");
     }
 }
