@@ -66,23 +66,10 @@
     
   </div>
 
-  {{-- Keterangan Poin --}}
-  <div class="row mt-4 g-3">
-    <div class="col-12 col-lg-5">
-      <div class="app-card p-3">
-        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
-        <ul class="small mb-0">
-          <li>Hadir Apel <span class="text-success">+1</span></li>
-          <li>Cuti <span class="text-secondary">+0</span></li>
-          <li>Tugas Luar <span class="text-secondary">+0</span></li>
-          <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
-          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-7">
+{{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
+<div class="row mt-4 g-3">
+    {{-- Rekap per Bidang (atas) --}}
+    <div class="col-12">
       <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Rekap per Bidang</h6>
         <div class="table-responsive">
@@ -114,12 +101,26 @@
                 </tr>
               @endforeach
             </tbody>
-
           </table>
         </div>
       </div>
     </div>
-  </div>
+
+    {{-- Keterangan Point (bawah) --}}
+    <div class="col-12">
+      <div class="app-card p-3">
+        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+        <ul class="small mb-0">
+          <li>Hadir Apel <span class="text-success">+1</span></li>
+          <li>Cuti <span class="text-secondary">+0</span></li>
+          <li>Tugas Luar <span class="text-secondary">+0</span></li>
+          <li>Sakit <span class="text-secondary">+0</span></li>
+          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
+          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
+        </ul>
+      </div>
+    </div>
+</div>
 
   {{-- Log absensi user --}}
   <div class="app-card p-3 mt-4">
