@@ -97,7 +97,7 @@
   <div class="container">
     <ul class="nav justify-content-around py-2">
       <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i> Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-graph-up me-1"></i> Statistik</a></li>
+      <li class="nav-item"><a class="nav-link" href="{{ route('statistik') }}"><i class="bi bi-person me-1"></i> Statistik</a></li>
       <li class="nav-item"><a class="nav-link active" href="{{ route('account') }}"><i class="bi bi-person me-1"></i> Account</a></li>
     </ul>
   </div>

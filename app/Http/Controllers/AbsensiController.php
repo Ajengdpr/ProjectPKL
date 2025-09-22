@@ -3,12 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
+<<<<<<< HEAD
+=======
+use App\Models\User;
+>>>>>>> origin/meldi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AbsensiController extends Controller
 {
+<<<<<<< HEAD
     // mapping untuk penamaan konsisten
+=======
+>>>>>>> origin/meldi
     private const ALLOWED_STATUSES = [
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
@@ -82,6 +89,7 @@ class AbsensiController extends Controller
     {
         $user = $request->user();
 
+<<<<<<< HEAD
         // validasi input dari form modal
         $data = $request->validate([
             'status' => ['required', 'string'],
@@ -94,11 +102,22 @@ class AbsensiController extends Controller
         // samakan kapitalisasi agar sesuai yang tersimpan di DB/rekap
         $status = trim($data['status']);
         // izinkan hanya status yang kita kenal
+=======
+        $data = $request->validate([
+            'status' => ['required', 'string'],
+            'alasan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $status = trim($data['status']);
+>>>>>>> origin/meldi
         if (!in_array($status, self::ALLOWED_STATUSES, true)) {
             return back()->withErrors('Status tidak valid.');
         }
 
+<<<<<<< HEAD
         // Cegah absen ganda di hari yang sama
+=======
+>>>>>>> origin/meldi
         $today = now()->toDateString();
         $sudah = Absensi::where('user_id', $user->id)
             ->whereDate('tanggal', $today)
@@ -108,9 +127,13 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')
                 ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
         }
+<<<<<<< HEAD
     
 
         // Simpan absensi
+=======
+
+>>>>>>> origin/meldi
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
@@ -119,7 +142,10 @@ class AbsensiController extends Controller
         $absen->alasan  = $data['alasan'] ?? null;
         $absen->save();
 
+<<<<<<< HEAD
         // Update point user
+=======
+>>>>>>> origin/meldi
         $delta = 0;
         if ($status === 'Hadir') {
             $delta = 1;
@@ -133,5 +159,41 @@ class AbsensiController extends Controller
 
         return redirect()->route('dashboard')
             ->with('ok', "Absensi {$status} tersimpan.");
+    }
+
+    /**
+     * Statistik Kehadiran (sesuai blade statistik.blade.php)
+     */
+    public function statistik(Request $request)
+    {
+        $user  = $request->user();
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+
+        // ambil semua absensi user di bulan terpilih
+        $absensi = Absensi::where('user_id', $user->id)
+            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->orderBy('tanggal')
+            ->get();
+
+        // Ranking 5 tertinggi
+        $top5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderByDesc('point')
+            ->limit(5)
+            ->get();
+
+        // Ranking 5 terendah
+        $bottom5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderBy('point')
+            ->limit(5)
+            ->get();
+
+        return view('statistik', [
+            'user'          => $user,
+            'absensi'       => $absensi,
+            'top5Global'    => $top5Global,
+            'bottom5Global' => $bottom5Global,
+        ]);
     }
 }

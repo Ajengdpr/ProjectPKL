@@ -7,7 +7,7 @@
     min-height: 100vh;           /* full tinggi layar */
     margin: 0;                   /* jangan ada ruang */
     display:flex;align-items:center;justify-content:center;
-    background: #0f172a url('{{ asset('img/bg.jpg') }}') center/cover no-repeat fixed;
+    background: #0f172a url('{{ asset('img/depan.jpeg') }}') center/cover no-repeat fixed;
   }
   .login-card{ width: min(440px, 92vw); }
 </style>
