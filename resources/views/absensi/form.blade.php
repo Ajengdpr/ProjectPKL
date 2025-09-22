@@ -17,15 +17,21 @@
           <input type="hidden" name="status" value="{{ $preset }}">
 
           <div class="mb-3">
-            <label class="form-label">
-              Alasan {{ $required ? '(wajib)' : '(opsional)' }}
-            </label>
-            <textarea name="alasan" class="form-control" {{ $required ? 'required' : '' }} maxlength="500"
-                      placeholder="{{ $preset==='Terlambat' ? 'Cth: ban bocor, macet, ada keperluan mendadak...' : 'Isi jika perlu' }}"></textarea>
-            @if($preset==='Terlambat')
-              <div class="form-text">
-                Poin dikurangi <b>-3</b> jika ada alasan, <b>-5</b> jika kosong.
-              </div>
+             @if($preset === 'Hadir')
+              <!-- Tidak ada kolom alasan untuk Hadir -->
+              <label class="form-label">Alasan</label>
+              <input type="text" class="form-control" disabled value="Tidak perlu alasan">
+            @elseif($preset === 'Izin' || $preset === 'Terlambat')
+              <label class="form-label" required>Alasan (Wajib)</label>
+              <textarea name="alasan" class="form-control" required maxlength="500" placeholder="Isi alasan untuk {{ strtolower($preset) }}"></textarea>
+              @if($preset === 'Terlambat')
+                <div class="form-text">
+                  Poin dikurangi <b>-3</b> jika ada alasan, <b>-5</b> jika kosong.
+                </div>
+              @endif
+            @else
+              <label class="form-label">Keterangan (Opsional)</label>
+              <textarea name="alasan" class="form-control" maxlength="500" placeholder="Isi jika perlu"></textarea>
             @endif
           </div>
 

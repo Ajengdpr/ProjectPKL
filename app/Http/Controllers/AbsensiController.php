@@ -115,7 +115,17 @@ class AbsensiController extends Controller
 
         $today = now($tz)->toDateString();
 
-        // Cek sudah absen hari ini
+    // Pastikan alasan tidak wajib untuk status 'Hadir'
+        if ($status === 'Hadir') {
+            $data['alasan'] = null;  // Kosongkan alasan jika statusnya Hadir
+        }
+
+        $status = trim($data['status']);
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            return back()->withErrors('Status tidak valid.');
+        }
+
+        $today = now()->toDateString();
         $sudah = Absensi::where('user_id', $user->id)
             ->whereDate('tanggal', $today)
             ->exists();
@@ -139,10 +149,11 @@ class AbsensiController extends Controller
         $absen->tanggal = $today;
         $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
-        $absen->alasan  = $data['alasan'] ?? null;
+        $absen->alasan  = $data['alasan'] ?? null; // Jika alasan kosong, tetap null
         $absen->save();
 
-        // Update point
+
+        // Update poin berdasarkan status
         $delta = 0;
         if ($status === 'Hadir') {
             $delta = 1;

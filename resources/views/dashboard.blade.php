@@ -15,7 +15,6 @@
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
 
-
   {{-- Hero --}}
   <div class="text-center my-3">
     <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
@@ -76,8 +75,8 @@
     </div>
   </div>
 
-{{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
-<div class="row mt-4 g-3">
+  {{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
+  <div class="row mt-4 g-3">
     {{-- Rekap per Bidang (atas) --}}
     <div class="col-12">
       <div class="app-card p-3">
@@ -111,26 +110,41 @@
                 </tr>
               @endforeach
             </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <th>Total</th>
+                <td class="text-center">
+                  {{ $daftarBidang->sum('jumlah_pegawai') }}
+                </td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
     </div>
+  </div>
 
-    {{-- Keterangan Point (bawah) --}}
-    <div class="col-12">
-      <div class="app-card p-3">
-        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
-        <ul class="small mb-0">
-          <li>Hadir Apel <span class="text-success">+1</span></li>
-          <li>Cuti <span class="text-secondary">+0</span></li>
-          <li>Tugas Luar <span class="text-secondary">+0</span></li>
-          <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat <span class="text-warning">-3</span></li>
-          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
-        </ul>
-      </div>
+  {{-- Keterangan Point (bawah) --}}
+  <div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
+    <div class="app-card p-3">
+      <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+      <ul class="small mb-0">
+        <li>Hadir Apel <span class="text-success">+1</span></li>
+        <li>Cuti <span class="text-secondary">+0</span></li>
+        <li>Tugas Luar <span class="text-secondary">+0</span></li>
+        <li>Sakit <span class="text-secondary">+0</span></li>
+        <li>Terlambat <span class="text-warning">-3</span></li>
+        <li>Tanpa keterangan <span class="text-danger">-5</span></li>
+        <li>Izin<span class="text-secondary">+0</span></li>
+      </ul>
     </div>
-</div>
+  </div>
 
   {{-- Log absensi user --}}
   <div class="app-card p-3 mt-4">
@@ -182,7 +196,7 @@
   </div>
 </nav>
 
-{{-- Modal input absen --}}
+<!-- Modal input absen -->
 <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -202,8 +216,9 @@
 
           <div class="mb-2">
             <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
-            <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan">
+            <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan" style="display: none;"> <!-- Default hide for 'Hadir' and 'Cuti' -->
           </div>
+
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Batal</button>
@@ -220,24 +235,43 @@
 @push('scripts')
 <script>
   function setStatus(s){
-    const field   = document.getElementById('statusField');
-    const preview = document.getElementById('statusPreview');
-    const alasan  = document.getElementById('alasanInput');
-    const label   = document.getElementById('alasanLabel');
+  const field   = document.getElementById('statusField');
+  const preview = document.getElementById('statusPreview');
+  const alasan  = document.getElementById('alasanInput');
+  const label   = document.getElementById('alasanLabel');
+  const terlambatInfo = document.getElementById('terlambatInfo');
 
-    field.value = s;
-    preview.value = s;
+  field.value = s;
+  preview.value = s;
 
-    if (s === 'Terlambat') {
-      alasan.setAttribute('required','required');
-      label.textContent = 'Alasan (wajib untuk Terlambat)';
-      alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
-    } else {
-      alasan.removeAttribute('required');
-      label.textContent = 'Alasan (opsional)';
-      alasan.placeholder = 'Tulis alasan bila diperlukan';
-    }
+  // Sesuaikan tampilan kolom alasan berdasarkan status
+  if (s === 'Hadir' || s === 'Cuti') {
+    alasan.removeAttribute('required'); // Jangan wajib
+    alasan.style.display = 'none'; // Sembunyikan kolom alasan untuk 'Hadir' dan 'Cuti'
+    label.textContent = ''; // Tidak ada label alasan
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
+  } else if (s === 'Terlambat') {
+    alasan.setAttribute('required', 'required');
+    alasan.style.display = 'block'; // Tampilkan kolom alasan
+    label.textContent = 'Alasan (wajib untuk terlambat)';
+    alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
+    terlambatInfo.classList.remove('d-none'); // Tampilkan informasi pengurangan poin
+  } else if (s === 'Izin') {
+    alasan.setAttribute('required', 'required');
+    alasan.style.display = 'block'; // Tampilkan kolom alasan
+    label.textContent = 'Alasan';
+    alasan.placeholder = 'Isi alasan untuk izin';
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
+  } else {
+    alasan.removeAttribute('required'); // Jangan wajib
+    alasan.style.display = 'block'; // Tampilkan kolom alasan untuk status lainnya
+    label.textContent = 'Keterangan (opsional)';
+    alasan.placeholder = 'Masukkan keterangan';
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
   }
+}
+
+
 
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
@@ -277,6 +311,7 @@
     btn.style.opacity = .5;
   }
 
+
   function showDebug(lat, lng, acc, dist) {
     let box = document.getElementById('geoDebug');
     if (!box) {
@@ -293,6 +328,7 @@
     `;
   }
 
+  // Logika keputusan dengan mempertimbangkan akurasi:
   // terima jika (jarak ≤ radius + accuracy)
   function decide(lat, lng, acc) {
     const dist = getDistance(lat, lng, officeLat, officeLng);
