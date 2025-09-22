@@ -20,31 +20,32 @@
   <div class="text-center my-3">
     <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="mt-2">
-  <span class="badge rounded-pill text-bg-primary px-3 py-2">
-    POINT: <strong>{{ $user->point ?? 0 }}</strong>
-  </span>
-</div>
+      <span class="badge rounded-pill text-bg-primary px-3 py-2">
+        POINT: <strong>{{ $user->point ?? 0 }}</strong>
+      </span>
+    </div>
   </div>
 
   @php
-    $now = now('Asia/Makassar')->format('H:i');
-    $hadirDisabled = $now > '08:00';
-    $terlambatDisabled = $now > '16:00';
+    $locked = ($hadirDisabled ?? false) || ($sudahAbsenToday ?? false);
+    // fallback kalau controller belum mengirim $terlambatDisabled
+    $terlambatDisabled = $terlambatDisabled ?? (now('Asia/Makassar')->format('H:i') > '16:00');
   @endphp
 
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
       <a id="btnHadir"
-        class="tile cyan w-100 text-decoration-none disabled"
-        style="pointer-events:none; opacity:.5"
-        data-bs-toggle="modal"
-        data-bs-target="#absenModal"
-        onclick="setStatus('Hadir')">
+        class="tile cyan w-100 text-decoration-none {{ $locked ? 'disabled' : '' }}"
+        style="{{ $locked ? 'pointer-events:none;opacity:.5' : '' }}"
+        @unless($locked)
+          data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')"
+        @endunless
+      >
         <i class="bi bi-person"></i><h6>Hadir</h6>
-        @if($hadirDisabled) @endif
       </a>
     </div>
+
     <div class="col-12 col-md-4">
       <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
         <i class="bi bi-phone"></i><h6>Izin</h6>
@@ -73,7 +74,6 @@
         @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
       </a>
     </div>
-    
   </div>
 
 {{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
@@ -125,7 +125,7 @@
           <li>Cuti <span class="text-secondary">+0</span></li>
           <li>Tugas Luar <span class="text-secondary">+0</span></li>
           <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
+          <li>Terlambat <span class="text-warning">-3</span></li>
           <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
         </ul>
       </div>
@@ -277,7 +277,6 @@
     btn.style.opacity = .5;
   }
 
-
   function showDebug(lat, lng, acc, dist) {
     let box = document.getElementById('geoDebug');
     if (!box) {
@@ -294,7 +293,6 @@
     `;
   }
 
-  // Logika keputusan dengan mempertimbangkan akurasi:
   // terima jika (jarak ≤ radius + accuracy)
   function decide(lat, lng, acc) {
     const dist = getDistance(lat, lng, officeLat, officeLng);

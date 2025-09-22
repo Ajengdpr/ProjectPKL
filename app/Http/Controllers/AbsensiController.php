@@ -3,27 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
-<<<<<<< HEAD
-=======
-use App\Models\User;
->>>>>>> origin/meldi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AbsensiController extends Controller
 {
-<<<<<<< HEAD
-    // mapping untuk penamaan konsisten
-=======
->>>>>>> origin/meldi
     private const ALLOWED_STATUSES = [
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
     public function index(Request $request)
     {
-        $user    = $request->user();
-        $tanggal = $request->input('tanggal', now()->toDateString());
+        $user     = $request->user();
+        $tz       = 'Asia/Makassar';
+        $today    = now($tz)->toDateString();
+        $tanggal  = $request->input('tanggal', $today);
 
         // log absensi user
         $log = DB::table('absensi')
@@ -74,51 +68,54 @@ class AbsensiController extends Controller
             'radius' => (int)   env('OFFICE_RADIUS', 200),
         ];
 
+        // ----- Tambahan: flag untuk tampilan (tidak mengganggu variabel lama)
+        $sudahAbsenToday = DB::table('absensi')
+            ->where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->exists();
+
+        $lastToday = DB::table('absensi')
+            ->where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->orderByDesc('jam')
+            ->first();
+
+        $hadirDisabled = now('Asia/Makassar')->format('H:i') > '08:00';
+
         return view('dashboard', [
-            'user'           => $user,
-            'log'            => $log,
-            'tanggal'        => $tanggal,
-            'daftarBidang'   => $daftarBidang,
-            'rekapPerBidang' => $rekapPerBidang,
-            'rekap'          => $rekapUser,
-            'office'         => $office,
+            'user'             => $user,
+            'log'              => $log,
+            'tanggal'          => $tanggal,
+            'daftarBidang'     => $daftarBidang,
+            'rekapPerBidang'   => $rekapPerBidang,
+            'rekap'            => $rekapUser,
+            'office'           => $office,
+
+            // tambahan aman untuk UI
+            'sudahAbsenToday'  => $sudahAbsenToday,
+            'lastToday'        => $lastToday,
+            'hadirDisabled'    => $hadirDisabled,
         ]);
     }
 
     public function store(Request $request)
     {
         $user = $request->user();
+        $tz   = 'Asia/Makassar';
 
-<<<<<<< HEAD
-        // validasi input dari form modal
-        $data = $request->validate([
-            'status' => ['required', 'string'],
-            'alasan' => ['nullable', 'string', 'max:255'],
-            // jika kamu kirim lat/lng dari frontend, bisa divalidasi juga:
-            // 'lat' => ['nullable','numeric'],
-            // 'lng' => ['nullable','numeric'],
-        ]);
-
-        // samakan kapitalisasi agar sesuai yang tersimpan di DB/rekap
-        $status = trim($data['status']);
-        // izinkan hanya status yang kita kenal
-=======
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
         ]);
 
         $status = trim($data['status']);
->>>>>>> origin/meldi
         if (!in_array($status, self::ALLOWED_STATUSES, true)) {
             return back()->withErrors('Status tidak valid.');
         }
 
-<<<<<<< HEAD
-        // Cegah absen ganda di hari yang sama
-=======
->>>>>>> origin/meldi
-        $today = now()->toDateString();
+        $today = now($tz)->toDateString();
+
+        // Cek sudah absen hari ini
         $sudah = Absensi::where('user_id', $user->id)
             ->whereDate('tanggal', $today)
             ->exists();
@@ -127,25 +124,25 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')
                 ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
         }
-<<<<<<< HEAD
-    
 
-        // Simpan absensi
-=======
+        // Blokir "Hadir" setelah 08:00 WITA (SERVER-SIDE)
+        if ($request->status === 'Hadir') {
+            if (now('Asia/Makassar')->format('H:i') > '08:00') {
+                return redirect()->route('dashboard')
+                    ->with('err', 'Absen Hadir ditutup setelah 08:00 WITA.');
+            }
+        }
 
->>>>>>> origin/meldi
+        // Simpan data absensi (pakai waktu WITA)
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
-        $absen->jam     = now()->toTimeString();
+        $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
         $absen->save();
 
-<<<<<<< HEAD
-        // Update point user
-=======
->>>>>>> origin/meldi
+        // Update point
         $delta = 0;
         if ($status === 'Hadir') {
             $delta = 1;
@@ -161,15 +158,11 @@ class AbsensiController extends Controller
             ->with('ok', "Absensi {$status} tersimpan.");
     }
 
-    /**
-     * Statistik Kehadiran (sesuai blade statistik.blade.php)
-     */
     public function statistik(Request $request)
     {
         $user  = $request->user();
         $bulan = $request->input('bulan', now()->format('Y-m'));
 
-        // ambil semua absensi user di bulan terpilih
         $absensi = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
             ->orderBy('tanggal')
