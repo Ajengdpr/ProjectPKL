@@ -2,155 +2,162 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreAbsensiRequest;
 use App\Models\Absensi;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AbsensiController extends Controller
 {
-    private const STATUS_LABELS = [
-        'hadir'       => 'Hadir',
-        'izin'        => 'Izin',
-        'cuti'        => 'Cuti',
-        'sakit'       => 'Sakit',
-        'terlambat'   => 'Terlambat',
-        'tugas-luar'  => 'Tugas Luar',
+    private const ALLOWED_STATUSES = [
+        'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
-    public function index()
+    public function index(Request $request)
     {
-        $user = User::findOrFail(auth()->id());
-        $log = Absensi::where('user_id', $user->id)
+        $user    = $request->user();
+        $tanggal = $request->input('tanggal', now()->toDateString());
+
+        // log absensi user
+        $log = DB::table('absensi')
+            ->where('user_id', $user->id)
             ->orderByDesc('tanggal')
             ->orderByDesc('jam')
             ->limit(50)
             ->get();
 
-        $rekap = Absensi::selectRaw('status, COUNT(*) as total')
+        // rekap per status untuk user
+        $rekapUser = DB::table('absensi')
+            ->selectRaw('status, COUNT(*) AS total')
             ->where('user_id', $user->id)
             ->groupBy('status')
-            ->pluck('total','status');
+            ->pluck('total', 'status');
 
-        // Tambahkan "Tanpa Keterangan" jika ada tanggal tanpa absensi
-        $hariIni = Carbon::now('Asia/Makassar')->daysInMonth;
-        $absensiCount = $rekap->sum();
-        if($absensiCount < $hariIni){
-            $rekap['Tanpa Keterangan'] = $hariIni - $absensiCount;
-        }
-
-        return view('dashboard', compact('user','log','rekap'));
-    }
-
-    public function create(string $status)
-    {
-        $label = self::STATUS_LABELS[$status] ?? null;
-        abort_unless($label, 404);
-
-        return view('absensi.form', [
-            'preset'    => $label,
-            'required'  => $label === 'Terlambat'
-        ]);
-    }
-
-    public function store(StoreAbsensiRequest $request)
-    {
-        $userId = auth()->id();
-        $today  = Carbon::now('Asia/Makassar')->toDateString();
-        $currentTime = Carbon::now('Asia/Makassar');
-
-        $sudahAda = Absensi::where('user_id', $userId)
-            ->where('tanggal', $today)
-            ->exists();
-
-        if ($sudahAda) {
-            return back()->withErrors(['msg' => 'Anda sudah absen hari ini, data tidak bisa diubah.']);
-        }
-
-        if ($request->status === 'Hadir' && $currentTime->hour >= 8) {
-            return back()->withErrors(['msg' => 'Anda sudah tidak bisa absen Hadir, lewat jam 08.00 WITA']);
-        }
-        if ($request->status === 'Terlambat' && $currentTime->hour >= 16) {
-            return back()->withErrors(['msg' => 'Anda sudah tidak bisa absen Terlambat, lewat jam 16.00 WITA']);
-        }
-
-        $absen = Absensi::create([
-            'user_id' => $userId,
-            'tanggal' => $today,
-            'jam'     => $currentTime->toTimeString(),
-            'status'  => $request->status,
-            'alasan'  => $request->alasan ?: null,
-        ]);
-
-        // Hitung poin
-        $delta = 0;
-        if ($request->status === 'Hadir') $delta = +1;
-        elseif ($request->status === 'Terlambat') $delta = -3;
-
-        if ($delta !== 0) {
-            $user = User::find($userId);
-            $user->point += $delta;
-            $user->save();
-        }
-
-        return redirect()->route('dashboard')->with('ok', "Absensi {$absen->status} tersimpan.");
-    }
-
-    public function statistik(Request $request)
-    {
-        $user = User::findOrFail(auth()->id());
-        $bulan = $request->bulan ?? date('Y-m');
-        $tahun = date('Y', strtotime($bulan));
-        $bulanNum = date('m', strtotime($bulan));
-
-        $absensi = Absensi::where('user_id', $user->id)
-            ->whereYear('tanggal', $tahun)
-            ->whereMonth('tanggal', $bulanNum)
-            ->orderBy('tanggal','asc')
+        // daftar bidang & jumlah pegawai
+        $daftarBidang = DB::table('users as u')
+            ->select('u.bidang', DB::raw('COUNT(*) AS jumlah_pegawai'))
+            ->whereNotNull('u.bidang')
+            ->groupBy('u.bidang')
+            ->orderBy('u.bidang')
             ->get();
 
-        $hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
+        // rekap absensi per bidang (harian)
+        $rekapPerBidang = DB::table('users as u')
+            ->leftJoin('absensi as a', function ($join) use ($tanggal) {
+                $join->on('a.user_id', '=', 'u.id')
+                     ->whereDate('a.tanggal', $tanggal);
+            })
+            ->select(
+                'u.bidang',
+                DB::raw("SUM(CASE WHEN a.status = 'Hadir'      THEN 1 ELSE 0 END) AS hadir"),
+                DB::raw("SUM(CASE WHEN a.status = 'Cuti'       THEN 1 ELSE 0 END) AS cuti"),
+                DB::raw("SUM(CASE WHEN a.status = 'Sakit'      THEN 1 ELSE 0 END) AS sakit"),
+                DB::raw("SUM(CASE WHEN a.status = 'Tugas Luar' THEN 1 ELSE 0 END) AS tugas_luar"),
+                DB::raw("SUM(CASE WHEN a.status = 'Terlambat'  THEN 1 ELSE 0 END) AS terlambat"),
+                DB::raw("SUM(CASE WHEN a.status = 'Izin'       THEN 1 ELSE 0 END) AS izin")
+            )
+            ->groupBy('u.bidang')
+            ->get()
+            ->keyBy('bidang');
 
-        $rekap = Absensi::selectRaw('status, COUNT(*) as total')
-            ->where('user_id', $user->id)
-            ->whereYear('tanggal', $tahun)
-            ->whereMonth('tanggal', $bulanNum)
-            ->groupBy('status')
-            ->pluck('total','status');
+        // data kantor untuk geolocation
+        $office = [
+            'lat'    => (float) env('OFFICE_LAT', -3.489179),
+            'lng'    => (float) env('OFFICE_LNG', 114.828158),
+            'radius' => (int)   env('OFFICE_RADIUS', 200),
+        ];
 
-        // Tambahkan "Tanpa Keterangan" jika ada tanggal tanpa absensi
-        $absensiCount = $rekap->sum();
-        if($absensiCount < $hariDalamBulan){
-            $rekap['Tanpa Keterangan'] = $hariDalamBulan - $absensiCount;
+        return view('dashboard', [
+            'user'           => $user,
+            'log'            => $log,
+            'tanggal'        => $tanggal,
+            'daftarBidang'   => $daftarBidang,
+            'rekapPerBidang' => $rekapPerBidang,
+            'rekap'          => $rekapUser,
+            'office'         => $office,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'status' => ['required', 'string'],
+            'alasan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $status = trim($data['status']);
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            return back()->withErrors('Status tidak valid.');
         }
 
-        // Hitung poin semua user
-        $allUsers = User::with(['absensi' => function($q) use ($tahun, $bulanNum){
-            $q->whereYear('tanggal',$tahun)->whereMonth('tanggal',$bulanNum);
-        }])->get();
+        $today = now()->toDateString();
+        $sudah = Absensi::where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->exists();
 
-        foreach($allUsers as $u){
-            $poinTotal = 0;
-            $absensiUser = $u->absensi->keyBy('tanggal');
-            for($i=1;$i<=$hariDalamBulan;$i++){
-                $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
-                if(isset($absensiUser[$tgl])){
-                    $status = $absensiUser[$tgl]->status;
-                    if($status==='Hadir') $poinTotal += 1;
-                    elseif($status==='Terlambat') $poinTotal -= 3;
-                } else {
-                    $poinTotal -= 5; // Tanpa Keterangan
-                }
-            }
-            $u->poin_total = $poinTotal;
+        if ($sudah) {
+            return redirect()->route('dashboard')
+                ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
         }
 
-        $top5Global = $allUsers->sortByDesc('poin_total')->take(5);
-        $bottom5Global = $allUsers->sortBy('poin_total')->take(5);
+        $absen = new Absensi();
+        $absen->user_id = $user->id;
+        $absen->tanggal = $today;
+        $absen->jam     = now()->toTimeString();
+        $absen->status  = $status;
+        $absen->alasan  = $data['alasan'] ?? null;
+        $absen->save();
 
-        return view('statistik', compact(
-            'user','absensi','rekap','top5Global','bottom5Global','bulan'
-        ));
+        $delta = 0;
+        if ($status === 'Hadir') {
+            $delta = 1;
+        } elseif ($status === 'Terlambat') {
+            $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
+        }
+        if ($delta !== 0) {
+            DB::table('users')->where('id', $user->id)
+                ->update(['point' => DB::raw("point + ($delta)")]);
+        }
+
+        return redirect()->route('dashboard')
+            ->with('ok', "Absensi {$status} tersimpan.");
+    }
+
+    /**
+     * Statistik Kehadiran (sesuai blade statistik.blade.php)
+     */
+    public function statistik(Request $request)
+    {
+        $user  = $request->user();
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+
+        // ambil semua absensi user di bulan terpilih
+        $absensi = Absensi::where('user_id', $user->id)
+            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->orderBy('tanggal')
+            ->get();
+
+        // Ranking 5 tertinggi
+        $top5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderByDesc('point')
+            ->limit(5)
+            ->get();
+
+        // Ranking 5 terendah
+        $bottom5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderBy('point')
+            ->limit(5)
+            ->get();
+
+        return view('statistik', [
+            'user'          => $user,
+            'absensi'       => $absensi,
+            'top5Global'    => $top5Global,
+            'bottom5Global' => $bottom5Global,
+        ]);
     }
 }

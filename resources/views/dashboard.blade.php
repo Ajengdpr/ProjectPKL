@@ -4,18 +4,27 @@
 @section('content')
 <div class="container">
 
-  {{-- Alerts --}}
+    {{-- Alerts --}}
   @if(session('ok'))
     <div class="alert alert-success">{{ session('ok') }}</div>
+  @endif
+  @if(session('err'))
+    <div class="alert alert-danger">{{ session('err') }}</div>
   @endif
   @if($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
 
+
   {{-- Hero --}}
   <div class="text-center my-3">
-    <img src="{{ asset('img/halamandepan.jpeg') }}" alt="gedung" class="img-fluid" style="max-height:220px">
-    <div class="small text-secondary mt-2">POINT</div>
+    <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
+    <div class="mt-2">
+  <span class="badge rounded-pill text-bg-primary px-3 py-2">
+    POINT: <strong>{{ $user->point ?? 0 }}</strong>
+  </span>
+</div>
+
   </div>
 
   @php
@@ -27,16 +36,19 @@
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
-      <a class="tile cyan w-100 text-decoration-none {{ $hadirDisabled ? 'disabled' : '' }}"
-         data-bs-toggle="modal" data-bs-target="#absenModal"
-         onclick="setStatus('Hadir')">
+      <a class="tile cyan w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')">
         <i class="bi bi-person"></i><h6>Hadir</h6>
         @if($hadirDisabled) @endif
       </a>
     </div>
     <div class="col-12 col-md-4">
-      <a class="tile yellow w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Cuti')">
-        <i class="bi bi-x-circle"></i><h6>Cuti</h6>
+      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
+        <i class="bi bi-phone"></i><h6>Izin</h6>
+      </a>
+    </div>
+    <div class="col-12 col-md-4">
+      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
+        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -44,10 +56,9 @@
         <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
       </a>
     </div>
-
     <div class="col-12 col-md-4">
-      <a class="tile gray w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')">
-        <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
+      <a class="tile yellow w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Cuti')">
+        <i class="bi bi-x-circle"></i><h6>Cuti</h6>
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -58,11 +69,7 @@
         @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
       </a>
     </div>
-    <div class="col-12 col-md-4">
-      <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
-        <i class="bi bi-phone"></i><h6>Izin Tidak Masuk</h6>
-      </a>
-    </div>
+    
   </div>
 
   {{-- Keterangan Poin --}}
@@ -75,14 +82,12 @@
           <li>Cuti <span class="text-secondary">+0</span></li>
           <li>Tugas Luar <span class="text-secondary">+0</span></li>
           <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat <span class="text-danger">-3</span></li>
-          <li>Tidak absen sama sekali <span class="text-danger">-5</span></li>
+          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
           <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
         </ul>
       </div>
     </div>
 
-    {{-- Rekap bidang --}}
     <div class="col-12 col-lg-7">
       <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Rekap per Bidang</h6>
@@ -101,21 +106,17 @@
               </tr>
             </thead>
             <tbody>
-              @php
-                $rekapBidang = [
-                  ['KPPI',13], ['PHL',11], ['PPKLH',15], ['SEKRETARIAT',38], ['TALING',17]
-                ];
-              @endphp
-              @foreach($rekapBidang as [$nama,$jumlah])
+              @foreach($daftarBidang as $b)
+                @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
                 <tr>
-                  <td>{{ $nama }}</td>
-                  <td class="text-center">{{ $jumlah }}</td>
-                  <td class="text-center">{{ $rekap['Hadir'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Cuti'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Sakit'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Tugas Luar'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Terlambat'] ?? 0 }}</td>
-                  <td class="text-center">{{ $rekap['Izin'] ?? 0 }}</td>
+                  <td>{{ $b->bidang }}</td>
+                  <td class="text-center">{{ $b->jumlah_pegawai }}</td>
+                  <td class="text-center">{{ $r->hadir ?? 0 }}</td>
+                  <td class="text-center">{{ $r->cuti ?? 0 }}</td>
+                  <td class="text-center">{{ $r->sakit ?? 0 }}</td>
+                  <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
+                  <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
+                  <td class="text-center">{{ $r->izin ?? 0 }}</td>
                 </tr>
               @endforeach
             </tbody>
@@ -123,7 +124,22 @@
         </div>
       </div>
     </div>
-  </div>
+
+    {{-- Keterangan Point (bawah) --}}
+    <div class="col-12">
+      <div class="app-card p-3">
+        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+        <ul class="small mb-0">
+          <li>Hadir Apel <span class="text-success">+1</span></li>
+          <li>Cuti <span class="text-secondary">+0</span></li>
+          <li>Tugas Luar <span class="text-secondary">+0</span></li>
+          <li>Sakit <span class="text-secondary">+0</span></li>
+          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
+          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
+        </ul>
+      </div>
+    </div>
+</div>
 
   {{-- Log absensi user --}}
   <div class="app-card p-3 mt-4">
@@ -232,13 +248,101 @@
     }
   }
 
-  // cegah double submit
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.querySelector('.btn-text').classList.add('d-none');
     btn.querySelector('.spinner-border').classList.remove('d-none');
     return true;
+  }
+
+  const officeLat    = {{ $office['lat'] }};
+  const officeLng    = {{ $office['lng'] }};
+  const officeRadius = {{ $office['radius'] }}; // meter
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon/2)**2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function enableHadir() {
+    const btn = document.getElementById('btnHadir');
+    if (!btn) return;
+    btn.classList.remove('disabled');
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = 1;
+  }
+  function disableHadir() {
+    const btn = document.getElementById('btnHadir');
+    if (!btn) return;
+    btn.classList.add('disabled');
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = .5;
+  }
+
+
+  function showDebug(lat, lng, acc, dist) {
+    let box = document.getElementById('geoDebug');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'geoDebug';
+      box.style.cssText = 'position:fixed;right:8px;bottom:68px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);font:12px/1.4 system-ui,Arial;';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = `
+      <div><b>Office</b> : ${officeLat.toFixed(6)}, ${officeLng.toFixed(6)} (R:${officeRadius}m)</div>
+      <div><b>User</b>   : ${lat?.toFixed(6)}, ${lng?.toFixed(6)}</div>
+      <div><b>Accuracy</b>: ${Math.round(acc)} m</div>
+      <div><b>Distance</b>: ${Math.round(dist)} m</div>
+    `;
+  }
+
+  // Logika keputusan dengan mempertimbangkan akurasi:
+  // terima jika (jarak ≤ radius + accuracy)
+  function decide(lat, lng, acc) {
+    const dist = getDistance(lat, lng, officeLat, officeLng);
+    showDebug(lat, lng, acc, dist);
+    console.log({userLat:lat, userLng:lng, accuracy_m:acc, dist_m:Math.round(dist), officeLat, officeLng, officeRadius});
+
+    if (dist <= officeRadius + acc) {
+      enableHadir();
+    } else {
+      disableHadir();
+      alert('Anda berada di luar area kantor (jarak ~' + Math.round(dist) + ' m).');
+    }
+  }
+
+  function handlePos(pos) {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const acc = pos.coords.accuracy; // meter (semakin kecil semakin baik)
+    decide(lat, lng, acc);
+  }
+
+  function handleErr(err) {
+    console.warn('Geolocation error:', err);
+    alert('Tidak bisa mengambil lokasi: ' + err.message);
+    disableHadir();
+  }
+
+  if (navigator.geolocation) {
+    const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+
+    // Ambil posisi sekali (cepat)
+    navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
+
+    // Pantau beberapa detik — biasanya akurasi akan membaik setelah 5–15 dtk
+    const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
+    setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
+  } else {
+    alert('Browser tidak mendukung geolocation.');
+    disableHadir();
   }
 </script>
 @endpush
