@@ -112,13 +112,28 @@
                 </tr>
               @endforeach
             </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <th>Total</th>
+                <td class="text-center">
+                  {{ $daftarBidang->sum('jumlah_pegawai') }}
+                </td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
+                <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
     </div>
+</div>
 
-    {{-- Keterangan Point (bawah) --}}
-<div class="col-12">
+{{-- Keterangan Point (bawah) --}}
+<div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
   <div class="app-card p-3">
     <h6 class="fw-bold mb-3">Keterangan Point:</h6>
     <ul class="small mb-0">
@@ -132,7 +147,7 @@
     </ul>
   </div>
 </div>
-</div>
+
 
 
   {{-- Log absensi user --}}
