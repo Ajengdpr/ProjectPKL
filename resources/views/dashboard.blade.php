@@ -4,23 +4,34 @@
 @section('content')
 <div class="container">
 
-  {{-- Alerts --}}
+    {{-- Alerts --}}
   @if(session('ok'))
     <div class="alert alert-success">{{ session('ok') }}</div>
+  @endif
+  @if(session('err'))
+    <div class="alert alert-danger">{{ session('err') }}</div>
   @endif
   @if($errors->any())
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
 
+
   {{-- Hero --}}
   <div class="text-center my-3">
     <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="mt-2">
-      <span class="badge rounded-pill text-bg-primary px-3 py-2">
-        POINT: <strong>{{ $user->point ?? 0 }}</strong>
-      </span>
-    </div>
+  <span class="badge rounded-pill text-bg-primary px-3 py-2">
+    POINT: <strong>{{ $user->point ?? 0 }}</strong>
+  </span>
+</div>
+
   </div>
+
+  @php
+    $now = now('Asia/Makassar')->format('H:i');
+    $hadirDisabled = $now > '08:00';
+    $terlambatDisabled = $now > '16:00';
+  @endphp
 
   {{-- Tiles --}}
   <div class="row g-3">
@@ -32,6 +43,7 @@
         data-bs-target="#absenModal"
         onclick="setStatus('Hadir')">
         <i class="bi bi-person"></i><h6>Hadir</h6>
+        @if($hadirDisabled) @endif
       </a>
     </div>
     <div class="col-12 col-md-4">
@@ -55,10 +67,14 @@
       </a>
     </div>
     <div class="col-12 col-md-4">
-      <a class="tile red w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Terlambat')">
+      <a class="tile red w-100 text-decoration-none {{ $terlambatDisabled ? 'disabled' : '' }}"
+         data-bs-toggle="modal" data-bs-target="#absenModal"
+         onclick="setStatus('Terlambat')">
         <i class="bi bi-alarm"></i><h6>Terlambat</h6>
+        @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
       </a>
     </div>
+    
   </div>
 
   {{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
@@ -102,19 +118,20 @@
     </div>
 
     {{-- Keterangan Point (bawah) --}}
-    <div class="col-12">
-      <div class="app-card p-3">
-        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
-        <ul class="small mb-0">
-          <li>Hadir Apel <span class="text-success">+1</span></li>
-          <li>Cuti <span class="text-secondary">+0</span></li>
-          <li>Tugas Luar <span class="text-secondary">+0</span></li>
-          <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat tanpa alasan <span class="text-danger">-5</span>, dengan alasan <span class="text-warning">-3</span></li>
-          <li>Izin tidak masuk kantor <span class="text-secondary">+0</span></li>
-        </ul>
-      </div>
-    </div>
+<div class="col-12">
+  <div class="app-card p-3">
+    <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+    <ul class="small mb-0">
+      <li>Hadir Apel <span class="text-success">+1</span></li>
+      <li>Cuti <span class="text-secondary">+0</span></li>
+      <li>Tugas Luar <span class="text-secondary">+0</span></li>
+      <li>Sakit <span class="text-secondary">+0</span></li>
+      <li>Terlambat <span class="text-warning">-3</span></li>
+      <li>Tanpa keterangan <span class="text-danger">-5</span></li>
+      <li>Izin<span class="text-secondary">+0</span></li>
+    </ul>
+  </div>
+</div>
 </div>
 
 
@@ -155,7 +172,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
           <i class="bi bi-graph-up me-1"></i> Statistik
         </a>
       </li>
@@ -189,9 +206,6 @@
           <div class="mb-2">
             <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
             <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan">
-            <div class="form-text d-none" id="terlambatHint">
-              Untuk <b>Terlambat</b>: alasan <b>wajib</b>. Poin <b>-3</b> jika ada alasan, <b>-5</b> jika kosong.
-            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -213,7 +227,6 @@
     const preview = document.getElementById('statusPreview');
     const alasan  = document.getElementById('alasanInput');
     const label   = document.getElementById('alasanLabel');
-    const hint    = document.getElementById('terlambatHint');
 
     field.value = s;
     preview.value = s;
@@ -221,12 +234,10 @@
     if (s === 'Terlambat') {
       alasan.setAttribute('required','required');
       label.textContent = 'Alasan (wajib untuk Terlambat)';
-      hint.classList.remove('d-none');
       alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
     } else {
       alasan.removeAttribute('required');
       label.textContent = 'Alasan (opsional)';
-      hint.classList.add('d-none');
       alasan.placeholder = 'Tulis alasan bila diperlukan';
     }
   }
@@ -269,6 +280,7 @@
     btn.style.opacity = .5;
   }
 
+
   function showDebug(lat, lng, acc, dist) {
     let box = document.getElementById('geoDebug');
     if (!box) {
@@ -285,9 +297,12 @@
     `;
   }
 
+  // Logika keputusan dengan mempertimbangkan akurasi:
+  // terima jika (jarak ≤ radius + accuracy)
   function decide(lat, lng, acc) {
     const dist = getDistance(lat, lng, officeLat, officeLng);
     showDebug(lat, lng, acc, dist);
+    console.log({userLat:lat, userLng:lng, accuracy_m:acc, dist_m:Math.round(dist), officeLat, officeLng, officeRadius});
 
     if (dist <= officeRadius + acc) {
       enableHadir();
@@ -300,7 +315,7 @@
   function handlePos(pos) {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
-    const acc = pos.coords.accuracy;
+    const acc = pos.coords.accuracy; // meter (semakin kecil semakin baik)
     decide(lat, lng, acc);
   }
 
@@ -312,7 +327,11 @@
 
   if (navigator.geolocation) {
     const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+
+    // Ambil posisi sekali (cepat)
     navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
+
+    // Pantau beberapa detik — biasanya akurasi akan membaik setelah 5–15 dtk
     const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
     setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
   } else {

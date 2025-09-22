@@ -9,13 +9,8 @@ use Illuminate\Support\Facades\DB;
 
 class AbsensiController extends Controller
 {
-    private const STATUS_LABELS = [
-        'hadir'      => 'Hadir',
-        'izin'       => 'Izin',
-        'cuti'       => 'Cuti',
-        'sakit'      => 'Sakit',
-        'terlambat'  => 'Terlambat',
-        'tugas-luar' => 'Tugas Luar',
+    private const ALLOWED_STATUSES = [
+        'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
     public function index(Request $request)
@@ -80,6 +75,89 @@ class AbsensiController extends Controller
             'rekapPerBidang' => $rekapPerBidang,
             'rekap'          => $rekapUser,
             'office'         => $office,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'status' => ['required', 'string'],
+            'alasan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $status = trim($data['status']);
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            return back()->withErrors('Status tidak valid.');
+        }
+
+        $today = now()->toDateString();
+        $sudah = Absensi::where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->exists();
+
+        if ($sudah) {
+            return redirect()->route('dashboard')
+                ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
+        }
+
+        $absen = new Absensi();
+        $absen->user_id = $user->id;
+        $absen->tanggal = $today;
+        $absen->jam     = now()->toTimeString();
+        $absen->status  = $status;
+        $absen->alasan  = $data['alasan'] ?? null;
+        $absen->save();
+
+        $delta = 0;
+        if ($status === 'Hadir') {
+            $delta = 1;
+        } elseif ($status === 'Terlambat') {
+            $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
+        }
+        if ($delta !== 0) {
+            DB::table('users')->where('id', $user->id)
+                ->update(['point' => DB::raw("point + ($delta)")]);
+        }
+
+        return redirect()->route('dashboard')
+            ->with('ok', "Absensi {$status} tersimpan.");
+    }
+
+    /**
+     * Statistik Kehadiran (sesuai blade statistik.blade.php)
+     */
+    public function statistik(Request $request)
+    {
+        $user  = $request->user();
+        $bulan = $request->input('bulan', now()->format('Y-m'));
+
+        // ambil semua absensi user di bulan terpilih
+        $absensi = Absensi::where('user_id', $user->id)
+            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->orderBy('tanggal')
+            ->get();
+
+        // Ranking 5 tertinggi
+        $top5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderByDesc('point')
+            ->limit(5)
+            ->get();
+
+        // Ranking 5 terendah
+        $bottom5Global = DB::table('users')
+            ->select('nama', 'point as poin_total')
+            ->orderBy('point')
+            ->limit(5)
+            ->get();
+
+        return view('statistik', [
+            'user'          => $user,
+            'absensi'       => $absensi,
+            'top5Global'    => $top5Global,
+            'bottom5Global' => $bottom5Global,
         ]);
     }
 }
