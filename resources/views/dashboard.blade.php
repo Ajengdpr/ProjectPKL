@@ -15,37 +15,36 @@
     <div class="alert alert-danger">{{ $errors->first() }}</div>
   @endif
 
-
   {{-- Hero --}}
   <div class="text-center my-3">
     <img src="{{ asset('img/gedung.png') }}" alt="gedung" class="img-fluid" style="max-height:220px">
     <div class="mt-2">
-  <span class="badge rounded-pill text-bg-primary px-3 py-2">
-    POINT: <strong>{{ $user->point ?? 0 }}</strong>
-  </span>
-</div>
-
+      <span class="badge rounded-pill text-bg-primary px-3 py-2">
+        POINT: <strong>{{ $user->point ?? 0 }}</strong>
+      </span>
+    </div>
   </div>
 
   @php
-    $now = now('Asia/Makassar')->format('H:i');
-    $hadirDisabled = $now > '08:00';
-    $terlambatDisabled = $now > '16:00';
+    $locked = ($hadirDisabled ?? false) || ($sudahAbsenToday ?? false);
+    // fallback kalau controller belum mengirim $terlambatDisabled
+    $terlambatDisabled = $terlambatDisabled ?? (now('Asia/Makassar')->format('H:i') > '16:00');
   @endphp
 
   {{-- Tiles --}}
   <div class="row g-3">
     <div class="col-12 col-md-4">
       <a id="btnHadir"
-        class="tile cyan w-100 text-decoration-none disabled"
-        style="pointer-events:none; opacity:.5"
-        data-bs-toggle="modal"
-        data-bs-target="#absenModal"
-        onclick="setStatus('Hadir')">
+        class="tile cyan w-100 text-decoration-none {{ $locked ? 'disabled' : '' }}"
+        style="{{ $locked ? 'pointer-events:none;opacity:.5' : '' }}"
+        @unless($locked)
+          data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')"
+        @endunless
+      >
         <i class="bi bi-person"></i><h6>Hadir</h6>
-        @if($hadirDisabled) @endif
       </a>
     </div>
+
     <div class="col-12 col-md-4">
       <a class="tile dark w-100 text-decoration-none" data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')">
         <i class="bi bi-phone"></i><h6>Izin</h6>
@@ -74,11 +73,10 @@
         @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
       </a>
     </div>
-    
   </div>
 
   {{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
-<div class="row mt-4 g-3">
+  <div class="row mt-4 g-3">
     {{-- Rekap per Bidang (atas) --}}
     <div class="col-12">
       <div class="app-card p-3">
@@ -130,25 +128,23 @@
         </div>
       </div>
     </div>
-</div>
-
-{{-- Keterangan Point (bawah) --}}
-<div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
-  <div class="app-card p-3">
-    <h6 class="fw-bold mb-3">Keterangan Point:</h6>
-    <ul class="small mb-0">
-      <li>Hadir Apel <span class="text-success">+1</span></li>
-      <li>Cuti <span class="text-secondary">+0</span></li>
-      <li>Tugas Luar <span class="text-secondary">+0</span></li>
-      <li>Sakit <span class="text-secondary">+0</span></li>
-      <li>Terlambat <span class="text-warning">-3</span></li>
-      <li>Tanpa keterangan <span class="text-danger">-5</span></li>
-      <li>Izin<span class="text-secondary">+0</span></li>
-    </ul>
   </div>
-</div>
 
-
+  {{-- Keterangan Point (bawah) --}}
+  <div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
+    <div class="app-card p-3">
+      <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+      <ul class="small mb-0">
+        <li>Hadir Apel <span class="text-success">+1</span></li>
+        <li>Cuti <span class="text-secondary">+0</span></li>
+        <li>Tugas Luar <span class="text-secondary">+0</span></li>
+        <li>Sakit <span class="text-secondary">+0</span></li>
+        <li>Terlambat <span class="text-warning">-3</span></li>
+        <li>Tanpa keterangan <span class="text-danger">-5</span></li>
+        <li>Izin<span class="text-secondary">+0</span></li>
+      </ul>
+    </div>
+  </div>
 
   {{-- Log absensi user --}}
   <div class="app-card p-3 mt-4">
