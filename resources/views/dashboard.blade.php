@@ -185,7 +185,7 @@
   </div>
 </nav>
 
-{{-- Modal input absen --}}
+<!-- Modal input absen -->
 <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -205,8 +205,9 @@
 
           <div class="mb-2">
             <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
-            <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan">
+            <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan" style="display: none;"> <!-- Default hide for 'Hadir' and 'Cuti' -->
           </div>
+
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Batal</button>
@@ -223,24 +224,43 @@
 @push('scripts')
 <script>
   function setStatus(s){
-    const field   = document.getElementById('statusField');
-    const preview = document.getElementById('statusPreview');
-    const alasan  = document.getElementById('alasanInput');
-    const label   = document.getElementById('alasanLabel');
+  const field   = document.getElementById('statusField');
+  const preview = document.getElementById('statusPreview');
+  const alasan  = document.getElementById('alasanInput');
+  const label   = document.getElementById('alasanLabel');
+  const terlambatInfo = document.getElementById('terlambatInfo');
 
-    field.value = s;
-    preview.value = s;
+  field.value = s;
+  preview.value = s;
 
-    if (s === 'Terlambat') {
-      alasan.setAttribute('required','required');
-      label.textContent = 'Alasan (wajib untuk Terlambat)';
-      alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
-    } else {
-      alasan.removeAttribute('required');
-      label.textContent = 'Alasan (opsional)';
-      alasan.placeholder = 'Tulis alasan bila diperlukan';
-    }
+  // Sesuaikan tampilan kolom alasan berdasarkan status
+  if (s === 'Hadir' || s === 'Cuti') {
+    alasan.removeAttribute('required'); // Jangan wajib
+    alasan.style.display = 'none'; // Sembunyikan kolom alasan untuk 'Hadir' dan 'Cuti'
+    label.textContent = ''; // Tidak ada label alasan
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
+  } else if (s === 'Terlambat') {
+    alasan.setAttribute('required', 'required');
+    alasan.style.display = 'block'; // Tampilkan kolom alasan
+    label.textContent = 'Alasan (wajib untuk terlambat)';
+    alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
+    terlambatInfo.classList.remove('d-none'); // Tampilkan informasi pengurangan poin
+  } else if (s === 'Izin') {
+    alasan.setAttribute('required', 'required');
+    alasan.style.display = 'block'; // Tampilkan kolom alasan
+    label.textContent = 'Alasan';
+    alasan.placeholder = 'Isi alasan untuk izin';
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
+  } else {
+    alasan.removeAttribute('required'); // Jangan wajib
+    alasan.style.display = 'block'; // Tampilkan kolom alasan untuk status lainnya
+    label.textContent = 'Keterangan (opsional)';
+    alasan.placeholder = 'Masukkan keterangan';
+    terlambatInfo.classList.add('d-none'); // Sembunyikan informasi pengurangan poin
   }
+}
+
+
 
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
