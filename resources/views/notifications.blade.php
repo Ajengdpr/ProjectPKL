@@ -34,7 +34,7 @@
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
           <i class="bi bi-graph-up me-1"></i> Statistik
         </a>
       </li>

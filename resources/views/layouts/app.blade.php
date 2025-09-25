@@ -108,7 +108,31 @@
     @yield('content')
   </main>
 
+{{-- ... kode lain sebelum </body> ... --}}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  {{-- AWAL: Tambahkan Firebase SDK --}}
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script>
+    // GANTI DENGAN KONFIGURASI FIREBASE DARI PROYEK ANDA (Langkah 1.4)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBlRJlDMXduk2BRjW0U8tkhGeFb6YtGZkI",
+    authDomain: "project-pkl-b57bf.firebaseapp.com",
+    databaseURL: "https://project-pkl-b57bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "project-pkl-b57bf",
+    storageBucket: "project-pkl-b57bf.firebasestorage.app",
+    messagingSenderId: "161424256692",
+    appId: "1:161424256692:web:e7d89cfcfab2cf4ff331e1",
+    measurementId: "G-QHQE9C1XD8"
+  };
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+  </script>
+  {{-- AKHIR: Tambahkan Firebase SDK --}}
+
   @stack('scripts')
 </body>
 </html>

@@ -17,7 +17,7 @@
           <input type="hidden" name="status" value="{{ $preset }}">
 
           <div class="mb-3">
-            @if($preset === 'Hadir')
+             @if($preset === 'Hadir')
               <!-- Tidak ada kolom alasan untuk Hadir -->
               <label class="form-label">Alasan</label>
               <input type="text" class="form-control" disabled value="Tidak perlu alasan">

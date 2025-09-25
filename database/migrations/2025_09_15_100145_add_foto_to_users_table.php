@@ -12,7 +12,7 @@ return new class extends Migration {
                 $t->string('foto')->nullable()->after('password');
             }
         });
-    }
+    } 
     public function down(): void {
         Schema::table('users', function (Blueprint $t) {
             $t->dropColumn('foto');

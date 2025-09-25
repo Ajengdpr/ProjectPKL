@@ -92,13 +92,25 @@
   </div>
 </div>
 
-{{-- Bottom nav tetap --}}
+{{-- Bottom Nav --}}
 <nav class="bottom-nav mt-4">
   <div class="container">
     <ul class="nav justify-content-around py-2">
-      <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}"><i class="bi bi-house-door me-1"></i> Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="{{ route('statistik') }}"><i class="bi bi-person me-1"></i> Statistik</a></li>
-      <li class="nav-item"><a class="nav-link active" href="{{ route('account') }}"><i class="bi bi-person me-1"></i> Account</a></li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+          <i class="bi bi-house-door me-1"></i> Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
+          <i class="bi bi-graph-up me-1"></i> Statistik
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
+          <i class="bi bi-person me-1"></i> Account
+        </a>
+      </li>
     </ul>
   </div>
 </nav>
@@ -107,9 +119,9 @@
 <style>
   .btn-profile {
     display: inline-block;
-    width: 100%;            /* biar sama panjang */
-    font-size: 0.95rem;     /* seragam */
-    padding: 0.6rem 1rem;   /* seragam */
+    width: 100%;           
+    font-size: 0.95rem;     
+    padding: 0.6rem 1rem;   
     border-radius: 8px;
     font-weight: 600;
     text-align: center;
