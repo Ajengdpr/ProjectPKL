@@ -81,7 +81,7 @@ class AbsensiController extends Controller
             ->orderByDesc('jam')
             ->first();
 
-        $hadirDisabled = now('Asia/Makassar')->format('H:i') > '08:00';
+        $hadirDisabled = now('Asia/Makassar')->format('H:i') > '10:00';
 
         return view('dashboard', [
             'user'             => $user,
@@ -126,9 +126,9 @@ class AbsensiController extends Controller
 
         // Blokir "Hadir" setelah 08:00 WITA (SERVER-SIDE)
         if ($request->status === 'Hadir') {
-            if (now('Asia/Makassar')->format('H:i') > '08:00') {
+            if (now('Asia/Makassar')->format('H:i') > '10:00') {
                 return redirect()->route('dashboard')
-                    ->with('err', 'Absen Hadir ditutup setelah 08:00 WITA.');
+                    ->with('err', 'Absen Hadir ditutup setelah 10:00 WITA.');
             }
         }
 
