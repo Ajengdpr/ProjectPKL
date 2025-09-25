@@ -372,3 +372,66 @@
 </script>
 @endpush
 @endsection
+@push('scripts')
+<script>
+  // Dapatkan tanggal hari ini (sesuai zona waktu browser pengguna) dengan format YYYY-MM-DD
+  const today = new Date().toLocaleDateString('en-CA'); // Format 'en-CA' menghasilkan 'YYYY-MM-DD'
+  const rekapRef = database.ref('rekap/' + today);
+
+  // Listener utama: akan berjalan sekali saat halaman dimuat,
+  // dan akan berjalan lagi setiap kali data di path 'rekap/YYYY-MM-DD' berubah.
+  rekapRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    console.log("Menerima data rekap terbaru dari Firebase:", data); // Untuk debugging
+    updateRekapTable(data);
+  });
+
+  function updateRekapTable(rekapData) {
+    if (!rekapData) { // Jika belum ada data rekap di Firebase untuk hari ini, jangan lakukan apa-apa
+      console.log("Belum ada data rekap di Firebase untuk hari ini.");
+      return;
+    }
+
+    // Cari elemen tabel di dalam DOM
+    const tableBody = document.querySelector('.table-responsive tbody');
+    const tableFoot = document.querySelector('.table-responsive tfoot');
+
+    // Reset variabel total
+    let totalHadir = 0, totalCuti = 0, totalSakit = 0;
+    let totalTugasLuar = 0, totalTerlambat = 0, totalIzin = 0;
+
+    // Iterasi setiap baris <tr> di dalam <tbody>
+    tableBody.querySelectorAll('tr').forEach(row => {
+      const bidangName = row.cells[0].textContent.trim();
+      const rekapBidang = rekapData[bidangName] || {}; // Ambil data untuk bidang ini, atau object kosong jika tidak ada
+
+      // Update setiap cell <td>. Gunakan '?? 0' untuk default ke 0 jika datanya null.
+      row.cells[2].textContent = rekapBidang.hadir ?? 0;
+      row.cells[3].textContent = rekapBidang.cuti ?? 0;
+      row.cells[4].textContent = rekapBidang.sakit ?? 0;
+      row.cells[5].textContent = rekapBidang.tugas_luar ?? 0;
+      row.cells[6].textContent = rekapBidang.terlambat ?? 0;
+      row.cells[7].textContent = rekapBidang.izin ?? 0;
+
+      // Kalkulasi total untuk footer
+      totalHadir     += parseInt(rekapBidang.hadir ?? 0);
+      totalCuti      += parseInt(rekapBidang.cuti ?? 0);
+      totalSakit     += parseInt(rekapBidang.sakit ?? 0);
+      totalTugasLuar += parseInt(rekapBidang.tugas_luar ?? 0);
+      totalTerlambat += parseInt(rekapBidang.terlambat ?? 0);
+      totalIzin      += parseInt(rekapBidang.izin ?? 0);
+    });
+
+    // Update baris total di <tfoot>
+    const footerRow = tableFoot.querySelector('tr');
+    if(footerRow) {
+        footerRow.cells[2].textContent = totalHadir;
+        footerRow.cells[3].textContent = totalCuti;
+        footerRow.cells[4].textContent = totalSakit;
+        footerRow.cells[5].textContent = totalTugasLuar;
+        footerRow.cells[6].textContent = totalTerlambat;
+        footerRow.cells[7].textContent = totalIzin;
+    }
+  }
+</script>
+@endpush

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Kreait\Firebase\Contract\Database; // <-- TAMBAHKAN: Import Firebase Database
 
 class AbsensiController extends Controller
 {
@@ -12,6 +14,16 @@ class AbsensiController extends Controller
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
+    // <-- TAMBAHKAN: Property untuk menampung instance Firebase Database
+    protected $database;
+
+    // <-- TAMBAHKAN: Constructor untuk otomatis mendapatkan instance Firebase
+    public function __construct(Database $database)
+    {
+        $this->database = $database;
+    }
+
+    // ... (Method index() tidak perlu diubah, biarkan seperti semula)
     public function index(Request $request)
     {
         $user     = $request->user();
@@ -19,7 +31,6 @@ class AbsensiController extends Controller
         $today    = now($tz)->toDateString();
         $tanggal  = $request->input('tanggal', $today);
 
-        // log absensi user
         $log = DB::table('absensi')
             ->where('user_id', $user->id)
             ->orderByDesc('tanggal')
@@ -27,14 +38,12 @@ class AbsensiController extends Controller
             ->limit(50)
             ->get();
 
-        // rekap per status untuk user
         $rekapUser = DB::table('absensi')
             ->selectRaw('status, COUNT(*) AS total')
             ->where('user_id', $user->id)
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        // daftar bidang & jumlah pegawai
         $daftarBidang = DB::table('users as u')
             ->select('u.bidang', DB::raw('COUNT(*) AS jumlah_pegawai'))
             ->whereNotNull('u.bidang')
@@ -42,7 +51,6 @@ class AbsensiController extends Controller
             ->orderBy('u.bidang')
             ->get();
 
-        // rekap absensi per bidang (harian)
         $rekapPerBidang = DB::table('users as u')
             ->leftJoin('absensi as a', function ($join) use ($tanggal) {
                 $join->on('a.user_id', '=', 'u.id')
@@ -61,14 +69,12 @@ class AbsensiController extends Controller
             ->get()
             ->keyBy('bidang');
 
-        // data kantor untuk geolocation
         $office = [
             'lat'    => (float) env('OFFICE_LAT', -3.489179),
             'lng'    => (float) env('OFFICE_LNG', 114.828158),
             'radius' => (int)   env('OFFICE_RADIUS', 200),
         ];
 
-        // ----- Tambahan: flag untuk tampilan (tidak mengganggu variabel lama)
         $sudahAbsenToday = DB::table('absensi')
             ->where('user_id', $user->id)
             ->whereDate('tanggal', $today)
@@ -90,109 +96,108 @@ class AbsensiController extends Controller
             'rekapPerBidang'   => $rekapPerBidang,
             'rekap'            => $rekapUser,
             'office'           => $office,
-
-            // tambahan aman untuk UI
             'sudahAbsenToday'  => $sudahAbsenToday,
             'lastToday'        => $lastToday,
             'hadirDisabled'    => $hadirDisabled,
         ]);
     }
 
+
     public function store(Request $request)
     {
         $user = $request->user();
         $tz   = 'Asia/Makassar';
-
+        $today = now($tz)->toDateString();
+        
+        // ... (Logika validasi Anda tetap sama)
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
         ]);
-
         $status = trim($data['status']);
         if (!in_array($status, self::ALLOWED_STATUSES, true)) {
             return back()->withErrors('Status tidak valid.');
         }
-
-        $today = now($tz)->toDateString();
-
-    // Pastikan alasan tidak wajib untuk status 'Hadir'
-        if ($status === 'Hadir') {
-            $data['alasan'] = null;  // Kosongkan alasan jika statusnya Hadir
+        if (Absensi::where('user_id', $user->id)->whereDate('tanggal', $today)->exists()) {
+            return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
         }
-
-        $status = trim($data['status']);
-        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
-            return back()->withErrors('Status tidak valid.');
+        if ($request->status === 'Hadir' && now('Asia/Makassar')->format('H:i') > '08:00') {
+            return redirect()->route('dashboard')->with('err', 'Absen Hadir ditutup setelah 08:00 WITA.');
         }
-
-        $today = now()->toDateString();
-        $sudah = Absensi::where('user_id', $user->id)
-            ->whereDate('tanggal', $today)
-            ->exists();
-
-        if ($sudah) {
-            return redirect()->route('dashboard')
-                ->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
-        }
-
-        // Blokir "Hadir" setelah 08:00 WITA (SERVER-SIDE)
-        if ($request->status === 'Hadir') {
-            if (now('Asia/Makassar')->format('H:i') > '08:00') {
-                return redirect()->route('dashboard')
-                    ->with('err', 'Absen Hadir ditutup setelah 08:00 WITA.');
-            }
-        }
-
-        // Simpan data absensi (pakai waktu WITA)
+        
+        // Simpan data absensi ke database utama Anda
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
         $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
-        $absen->alasan  = $data['alasan'] ?? null; // Jika alasan kosong, tetap null
+        $absen->alasan  = $data['alasan'] ?? null;
         $absen->save();
 
-
-        // Update poin berdasarkan status
+        // Update point
+        // ... (Logika update point Anda tetap sama)
         $delta = 0;
-        if ($status === 'Hadir') {
-            $delta = 1;
-        } elseif ($status === 'Terlambat') {
-            $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
-        }
+        if ($status === 'Hadir') $delta = 1;
+        elseif ($status === 'Terlambat') $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
         if ($delta !== 0) {
-            DB::table('users')->where('id', $user->id)
-                ->update(['point' => DB::raw("point + ($delta)")]);
+            DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
         }
+        
+        // <-- MODIFIKASI: Panggil method untuk update rekap ke Firebase setelah data tersimpan
+        $this->updateFirebaseRekap($today);
 
         return redirect()->route('dashboard')
             ->with('ok', "Absensi {$status} tersimpan.");
     }
 
+    // <-- TAMBAHKAN: Method baru untuk menghitung dan mengirim rekap ke Firebase
+    private function updateFirebaseRekap(string $tanggal)
+    {
+        // 1. Ambil data rekap terbaru (logika query sama persis seperti di method index)
+        $rekapData = DB::table('users as u')
+            ->leftJoin('absensi as a', function ($join) use ($tanggal) {
+                $join->on('a.user_id', '=', 'u.id')
+                     ->whereDate('a.tanggal', $tanggal);
+            })
+            ->select(
+                'u.bidang',
+                DB::raw("SUM(CASE WHEN a.status = 'Hadir'      THEN 1 ELSE 0 END) AS hadir"),
+                DB::raw("SUM(CASE WHEN a.status = 'Cuti'       THEN 1 ELSE 0 END) AS cuti"),
+                DB::raw("SUM(CASE WHEN a.status = 'Sakit'      THEN 1 ELSE 0 END) AS sakit"),
+                DB::raw("SUM(CASE WHEN a.status = 'Tugas Luar' THEN 1 ELSE 0 END) AS tugas_luar"),
+                DB::raw("SUM(CASE WHEN a.status = 'Terlambat'  THEN 1 ELSE 0 END) AS terlambat"),
+                DB::raw("SUM(CASE WHEN a.status = 'Izin'       THEN 1 ELSE 0 END) AS izin")
+            )
+            ->whereNotNull('u.bidang')
+            ->groupBy('u.bidang')
+            ->get()
+            ->keyBy('bidang') // Kunci array berdasarkan nama bidang
+            ->toArray();       // Ubah menjadi array
+
+        // 2. Tentukan path di Firebase (misal: rekap/2025-09-25)
+        $firebasePath = 'rekap/' . $tanggal;
+
+        // 3. Kirim data ke Firebase Realtime Database
+        try {
+            $this->database->getReference($firebasePath)->set($rekapData);
+        } catch (\Exception $e) {
+            // Jika gagal, catat error agar tidak mengganggu alur utama aplikasi
+            \Log::error('Firebase update failed: ' . $e->getMessage());
+        }
+    }
+
+
+    // ... (Method statistik() tidak perlu diubah, biarkan seperti semula)
     public function statistik(Request $request)
     {
         $user  = $request->user();
         $bulan = $request->input('bulan', now()->format('Y-m'));
-
         $absensi = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
             ->orderBy('tanggal')
             ->get();
-
-        // Ranking 5 tertinggi
-        $top5Global = DB::table('users')
-            ->select('nama', 'point as poin_total')
-            ->orderByDesc('point')
-            ->limit(5)
-            ->get();
-
-        // Ranking 5 terendah
-        $bottom5Global = DB::table('users')
-            ->select('nama', 'point as poin_total')
-            ->orderBy('point')
-            ->limit(5)
-            ->get();
-
+        $top5Global = DB::table('users')->select('nama', 'point as poin_total')->orderByDesc('point')->limit(5)->get();
+        $bottom5Global = DB::table('users')->select('nama', 'point as poin_total')->orderBy('point')->limit(5)->get();
         return view('statistik', [
             'user'          => $user,
             'absensi'       => $absensi,
