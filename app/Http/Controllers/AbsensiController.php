@@ -6,7 +6,7 @@ use App\Models\Absensi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Kreait\Firebase\Contract\Database; // <-- TAMBAHKAN: Import Firebase Database
+use Kreait\Firebase\Contract\Database;
 
 class AbsensiController extends Controller
 {
@@ -133,9 +133,7 @@ class AbsensiController extends Controller
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
         $absen->save();
-
-        // Update point
-        // ... (Logika update point Anda tetap sama)
+        // Update poin user berdasarkan status absen
         $delta = 0;
         if ($status === 'Hadir') $delta = 1;
         elseif ($status === 'Terlambat') $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
@@ -143,17 +141,14 @@ class AbsensiController extends Controller
             DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
         }
         
-        // <-- MODIFIKASI: Panggil method untuk update rekap ke Firebase setelah data tersimpan
         $this->updateFirebaseRekap($today);
 
         return redirect()->route('dashboard')
             ->with('ok', "Absensi {$status} tersimpan.");
     }
 
-    // <-- TAMBAHKAN: Method baru untuk menghitung dan mengirim rekap ke Firebase
     private function updateFirebaseRekap(string $tanggal)
     {
-        // 1. Ambil data rekap terbaru (logika query sama persis seperti di method index)
         $rekapData = DB::table('users as u')
             ->leftJoin('absensi as a', function ($join) use ($tanggal) {
                 $join->on('a.user_id', '=', 'u.id')
@@ -171,23 +166,18 @@ class AbsensiController extends Controller
             ->whereNotNull('u.bidang')
             ->groupBy('u.bidang')
             ->get()
-            ->keyBy('bidang') // Kunci array berdasarkan nama bidang
-            ->toArray();       // Ubah menjadi array
+            ->keyBy('bidang')
+            ->toArray();       
 
-        // 2. Tentukan path di Firebase (misal: rekap/2025-09-25)
         $firebasePath = 'rekap/' . $tanggal;
 
-        // 3. Kirim data ke Firebase Realtime Database
         try {
             $this->database->getReference($firebasePath)->set($rekapData);
         } catch (\Exception $e) {
-            // Jika gagal, catat error agar tidak mengganggu alur utama aplikasi
             \Log::error('Firebase update failed: ' . $e->getMessage());
         }
     }
 
-
-    // ... (Method statistik() tidak perlu diubah, biarkan seperti semula)
     public function statistik(Request $request)
     {
         $user  = $request->user();
