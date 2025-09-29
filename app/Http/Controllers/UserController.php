@@ -10,9 +10,15 @@ class UserController extends Controller
     public function account()
     {
         $user = auth()->user();
+
+        // Jika dipanggil lewat route admin.account, pakai view khusus admin
+        if (request()->routeIs('admin.account')) {
+            return view('admin.account', compact('user'));
+        }
+
+        // Default: view akun untuk user biasa
         return view('account', compact('user'));
     }
-
     public function updatePhoto(Request $request)
     {
         $request->validate([

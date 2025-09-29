@@ -134,5 +134,11 @@
   {{-- AKHIR: Tambahkan Firebase SDK --}}
 
   @stack('scripts')
+  @auth
+  {{-- tampilkan nav bawah khusus saat berada di area admin --}}
+  @if(request()->routeIs('admin.*') && (auth()->user()->role ?? 'user') === 'admin')
+    @include('partials.bottom-nav-admin')
+  @endif
+  @endauth
 </body>
 </html>
