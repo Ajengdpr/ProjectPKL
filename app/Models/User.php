@@ -5,11 +5,14 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use Notifiable;
+
     protected $table = 'users';
-    protected $fillable = ['nama', 'username', 'password', 'jabatan', 'bidang', 'foto'];
+    protected $fillable = ['nama', 'username', 'password', 'jabatan', 'bidang', 'foto', 'point'];
 
     public $timestamps = false;
     protected $hidden = ['password'];

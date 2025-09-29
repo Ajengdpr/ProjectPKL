@@ -39,4 +39,10 @@ Route::middleware('auth')->group(function () {
         ];
         return view('notifications', compact('items'));
     })->name('notifications');
+
+    Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
+});
+
 });

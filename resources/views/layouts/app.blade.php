@@ -65,44 +65,51 @@
 
   {{-- Topbar (tampilkan saat sudah login) --}}
   @auth
-  @php
-    $u = auth()->user();
-    $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
-    $notifCount = 3; // nanti diganti query notifikasi asli
-  @endphp
+@php
+  $u = auth()->user();
+  $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
 
-  <nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(90deg,var(--brand),var(--brand-900))">
-    <div class="container">
-      <a class="navbar-brand" href="{{ route('dashboard') }}">ABSENSI</a>
-      <div class="ms-auto d-flex align-items-center gap-3">
+  // Aman kalau trait Notifiable belum dipasang atau tabel notifications belum ada
+  $unread = (method_exists($u, 'unreadNotifications') && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
+    ? $u->unreadNotifications()->count()
+    : 0;
+@endphp
 
-        {{-- Notifikasi --}}
-        <a href="{{ route('notifications') }}" class="position-relative text-white fs-5">
-          <i class="bi bi-bell"></i>
-          @if($notifCount > 0)
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(90deg,var(--brand),var(--brand-900))">
+  <div class="container">
+    <a class="navbar-brand" href="{{ route('dashboard') }}">ABSENSI</a>
+
+    <div class="ms-auto d-flex align-items-center gap-3">
+
+      {{-- Notifikasi --}}
+      <a href="{{ route('notifications.index') }}" class="position-relative text-white fs-5" title="Notifikasi">
+        <i class="bi bi-bell"></i>
+        @if($unread > 0)
           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            {{ $notifCount }}
+            {{ $unread }}
           </span>
-          @endif
-        </a>
+        @endif
+      </a>
 
-        {{-- Info User --}}
-        <div class="d-flex align-items-center gap-2 text-white">
-          <div class="text-end d-none d-md-block">
-            <div class="fw-semibold">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
-            <div class="small text-white-50">{{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}</div>
+      {{-- Info User --}}
+      <div class="d-flex align-items-center gap-2 text-white">
+        <div class="text-end d-none d-md-block">
+          <div class="fw-semibold">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
+          <div class="small text-white-50">
+            {{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}
           </div>
-          <a href="{{ route('account') }}">
-            <img src="{{ $avatar }}" alt="avatar"
-                 class="rounded-circle border border-light-subtle"
-                 style="width:36px;height:36px;object-fit:cover;">
-          </a>
         </div>
-
+        <a href="{{ route('account') }}">
+          <img src="{{ $avatar }}" alt="avatar"
+               class="rounded-circle border border-light-subtle"
+               style="width:36px;height:36px;object-fit:cover;">
+        </a>
       </div>
+
     </div>
-  </nav>
-  @endauth
+  </div>
+</nav>
+@endauth
 
   <main class="{{ request()->routeIs('login') ? 'p-0' : 'py-4' }}">
     @yield('content')

@@ -136,8 +136,6 @@
   </div>
 </div>
 
-
-
     {{-- Keterangan Point (bawah) --}}
     <div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
       <div class="app-card p-3">
