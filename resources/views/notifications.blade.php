@@ -1,49 +1,32 @@
 @extends('layouts.app')
-@section('title','Notifikasi')
 
 @section('content')
-<div class="container">
+<div class="card mx-auto max-w-3xl">
+  <div class="card-body">
+    <h2 class="h4 mb-3">Notifikasi</h2>
 
-  <div class="app-card p-4 mx-auto" style="max-width:720px">
-    <h4 class="fw-bold mb-3"><i class="bi bi-bell me-2"></i> Notifikasi</h4>
-
-    <ul class="list-group list-group-flush">
-      @forelse($items as $item)
-        <li class="list-group-item d-flex justify-content-between align-items-start">
-          <div>
-            <div class="fw-semibold">{{ $item['title'] }}</div>
-            <small class="text-muted">{{ $item['time'] }}</small>
+    @forelse ($items as $n)
+      <div class="border rounded p-3 mb-2 d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-semibold">{{ data_get($n->data, 'title') }}</div>
+          <div class="text-muted small">
+            {{ data_get($n->data, 'body') }}
           </div>
-          <i class="bi bi-dot text-primary fs-4"></i>
-        </li>
-      @empty
-        <li class="list-group-item text-center text-muted">Belum ada notifikasi</li>
-      @endforelse
-    </ul>
-  </div>
+          <div class="text-muted small">
+            {{ \Carbon\Carbon::parse($n->created_at)->diffForHumans() }}
+          </div>
+        </div>
+        @if(is_null($n->read_at))
+          <span class="badge bg-primary">baru</span>
+        @endif
+      </div>
+    @empty
+      <div class="text-center text-muted py-5">Belum ada notifikasi.</div>
+    @endforelse
 
+    <div class="mt-3">
+      {{ $items->links() }}
+    </div>
+  </div>
 </div>
-
-{{-- Bottom Nav --}}
-<nav class="bottom-nav mt-4">
-  <div class="container">
-    <ul class="nav justify-content-around py-2">
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-          <i class="bi bi-house-door me-1"></i> Home
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
-          <i class="bi bi-graph-up me-1"></i> Statistik
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
-          <i class="bi bi-person me-1"></i> Account
-        </a>
-      </li>
-    </ul>
-  </div>
-</nav>
 @endsection
