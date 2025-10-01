@@ -82,27 +82,41 @@
     </div>
   @endif
 
-  {{-- Toolbar --}}
-  <div class="app-card p-3 mb-3 toolbar">
-    <form method="get" class="row g-2 align-items-center">
-      <div class="col-12 col-md-3">
-        <select name="bidang" class="form-select">
-          <option value="">Semua Bidang</option>
-          @foreach($listBidang as $b)
-            <option value="{{ $b }}" @selected($bidang===$b)>{{ strtoupper($b) }}</option>
-          @endforeach
-        </select>
+{{-- Toolbar --}}
+<div class="app-card p-3 mb-3 toolbar">
+  <form method="get">
+    {{-- Filter Utama yang Selalu Terlihat --}}
+    <div class="row g-2 align-items-center">
+      <div class="col-md-7">
+        <input type="text" name="q" class="form-control" placeholder="Cari nama, username, jabatan..." value="{{ $q }}">
       </div>
-      <div class="col-12 col-md-6">
-        <input type="text" name="q" class="form-control"
-               placeholder="Cari nama / username / jabatan / bidang..." value="{{ $q }}">
-      </div>
-      <div class="col-12 col-md-3 d-grid d-md-flex gap-2">
-        <button class="btn btn-outline-secondary"><i class="bi bi-funnel me-1"></i> Terapkan</button>
+      
+      {{-- Grup Tombol --}}
+      <div class="col-md-5 d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedFilter" aria-expanded="false" aria-controls="advancedFilter">
+          <i class="bi bi-sliders me-1"></i> Filter Lanjutan
+        </button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
         <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark">Reset</a>
       </div>
-    </form>
-  </div>
+    </div>
+
+    {{-- Filter Lanjutan yang Tersembunyi --}}
+    <div class="collapse mt-3" id="advancedFilter">
+      <div class="row g-2">
+        <div class="col-md-12">
+          <label class="form-label">Filter Berdasarkan Bidang</label>
+          <select name="bidang" class="form-select">
+            <option value="">-- Semua Bidang --</option>
+            @foreach($listBidang as $b)
+              <option value="{{ $b }}" @selected($bidang===$b)>{{ strtoupper($b) }}</option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
 
   {{-- Table --}}
   <div class="app-card p-0">

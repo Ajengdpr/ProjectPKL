@@ -12,17 +12,27 @@ class AdminAbsensiController extends Controller
 {
     public function index(Request $r)
     {
-        $q = Absensi::with('user')
+        $q = trim($r->get('q'));
+
+        $query = Absensi::with('user')
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
 
-        if ($r->filled('from'))    $q->whereDate('tanggal', '>=', $r->from);
-        if ($r->filled('to'))      $q->whereDate('tanggal', '<=', $r->to);
-        if ($r->filled('user_id')) $q->where('user_id', $r->user_id);
-        if ($r->filled('bidang'))  $q->whereHas('user', fn($u) => $u->where('bidang', $r->bidang));
-        if ($r->filled('status'))  $q->where('status', $r->status);  // << filter status
+        if ($q) {
+            $query->where(function ($subquery) use ($q) {
+                $subquery->where('alasan', 'like', "%{$q}%")
+                        ->orWhereHas('user', function ($userQuery) use ($q) {
+                            $userQuery->where('nama', 'like', "%{$q}%");
+                        });
+            });
+        }
+        if ($r->filled('from'))    $query->whereDate('tanggal', '>=', $r->from);
+        if ($r->filled('to'))      $query->whereDate('tanggal', '<=', $r->to);
+        if ($r->filled('user_id')) $query->where('user_id', $r->user_id);
+        if ($r->filled('bidang'))  $query->whereHas('user', fn($u) => $u->where('bidang', $r->bidang));
+        if ($r->filled('status'))  $query->where('status', $r->status);
 
-        $absensi = $q->paginate(20)->withQueryString();
+        $absensi = $query->paginate(20)->withQueryString();
 
         $users   = User::orderBy('nama')->get();
         $bidangs = User::select('bidang')->whereNotNull('bidang')->distinct()->pluck('bidang');
@@ -40,11 +50,6 @@ class AdminAbsensiController extends Controller
         ]);
         Absensi::create($data);
         return back()->with('ok', 'Absensi ditambahkan.');
-    }
-
-    public function edit(Absensi $absensi)
-    {
-        return view('admin.absensi.edit', compact('absensi'));
     }
 
     public function update(Request $r, Absensi $absensi)

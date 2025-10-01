@@ -13,89 +13,79 @@ class AdminDashboardController extends Controller
     public function index(Request $request)
     {
         $date = $request->query('date', now()->toDateString());
-        $filterBidang = $request->query('bidang');  // filter belum-absen
-        $q = $request->query('q');                  // search nama belum-absen
 
+        // 1. Statistik Utama
         $totalPegawai = User::count();
-
-        $stat = Absensi::whereDate('tanggal', $date)
-            ->select('status', DB::raw('COUNT(*) jml'))
+        $stats = Absensi::whereDate('tanggal', '2025-10-01') // Menggunakan tanggal statis untuk contoh
+            ->select('status', DB::raw('COUNT(1) as jumlah'))
             ->groupBy('status')
-            ->pluck('jml','status');
+            ->pluck('jumlah', 'status');
 
-        $hadir      = $stat['hadir']      ?? 0;
-        $terlambat  = $stat['terlambat']  ?? 0;
-        $izin       = $stat['izin']       ?? 0;
-        $sakit      = $stat['sakit']      ?? 0;
-        $alpha      = $stat['alpha']      ?? 0;
-
+        $hadir = $stats->get('hadir', 0);
+        $terlambat = $stats->get('terlambat', 0);
+        $izin = $stats->get('izin', 0);
+        $sakit = $stats->get('sakit', 0);
+        $alpha = $stats->get('alpha', 0);
+        $cuti = $stats->get('cuti', 0); // <-- BARIS BARU
+        $tugas_luar = $stats->get('tugas luar', 0); // <-- BARIS BARU
+        
         $hadirTotal = $hadir + $terlambat;
-        $attendanceRate = $totalPegawai ? round(($hadirTotal/$totalPegawai)*100,1) : 0.0;
+        $attendanceRate = $totalPegawai ? round(($hadirTotal / $totalPegawai) * 100, 1) : 0.0;
 
+        // 2. Log Absensi Terbaru
         $logTerbaru = Absensi::with('user')
             ->whereDate('tanggal', $date)
             ->orderByDesc('id')
-            ->limit(25)
+            ->limit(10)
             ->get();
 
-        // ---- Belum absen (dengan filter bidang & search) ----
-        $sudahAbsenIds = Absensi::whereDate('tanggal', $date)->pluck('user_id');
-        $belumAbsenBase = User::when($sudahAbsenIds->isNotEmpty(), fn($q2) => $q2->whereNotIn('id', $sudahAbsenIds))
-            ->when($filterBidang, fn($q2) => $q2->where('bidang', $filterBidang))
-            ->when($q, fn($q2) => $q2->where('nama','like',"%{$q}%"));
-        $belumAbsenCount = (clone $belumAbsenBase)->count();
-        $belumAbsen = $belumAbsenBase->orderBy('nama')->limit(30)->get();
+        // 3. Daftar Pegawai yang Belum Absen
+        $sudahAbsenUserIds = Absensi::whereDate('tanggal', $date)->pluck('user_id');
+        $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
+        
+        $belumAbsenCount = (clone $belumAbsenQuery)->count();
+        $belumAbsen = $belumAbsenQuery->orderBy('nama')->limit(20)->get();
 
-        // ---- Tren 7 hari (hadir + terlambat) ----
-        $start = now()->parse($date)->subDays(6)->toDateString();
-        $trend = Absensi::selectRaw('DATE(tanggal) as tgl, COUNT(DISTINCT user_id) as hadir')
-            ->whereBetween(DB::raw('DATE(tanggal)'), [$start, $date])
-            ->whereIn('status', ['hadir','terlambat'])
-            ->groupBy('tgl')->orderBy('tgl')->get();
+        // 4. Ringkasan per Bidang
+        $totalPerBidang = User::select('bidang', DB::raw('COUNT(1) as total'))
+            ->whereNotNull('bidang')->where('bidang', '!=', '')
+            ->groupBy('bidang')->pluck('total', 'bidang');
 
-        // ---- Ringkasan per Bidang ----
-        $totalPerBidang = User::select('bidang', DB::raw('COUNT(*) total'))
-            ->groupBy('bidang')->pluck('total','bidang');
-
-        $hadirPerBidang = Absensi::whereDate('tanggal', $date)
-            ->whereIn('status',['hadir','terlambat'])
-            ->join('users','users.id','=','absensi.user_id')
-            ->selectRaw('users.bidang as bidang, COUNT(DISTINCT absensi.user_id) as hadir')
-            ->groupBy('users.bidang')->pluck('hadir','bidang');
+        $statsPerBidang = Absensi::whereDate('tanggal', $date)
+            ->join('users', 'users.id', '=', 'absensi.user_id')
+            ->select(
+                'users.bidang',
+                DB::raw("COUNT(CASE WHEN absensi.status = 'hadir' THEN 1 END) as hadir"),
+                DB::raw("COUNT(CASE WHEN absensi.status = 'terlambat' THEN 1 END) as terlambat"),
+                DB::raw("COUNT(CASE WHEN absensi.status = 'alpha' THEN 1 END) as alpha")
+            )
+            ->groupBy('users.bidang')
+            ->get()
+            ->keyBy('bidang');
 
         $byBidang = [];
-        foreach ($totalPerBidang as $bidang => $tot) {
-            $h = $hadirPerBidang[$bidang] ?? 0;
+        foreach ($totalPerBidang as $namaBidang => $total) {
+            $statBidang = $statsPerBidang->get($namaBidang);
+            $h = $statBidang->hadir ?? 0;
+            $t = $statBidang->terlambat ?? 0;
+            $a = $statBidang->alpha ?? 0;
+            
             $byBidang[] = [
-                'bidang' => $bidang ?? '—',
-                'hadir'  => $h,
-                'total'  => $tot,
-                'rate'   => $tot ? round($h * 100 / $tot, 1) : 0.0,
+                'bidang' => $namaBidang,
+                'total' => $total,
+                'hadir_total' => $h + $t,
+                'hadir_total_rate' => $total ? round(($h + $t) * 100 / $total) : 0,
+                'hadir_rate' => $total ? round($h * 100 / $total) : 0,
+                'terlambat_rate' => $total ? round($t * 100 / $total) : 0,
+                'alpha_rate' => $total ? round($a * 100 / $total) : 0,
             ];
         }
-        usort($byBidang, fn($a,$b) => $b['rate'] <=> $a['rate']);
+        usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
 
-        // untuk dropdown filter bidang
-        $allBidangs = User::select('bidang')->whereNotNull('bidang')->distinct()->orderBy('bidang')->pluck('bidang');
-
-        return view('admin.dashboard', [
-            'date'            => $date,
-            'totalPegawai'    => $totalPegawai,
-            'hadir'           => $hadir,
-            'terlambat'       => $terlambat,
-            'izin'            => $izin,
-            'sakit'           => $sakit,
-            'alpha'           => $alpha,
-            'hadirTotal'      => $hadirTotal,
-            'attendanceRate'  => $attendanceRate,
-            'logTerbaru'      => $logTerbaru,
-            'belumAbsen'      => $belumAbsen,
-            'belumAbsenCount' => $belumAbsenCount,
-            'trend'           => $trend,
-            'byBidang'        => $byBidang,
-            'allBidangs'      => $allBidangs,
-            'filterBidang'    => $filterBidang,
-            'q'               => $q,
-        ]);
+        // Data dikirim ke view
+        return view('admin.dashboard', compact(
+            'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
+            'hadirTotal', 'attendanceRate', 'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
+        ));
     }
 }
