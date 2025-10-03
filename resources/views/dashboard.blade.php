@@ -1,6 +1,25 @@
 @extends('layouts.app')
 @section('title', 'Dashboard')
 
+{{-- LETAK PERBAIKANNYA ADA DI SINI --}}
+@push('styles')
+<style>
+  .tile {
+    display: flex;             /* Mengaktifkan mode layout flexbox */
+    flex-direction: column;    /* Menyusun item (ikon & teks) secara vertikal */
+    justify-content: center;   /* Menengahkan secara vertikal */
+    align-items: center;       /* Menengahkan secara horizontal */
+    padding: 20px;             /* Memberi ruang di dalam tombol */
+    min-height: 120px;         /* Memberi tinggi minimum agar terlihat seimbang */
+  }
+  .tile i {
+    font-size: 2.5rem;         /* Memperbesar ukuran ikon */
+    margin-bottom: 10px;       /* Memberi jarak antara ikon dan tulisan */
+  }
+</style>
+@endpush
+{{-- BATAS AKHIR PERBAIKAN --}}
+
 @section('content')
   <div class="container">
 
@@ -137,8 +156,7 @@
 </div>
 
     {{-- Keterangan Point (bawah) --}}
-    <div class="col-12 mt-4"> <!-- Add margin-top to Keterangan Point section -->
-      <div class="app-card p-3">
+    <div class="col-12 mt-4"> <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Keterangan Point:</h6>
         <ul class="small mb-0">
           <li>Hadir Apel <span class="text-success">+1</span></li>
@@ -202,7 +220,6 @@
     </div>
   </nav>
 
-  <!-- Modal input absen -->
   <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
