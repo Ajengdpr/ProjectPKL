@@ -22,8 +22,4 @@ class ApelReminder extends Notification
             'body'  => "Apel jam {$this->jadwalApel}. Jangan lupa absen.",
         ]);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/ajeng

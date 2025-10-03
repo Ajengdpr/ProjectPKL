@@ -30,8 +30,4 @@ class AbsenceReported extends Notification
             'att_id' => $this->attId,
         ]);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/ajeng
