@@ -114,8 +114,8 @@
           <label class="form-label">Filter Berdasarkan Status</label>
           <select name="status" class="form-select">
             <option value="">-- Semua Status --</option>
-            @foreach(['hadir','terlambat','izin','sakit','alpha', 'tugas luar'] as $s)
-              <option value="{{ $s }}" @selected(request('status')==$s)>{{ ucfirst($s) }}</option>
+            @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
+              <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
             @endforeach
           </select>
         </div>
@@ -235,7 +235,9 @@
           <option value="terlambat">Terlambat</option>
           <option value="izin">Izin</option>
           <option value="sakit">Sakit</option>
-          <option value="alpha">Alpha</option>
+          <option value="cuti">Cuti</option>
+          <option value="tugas_luar">Tugas Luar</option>
+          <option value="alpha">Tanpa Keterangan</option>
         </select>
       </div>
       <div class="col-12 col-md-3">
@@ -272,7 +274,9 @@
                 <option value="terlambat">Terlambat</option>
                 <option value="izin">Izin</option>
                 <option value="sakit">Sakit</option>
-                <option value="alpha">Alpha</option>
+                <option value="cuti">Cuti</option>
+                <option value="tugas_luar">Tugas Luar</option>
+                <option value="alpha">Tanpa Keterangan</option>
               </select>
             </div>
             <div class="col-12">

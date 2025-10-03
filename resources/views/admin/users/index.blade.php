@@ -249,12 +249,13 @@
               <input name="username" id="edit-username" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Password (kosongkan jika tidak diubah)</label>
-              <input name="password" type="password" class="form-control">
-            </div>
-            <div class="col-md-6">
               <label class="form-label">Bidang</label>
-              <input name="bidang" id="edit-bidang" class="form-control">
+              <select name="bidang" id="edit-bidang" class="form-select">
+                <option value="">-- Pilih Bidang --</option>
+                @foreach($listBidang as $b)
+                  <option value="{{ $b }}">{{ $b }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="col-md-6">
               <label class="form-label">Jabatan</label>

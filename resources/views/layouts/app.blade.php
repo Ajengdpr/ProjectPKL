@@ -30,7 +30,7 @@
     .btn-brand:hover{background:var(--brand-900); border-color:var(--brand-900)}
     .tile{
       border-radius:18px; padding:22px; color:#fff; display:flex;
-      gap:14px; align-items-center; justify-content:center; box-shadow:var(--shadow);
+      gap:14px; align-items:center; justify-content:center; box-shadow:var(--shadow);
       transition:transform .12s ease, box-shadow .12s ease;
     }
     .tile:hover{transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.12)}

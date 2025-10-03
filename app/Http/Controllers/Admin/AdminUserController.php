@@ -63,14 +63,7 @@ class AdminUserController extends Controller
             'username' => 'required|string|max:100|unique:users,username,' . $user->id,
             'jabatan'  => 'nullable|string|max:100',
             'bidang'   => 'nullable|string|max:100',
-            'password' => 'nullable|string|min:4',
         ]);
-
-        if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
 
         $user->update($data);
 

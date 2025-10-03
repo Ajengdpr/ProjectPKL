@@ -38,6 +38,7 @@ $totalPoin = 0;
 
 // Hitung rekap dan poin hanya sampai maxHari
 for($i=1; $i<=$maxHari; $i++){
+    $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
     $absen = $absensiBulan->firstWhere('tanggal',$tgl);
     if($absen){
         $status = $absen->status;

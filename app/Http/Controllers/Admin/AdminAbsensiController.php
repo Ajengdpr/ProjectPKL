@@ -45,7 +45,7 @@ class AdminAbsensiController extends Controller
         $data = $r->validate([
             'user_id' => 'required|exists:users,id',
             'tanggal' => 'required|date',
-            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha',
+            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
             'alasan'  => 'nullable|string',
         ]);
         Absensi::create($data);
@@ -56,7 +56,7 @@ class AdminAbsensiController extends Controller
     {
         $data = $r->validate([
             'tanggal' => 'required|date',
-            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha',
+            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
             'alasan'  => 'nullable|string',
         ]);
         $absensi->update($data);
