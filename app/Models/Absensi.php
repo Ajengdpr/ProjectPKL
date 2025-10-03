@@ -10,8 +10,7 @@ class Absensi extends Model
     protected $fillable = ['user_id','tanggal','status','alasan'];
 
     public $timestamps = false;
-
-    // relasi balik ke user
+    
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

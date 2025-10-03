@@ -30,7 +30,7 @@
     .btn-brand:hover{background:var(--brand-900); border-color:var(--brand-900)}
     .tile{
       border-radius:18px; padding:22px; color:#fff; display:flex;
-      gap:14px; align-items:center; justify-content:center; box-shadow:var(--shadow);
+      gap:14px; align-items-center; justify-content:center; box-shadow:var(--shadow);
       transition:transform .12s ease, box-shadow .12s ease;
     }
     .tile:hover{transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.12)}
@@ -99,11 +99,23 @@
             {{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}
           </div>
         </div>
-        <a href="{{ route('account') }}">
+        
+        {{-- ================= BAGIAN YANG DIPERBAIKI ================= --}}
+        @php
+          // Cek apakah pengguna adalah admin
+          $isAdmin = (auth()->user()->role ?? 'user') === 'admin';
+          
+          // Tentukan nama route dan parameternya berdasarkan peran
+          $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
+          $profileRouteParams = $isAdmin ? ['tab' => 'account'] : [];
+        @endphp
+        <a href="{{ route($profileRouteName, $profileRouteParams) }}">
           <img src="{{ $avatar }}" alt="avatar"
                class="rounded-circle border border-light-subtle"
                style="width:36px;height:36px;object-fit:cover;">
         </a>
+        {{-- ========================================================= --}}
+        
       </div>
 
     </div>
@@ -115,14 +127,11 @@
     @yield('content')
   </main>
 
-{{-- ... kode lain sebelum </body> ... --}}
+{{-- ... sisa kode tidak berubah ... --}}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-  {{-- AWAL: Tambahkan Firebase SDK --}}
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <script>
-    // GANTI DENGAN KONFIGURASI FIREBASE DARI PROYEK ANDA (Langkah 1.4)
   const firebaseConfig = {
     apiKey: "AIzaSyBlRJlDMXduk2BRjW0U8tkhGeFb6YtGZkI",
     authDomain: "project-pkl-b57bf.firebaseapp.com",
@@ -133,13 +142,14 @@
     appId: "1:161424256692:web:e7d89cfcfab2cf4ff331e1",
     measurementId: "G-QHQE9C1XD8"
   };
-
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
   </script>
-  {{-- AKHIR: Tambahkan Firebase SDK --}}
-
   @stack('scripts')
+    @auth
+  @if(request()->routeIs('admin.*') && (auth()->user()->role ?? 'user') === 'admin')
+    @include('partials.bottom-nav-admin')
+  @endif
+  @endauth
 </body>
 </html>

@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Absensi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class AdminDashboardController extends Controller
+{
+public function index(Request $request)
+    {
+        $date = $request->query('date', now()->toDateString());
+
+        // 1. Ambil data dasar
+        $totalPegawai = User::count();
+        $sudahAbsenUserIds = DB::table('absensi')->whereDate('tanggal', $date)->pluck('user_id');
+
+        // 2. Hitung statistik berdasarkan data yang sudah masuk di tabel absensi
+        // [FIX FINAL] Menggunakan LOWER(status) untuk mengatasi masalah case-sensitivity
+        $stats = DB::table('absensi')
+            ->whereDate('tanggal', $date)
+            ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
+            ->groupBy('status')
+            ->pluck('jumlah', 'status');
+
+        $hadir = $stats->get('hadir', 0);
+        $terlambat = $stats->get('terlambat', 0);
+        $izin = $stats->get('izin', 0);
+        $sakit = $stats->get('sakit', 0);
+        $cuti = $stats->get('cuti', 0);
+        // Di database Anda statusnya 'Tugas Luar', di kode dicarinya 'tugas_luar'
+        // Kita ambil keduanya untuk jaga-jaga
+        $tugas_luar = $stats->get('tugas luar', 0) + $stats->get('tugas_luar', 0);
+        
+        // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar
+        $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
+        $alpha = (clone $belumAbsenQuery)->count();
+        
+        $belumAbsenCount = $alpha;
+        $belumAbsen = $belumAbsenQuery->orderBy('nama')->limit(20)->get();
+
+        // 4. Log Absensi Terbaru
+        $logTerbaru = Absensi::with('user')
+            ->whereDate('tanggal', $date)
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
+        // 5. Ringkasan per Bidang (tidak perlu diubah, karena sudah pakai DB::raw)
+        $totalPerBidang = User::select('bidang', DB::raw('COUNT(1) as total'))
+            ->whereNotNull('bidang')->where('bidang', '!=', '')
+            ->groupBy('bidang')->pluck('total', 'bidang');
+
+        $statsPerBidang = DB::table('absensi')
+            ->join('users', 'users.id', '=', 'absensi.user_id')
+            ->whereDate('absensi.tanggal', $date)
+            ->select(
+                'users.bidang',
+                DB::raw("COUNT(CASE WHEN absensi.status = 'hadir' THEN 1 END) as hadir"),
+                DB::raw("COUNT(CASE WHEN absensi.status = 'terlambat' THEN 1 END) as terlambat"),
+                DB::raw("COUNT(CASE WHEN absensi.status = 'alpha' THEN 1 END) as alpha")
+            )
+            ->groupBy('users.bidang')
+            ->get()
+            ->keyBy('bidang');
+
+        $byBidang = [];
+        foreach ($totalPerBidang as $namaBidang => $total) {
+            $statBidang = $statsPerBidang->get($namaBidang);
+            $h = $statBidang->hadir ?? 0;
+            $t = $statBidang->terlambat ?? 0;
+            $a = $statBidang->alpha ?? 0;
+            
+            $byBidang[] = [
+                'bidang' => $namaBidang,
+                'total' => $total,
+                'hadir_total' => $h + $t,
+                'hadir_total_rate' => $total ? round(($h + $t) * 100 / $total) : 0,
+                'hadir_rate' => $total ? round($h * 100 / $total) : 0,
+                'terlambat_rate' => $total ? round($t * 100 / $total) : 0,
+                'alpha_rate' => $total ? round($a * 100 / $total) : 0,
+            ];
+        }
+        usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
+
+        // Data lengkap dikirim ke view
+        return view('admin.dashboard', compact(
+            'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
+            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
+        ));
+    }
+}
