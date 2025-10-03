@@ -21,7 +21,7 @@
           'terlambat'   => ['class' => 'bg-warning-subtle', 'style' => 'color: #e59400 !important; font-weight: 600;'],
           'sakit'       => ['class' => 'bg-info-subtle',    'style' => 'color: #087990 !important;'],
           'izin'        => ['class' => 'bg-primary-subtle', 'style' => 'color: #0a58ca !important;'],
-          'cuti'        => ['class' => 'bg-warning-subtle', 'style' => 'color: #e59400 !important;'], // <-- BARU
+          'cuti'        => ['class' => 'bg-warning-subtle', 'style' => 'color: #e59400 !important;'],
           'tugas luar'  => ['class' => 'bg-secondary-subtle', 'style' => 'color: #41464b !important;'],
           'alpha'       => ['class' => 'bg-danger-subtle',  'style' => 'color: #b02a37 !important; font-weight: 600;'],
           default       => ['class' => 'bg-light',          'style' => 'color: #000 !important;']
@@ -53,8 +53,8 @@
     </form>
   </div>
 
-{{-- STAT CARDS (VERSI BARU DENGAN IKON) --}}
-<div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 match-height">
+{{-- STAT CARDS --}}
+<div class="row g-3 match-height">
     <div class="col">
         <a href="{{ route('admin.users.index') }}" class="text-decoration-none text-reset h-100">
             <div class="app-card p-3 d-flex flex-column h-100">
@@ -133,6 +133,19 @@
             </div>
         </a>
     </div>
+    <div class="col">
+        <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'alpha']) }}" class="text-decoration-none text-reset h-100">
+            <div class="app-card p-3 d-flex flex-column h-100">
+                <div class="d-flex align-items-center">
+                    <div class="bg-danger-subtle text-danger p-2 rounded-3 me-2">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </div>
+                    <div class="fs-2 fw-bold">{{ $alpha }}</div>
+                </div>
+                <div class="small text-body-secondary mt-auto">Tanpa Keterangan</div>
+            </div>
+        </a>
+    </div>
 </div>
 
   <div class="row g-3 mt-1 match-height">
@@ -149,7 +162,7 @@
               <tr>
                 <th>Nama Pegawai</th>
                 <th style="width:120px;">Status</th>
-                <th style-="width:120px;" class="text-center">Jam Masuk</th>
+                <th style="width:120px;" class="text-center">Jam Masuk</th>
                 <th>Alasan</th>
               </tr>
             </thead>
@@ -220,7 +233,7 @@
                 <div class="progress" style="height: 10px;" title="Total Kehadiran: {{ $b['hadir_total_rate'] }}%">
                 <div class="progress-bar bg-success" role="progressbar" style="width: {{ $b['hadir_rate'] }}%" title="Hadir: {{ $b['hadir_rate'] }}%"></div>
                 <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $b['terlambat_rate'] }}%" title="Terlambat: {{ $b['terlambat_rate'] }}%"></div>
-                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $b['alpha_rate'] }}%" title="Alpha: {{ $b['alpha_rate'] }}%"></div>
+                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $b['alpha_rate'] }}%" title="Tanpa Keterangan: {{ $b['alpha_rate'] }}%"></div>
                 </div>
             </div>
             @empty

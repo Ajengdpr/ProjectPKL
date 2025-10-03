@@ -4,8 +4,8 @@
 @push('head')
 <style>
   .login-hero{
-    min-height: 100vh;           /* full tinggi layar */
-    margin: 0;                   /* jangan ada ruang */
+    min-height: 100vh;           
+    margin: 0;                   
     display:flex;align-items:center;justify-content:center;
     background: #0f172a url('{{ asset('img/depan.jpeg') }}') center/cover no-repeat fixed;
   }

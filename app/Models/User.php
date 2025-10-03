@@ -15,9 +15,9 @@ class User extends Authenticatable
     protected $fillable = [
         'nama', 'username', 'password',
         'jabatan', 'bidang', 'foto',
-        'role',       // tambahin supaya bisa bedain admin/user
-        'point',      // opsional: kalau ada di migration add_point_to_users
-        'is_active',  // opsional: kalau nanti dipakai buat status aktif/tidak
+        'role',       
+        'point',      
+        'is_active',  
     ];
 
     public $timestamps = false;

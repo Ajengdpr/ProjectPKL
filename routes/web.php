@@ -30,17 +30,16 @@ Route::middleware('auth')->group(function () {
 
     // Absen
     Route::get('/absen/{status}', [AbsensiController::class, 'create'])
-        // Jika whereIn TIDAK tersedia di versimu, ganti baris berikut dengan where('status', 'hadir|izin|cuti|sakit|terlambat|tugas-luar')
         ->whereIn('status', ['hadir','izin','cuti','sakit','terlambat','tugas-luar'])
         ->name('absen.create');
     Route::post('/absen', [AbsensiController::class, 'store'])->name('absen.store');
 
-    // Statistik
+    // Statistik absensi
     Route::get('/statistik', [AbsensiController::class, 'statistik'])->name('statistik');
     Route::get('/rekap-absensi', [AbsensiController::class, 'rekap'])->name('rekap.absensi');
     Route::get('/statistik/rekap', [AbsensiController::class, 'rekapHarian'])->name('statistik.rekapHarian');
 
-    // Notifications (PAKAI SALAH SATU: controller)
+    // Notifications 
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])
         ->name('notifications.index');
 });

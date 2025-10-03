@@ -227,18 +227,23 @@ class AbsensiController extends Controller
             ->whereNotNull('u.bidang')
             ->groupBy('u.bidang')
             ->get()
-            ->keyBy('bidang') 
-            ->toArray();      
+            ->keyBy('bidang') // Kunci array berdasarkan nama bidang
+            ->toArray();       // Ubah menjadi array
 
+        // 2. Tentukan path di Firebase (misal: rekap/2025-09-25)
         $firebasePath = 'rekap/' . $tanggal;
 
+        // 3. Kirim data ke Firebase Realtime Database
         try {
             $this->database->getReference($firebasePath)->set($rekapData);
         } catch (\Exception $e) {
+            // Jika gagal, catat error agar tidak mengganggu alur utama aplikasi
             \Log::error('Firebase update failed: ' . $e->getMessage());
         }
     }
 
+
+    // ... (Method statistik() tidak perlu diubah, biarkan seperti semula)
     public function statistik(Request $request)
     {
         $user  = $request->user();
