@@ -21,13 +21,13 @@ if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
 }
 
 $statusColors = [
-    'Hadir(+1)' => '#36A2EB',
-    'Izin(+0)' => '#FFCE56',
-    'Cuti(+0)' => '#9966FF',
-    'Sakit(+0)' => '#FF6384',
-    'Terlambat(-3)' => '#4BC0C0',
-    'Tugas Luar(+0)' => '#FF9F40',
-    'Tanpa Keterangan(-5)' => '#e0e0e0'
+    'Hadir' => '#36A2EB',
+    'Izin' => '#FFCE56',
+    'Cuti' => '#9966FF',
+    'Sakit' => '#FF6384',
+    'Terlambat' => '#4BC0C0',
+    'Tugas Luar' => '#FF9F40',
+    'Tanpa Keterangan' => '#e0e0e0'
 ];
 
 $rekapData = [

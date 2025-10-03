@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\User;
+use App\Models\Setting; // Ditambahkan
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Kreait\Firebase\Contract\Database; 
-use App\Notifications\AbsenceReported; 
+use Kreait\Firebase\Contract\Database;
+use App\Notifications\AbsenceReported;
 
 
 class AbsensiController extends Controller
@@ -78,10 +79,19 @@ class AbsensiController extends Controller
             ->get()
             ->keyBy('bidang');
 
+        // ==========================================================
+        // PERUBAHAN LOKASI: Mengambil data dari Settings
+        // ==========================================================
+        $lokasiConfig = Setting::get('lokasi', [
+            'lat'    => -3.489179,
+            'lng'    => 114.828158,
+            'radius' => 200,
+        ]);
+
         $office = [
-            'lat'    => (float) env('OFFICE_LAT', -3.489179),
-            'lng'    => (float) env('OFFICE_LNG', 114.828158),
-            'radius' => (int)   env('OFFICE_RADIUS', 200),
+            'lat'    => (float) $lokasiConfig['lat'],
+            'lng'    => (float) $lokasiConfig['lng'],
+            'radius' => (int)   $lokasiConfig['radius'],
         ];
 
         $sudahAbsenToday = DB::table('absensi')
@@ -94,8 +104,9 @@ class AbsensiController extends Controller
             ->whereDate('tanggal', $today)
             ->orderByDesc('jam')
             ->first();
-
-        $hadirDisabled = now('Asia/Makassar')->format('H:i') > '10:00';
+            
+        $jamConfig = Setting::get('jam', ['batas_hadir' => '08:00:00']);
+        $hadirDisabled = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_hadir'];
 
         return view('dashboard', [
             'user'             => $user,
@@ -113,95 +124,129 @@ class AbsensiController extends Controller
 
 
     public function store(Request $request)
-{
-    $user  = $request->user();
-    $tz    = 'Asia/Makassar';
-    $today = now($tz)->toDateString();
+    {
+        $user  = $request->user();
+        $tz    = 'Asia/Makassar';
+        $today = now($tz)->toDateString();
 
-    // Validasi
-    $data = $request->validate([
-        'status' => ['required', 'string'],
-        'alasan' => ['nullable', 'string', 'max:255'],
-    ]);
+        // Validasi
+        $data = $request->validate([
+            'status' => ['required', 'string'],
+            'alasan' => ['nullable', 'string', 'max:255'],
+        ]);
 
-    $status = trim($data['status']);
-    if (!in_array($status, self::ALLOWED_STATUSES, true)) {
-        return back()->withErrors('Status tidak valid.');
-    }
-
-    // Cegah double absen per hari
-    if (Absensi::where('user_id', $user->id)->whereDate('tanggal', $today)->exists()) {
-        return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
-    }
-
-    // Batas waktu Hadir
-    if ($status === 'Hadir' && now($tz)->format('H:i') > '08:00') {
-        return redirect()->route('dashboard')->with('err', 'Absen Hadir ditutup setelah 08:00 WITA.');
-    }
-
-    // Simpan absensi
-    $absen = new Absensi();
-    $absen->user_id = $user->id;
-    $absen->tanggal = $today;
-    $absen->jam     = now($tz)->format('H:i:s');
-    $absen->status  = $status;
-    $absen->alasan  = $data['alasan'] ?? null;
-    $absen->save();
-
-    // Update point
-    $delta = 0;
-    if ($status === 'Hadir') {
-        $delta = 1;
-    } elseif ($status === 'Terlambat') {
-        $delta = (isset($data['alasan']) && trim($data['alasan']) !== '') ? -3 : -5;
-    }
-    if ($delta !== 0) {
-        DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
-    }
-
-    // Update rekap ke Firebase (biar dashboard live)
-    $this->updateFirebaseRekap($today);
-
-    /* ============================
-       NOTIFIKASI KE ATASAN
-       - Hanya untuk status selain Hadir & Cuti (sesuai permintaanmu)
-       - Ke kepala bidang sesuai bidang user
-       - Juga ke PLT kepala dinas
-       ============================ */
-    if (!in_array($status, ['Hadir','Cuti'], true)) {
-        $targets = collect();
-
-        // Kepala bidang sesuai bidang user
-        if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
-            $kepala = User::where('username', self::KEPALA_BIDANG_USERNAME[$user->bidang])->first();
-            if ($kepala) $targets->push($kepala);
+        $status = trim($data['status']);
+        if (!in_array($status, self::ALLOWED_STATUSES, true)) {
+            return back()->withErrors('Status tidak valid.');
         }
 
-        // PLT kepala dinas
-        $plt = User::where('username', self::PLT_KEPALA_DINAS_USERNAME)->first();
-        if ($plt) $targets->push($plt);
+        // Cegah double absen per hari
+        if (Absensi::where('user_id', $user->id)->whereDate('tanggal', $today)->exists()) {
+            return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
+        }
+        
+        // ==========================================================
+        // PERUBAHAN BATAS WAKTU: Mengambil data dari Settings
+        // ==========================================================
+        $jamConfig = Setting::get('jam', ['batas_hadir' => '08:00:00']);
+        $batasHadir = $jamConfig['batas_hadir'];
 
-        // Kirim (hindari duplikasi untuk att_id sama)
-        $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz) {
-            $sudahAda = $atasan->notifications()
-                ->where('type', \App\Notifications\AbsenceReported::class)
-                ->where('data->att_id', $absen->id)
-                ->exists();
+        if ($status === 'Hadir' && now($tz)->format('H:i:s') > $batasHadir) {
+            return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
+        }
 
-            if (!$sudahAda) {
-                $atasan->notify(new AbsenceReported(
-                    attId:  $absen->id,
-                    namaPegawai: $user->nama,
-                    status: $status,
-                    alasan: $data['alasan'] ?? null,
-                    waktu: now($tz)->format('Y-m-d H:i')
-                ));
+        // Simpan absensi
+        $absen = new Absensi();
+        $absen->user_id = $user->id;
+        $absen->tanggal = $today;
+        $absen->jam     = now($tz)->format('H:i:s');
+        $absen->status  = $status;
+        $absen->alasan  = $data['alasan'] ?? null;
+        $absen->save();
+
+        // ==========================================================
+        // PERUBAHAN POIN: Mengambil data dari Settings
+        // ==========================================================
+        $poinConfig = Setting::get('poin', [
+            'hadir'      => 1,
+            'terlambat'  => -3,
+            'izin'       => 0,
+            'sakit'      => 0,
+            'cuti'       => 0,
+            'tugas_luar' => 0,
+            'alpha'      => -5
+        ]);
+        
+        $delta = 0;
+
+        $poinKeyMap = [
+            'Hadir'      => 'hadir',
+            'Terlambat'  => 'terlambat',
+            'Izin'       => 'izin',
+            'Sakit'      => 'sakit',
+            'Cuti'       => 'cuti',
+            'Tugas Luar' => 'tugas_luar',
+        ];
+
+        $key = $poinKeyMap[$status] ?? null;
+
+        if ($key && isset($poinConfig[$key])) {
+             // Jika status adalah Terlambat dan tidak ada alasan, gunakan poin 'alpha' (Tanpa Keterangan)
+            if ($status === 'Terlambat' && empty(trim($data['alasan'] ?? ''))) {
+                 $delta = (int) ($poinConfig['alpha'] ?? 0);
+            } else {
+                // Untuk status lain atau Terlambat dengan alasan, gunakan poin statusnya
+                 $delta = (int) $poinConfig[$key];
             }
-        });
-    }
+        }
+        
+        if ($delta !== 0) {
+            DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
+        }
 
-    return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
-}
+        // Update rekap ke Firebase (biar dashboard live)
+        $this->updateFirebaseRekap($today);
+
+        /* ============================
+           NOTIFIKASI KE ATASAN
+           - Hanya untuk status selain Hadir & Cuti (sesuai permintaanmu)
+           - Ke kepala bidang sesuai bidang user
+           - Juga ke PLT kepala dinas
+           ============================ */
+        if (!in_array($status, ['Hadir','Cuti'], true)) {
+            $targets = collect();
+
+            // Kepala bidang sesuai bidang user
+            if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
+                $kepala = User::where('username', self::KEPALA_BIDANG_USERNAME[$user->bidang])->first();
+                if ($kepala) $targets->push($kepala);
+            }
+
+            // PLT kepala dinas
+            $plt = User::where('username', self::PLT_KEPALA_DINAS_USERNAME)->first();
+            if ($plt) $targets->push($plt);
+
+            // Kirim (hindari duplikasi untuk att_id sama)
+            $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz) {
+                $sudahAda = $atasan->notifications()
+                    ->where('type', \App\Notifications\AbsenceReported::class)
+                    ->where('data->att_id', $absen->id)
+                    ->exists();
+
+                if (!$sudahAda) {
+                    $atasan->notify(new AbsenceReported(
+                        attId:  $absen->id,
+                        namaPegawai: $user->nama,
+                        status: $status,
+                        alasan: $data['alasan'] ?? null,
+                        waktu: now($tz)->format('Y-m-d H:i')
+                    ));
+                }
+            });
+        }
+
+        return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
+    }
     private function updateFirebaseRekap(string $tanggal)
     {
         $rekapData = DB::table('users as u')
@@ -221,8 +266,8 @@ class AbsensiController extends Controller
             ->whereNotNull('u.bidang')
             ->groupBy('u.bidang')
             ->get()
-            ->keyBy('bidang') 
-            ->toArray();       
+            ->keyBy('bidang')
+            ->toArray();
 
         $firebasePath = 'rekap/' . $tanggal;
 
