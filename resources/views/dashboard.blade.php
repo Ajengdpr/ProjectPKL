@@ -5,16 +5,16 @@
 @push('styles')
 <style>
   .tile {
-    display: flex;             /* Mengaktifkan mode layout flexbox */
-    flex-direction: column;    /* Menyusun item (ikon & teks) secara vertikal */
-    justify-content: center;   /* Menengahkan secara vertikal */
-    align-items: center;       /* Menengahkan secara horizontal */
-    padding: 20px;             /* Memberi ruang di dalam tombol */
-    min-height: 120px;         /* Memberi tinggi minimum agar terlihat seimbang */
+    display: flex;             
+    flex-direction: column;    
+    justify-content: center;  
+    align-items: center;       
+    padding: 20px;            
+    min-height: 120px;         
   }
   .tile i {
-    font-size: 2.5rem;         /* Memperbesar ukuran ikon */
-    margin-bottom: 10px;       /* Memberi jarak antara ikon dan tulisan */
+    font-size: 2.5rem;         
+    margin-bottom: 10px;      
   }
 </style>
 @endpush

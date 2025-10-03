@@ -180,7 +180,7 @@
                     @php $badge = $badgeStyles($l->status); @endphp
                     <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">{{ strtoupper($l->status) }}</span>
                   </td>
-                  <td class="text-center">{{ $l->jam_masuk ? \Carbon\Carbon::parse($l->jam_masuk)->format('H:i') : '-' }}</td>
+                  <td class="text-center">{{ $l->jam ? \Carbon\Carbon::parse($l->jam)->format('H:i') : '-' }}</td>
                   <td class="text-body-secondary">{{ $l->alasan ?: '-' }}</td>
                 </tr>
               @empty

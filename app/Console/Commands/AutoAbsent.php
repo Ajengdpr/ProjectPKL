@@ -84,7 +84,7 @@ class AutoAbsent extends Command
                     'user_id' => $u->id,
                     'tanggal' => $date->toDateString(),
                     'jam'     => $date->copy()->setTime(16, 1, 0)->format('H:i:s'),
-                    'status'  => 'Tanpa Keterangan',
+                    'status'  => 'alpha',
                     'alasan'  => null,
                     'created_at' => now(),
                     'updated_at' => now(),

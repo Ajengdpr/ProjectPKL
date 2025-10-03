@@ -21,13 +21,13 @@ if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
 }
 
 $statusColors = [
-    'Hadir(+1)' => '#36A2EB',
-    'Izin(+0)' => '#FFCE56',
-    'Cuti(+0)' => '#9966FF',
-    'Sakit(+0)' => '#FF6384',
-    'Terlambat(-3)' => '#4BC0C0',
-    'Tugas Luar(+0)' => '#FF9F40',
-    'Tanpa Keterangan(-5)' => '#e0e0e0'
+    'Hadir' => '#36A2EB',
+    'Izin' => '#FFCE56',
+    'Cuti' => '#9966FF',
+    'Sakit' => '#FF6384',
+    'Terlambat' => '#4BC0C0',
+    'Tugas Luar' => '#FF9F40',
+    'Tanpa Keterangan' => '#e0e0e0'
 ];
 
 $rekapData = [
@@ -36,17 +36,40 @@ $rekapData = [
 
 $totalPoin = 0;
 
+// Definisikan pemetaan dari status di database ke kunci di poinConfig
+$poinKeyMap = [
+    'Hadir'            => 'hadir',
+    'Terlambat'        => 'terlambat',
+    'Izin'             => 'izin',
+    'Sakit'            => 'sakit',
+    'Cuti'             => 'cuti',
+    'Tugas Luar'       => 'tugas_luar',
+    'Tanpa Keterangan' => 'alpha',
+];
+
 // Hitung rekap dan poin hanya sampai maxHari
 for($i=1; $i<=$maxHari; $i++){
     $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
     $absen = $absensiBulan->firstWhere('tanggal',$tgl);
+    
     if($absen){
         $status = $absen->status;
         $rekapData[$status] += 1;
-        if($status === 'Hadir') $totalPoin += 1;
-        elseif($status === 'Terlambat') $totalPoin += ($absen->alasan?-3:-5);
+        
+        // Ambil kunci poin yang sesuai
+        $key = $poinKeyMap[$status] ?? null;
+        if($key && isset($poinConfig[$key])){
+            // Kasus khusus untuk terlambat tanpa alasan
+            if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
+                $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+            } else {
+                $totalPoin += (int) $poinConfig[$key];
+            }
+        }
     } else {
         $rekapData['Tanpa Keterangan'] += 1;
+        // Tambahkan poin untuk alpha (Tanpa Keterangan)
+        $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
     }
 }
 
