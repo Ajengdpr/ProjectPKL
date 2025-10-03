@@ -361,7 +361,7 @@ class AbsensiController extends Controller
         // =================================================================
         // KALKULASI UNTUK SEMUA PENGGUNA (PERINGKAT)
         // =================================================================
-        $allUsers = User::all();
+        $allUsers = User::where('role', '!=', 'admin')->get();
         $monthlyScores = [];
 
         foreach ($allUsers as $u) {
