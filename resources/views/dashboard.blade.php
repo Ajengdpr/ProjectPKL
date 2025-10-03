@@ -346,12 +346,9 @@
     `;
   }
 
-  // Logika keputusan dengan mempertimbangkan akurasi:
-  // terima jika (jarak ≤ radius + accuracy)
   function decide(lat, lng, acc) {
     const dist = getDistance(lat, lng, officeLat, officeLng);
     showDebug(lat, lng, acc, dist);
-    console.log({userLat:lat, userLng:lng, accuracy_m:acc, dist_m:Math.round(dist), officeLat, officeLng, officeRadius});
 
     if (dist <= officeRadius + acc) {
       enableHadir();
@@ -364,7 +361,7 @@
   function handlePos(pos) {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
-    const acc = pos.coords.accuracy; // meter (semakin kecil semakin baik)
+    const acc = pos.coords.accuracy;
     decide(lat, lng, acc);
   }
 
@@ -376,11 +373,7 @@
 
   if (navigator.geolocation) {
     const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
-
-    // Ambil posisi sekali (cepat)
     navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
-
-    // Pantau beberapa detik — biasanya akurasi akan membaik setelah 5–15 dtk
     const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
     setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
   } else {
