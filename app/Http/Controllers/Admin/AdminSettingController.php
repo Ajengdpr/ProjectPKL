@@ -13,7 +13,7 @@ class AdminSettingController extends Controller
         $tab = $request->query('tab', 'account');
         $user = $request->user();
 
-        $poin   = Setting::get('poin',   ['hadir'=>1,'terlambat'=>0,'izin'=>0,'sakit'=>0,'alpha'=>-1]);
+        $poin   = Setting::get('poin',   ['hadir'=>1,'terlambat'=>0,'izin'=>0,'sakit'=>0,'cuti'=>0,'tugas_luar'=>0,'alpha'=>-1]);
         $lokasi = Setting::get('lokasi', ['lat'=>0,'lng'=>0,'radius'=>100]);
         $jam    = Setting::get('jam',    ['batas_hadir'=>'08:00:00']);
 
