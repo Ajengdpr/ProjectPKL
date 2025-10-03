@@ -31,9 +31,7 @@ public function index(Request $request)
         $izin = $stats->get('izin', 0);
         $sakit = $stats->get('sakit', 0);
         $cuti = $stats->get('cuti', 0);
-        // Di database Anda statusnya 'Tugas Luar', di kode dicarinya 'tugas_luar'
-        // Kita ambil keduanya untuk jaga-jaga
-        $tugas_luar = $stats->get('tugas luar', 0) + $stats->get('tugas_luar', 0);
+        $tugas_luar = $stats->get('tugas luar', 0); // Sesuaikan dengan nilai di DB
         
         // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar
         $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);

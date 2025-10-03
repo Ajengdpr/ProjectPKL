@@ -134,6 +134,19 @@
         </a>
     </div>
     <div class="col">
+        <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'Tugas Luar']) }}" class="text-decoration-none text-reset h-100">
+            <div class="app-card p-3 d-flex flex-column h-100">
+                <div class="d-flex align-items-center">
+                    <div class="bg-secondary-subtle text-secondary p-2 rounded-3 me-2">
+                        <i class="bi bi-briefcase-fill fs-5"></i>
+                    </div>
+                    <div class="fs-2 fw-bold">{{ $tugas_luar }}</div>
+                </div>
+                <div class="small text-body-secondary mt-auto">Tugas Luar</div>
+            </div>
+        </a>
+    </div>
+    <div class="col">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'alpha']) }}" class="text-decoration-none text-reset h-100">
             <div class="app-card p-3 d-flex flex-column h-100">
                 <div class="d-flex align-items-center">
