@@ -357,7 +357,6 @@
       enableHadir();
     } else {
       disableHadir();
-      alert('Anda berada di luar area kantor (jarak ~' + Math.round(dist) + ' m).');
     }
   }
 
