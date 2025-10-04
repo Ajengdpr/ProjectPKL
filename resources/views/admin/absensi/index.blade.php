@@ -47,6 +47,9 @@
   .btn-chip-danger{border-color:rgba(220,53,69,.28); color:#b42318; background:rgba(220,53,69,.08)}
   .btn-chip-danger:hover{background:rgba(220,53,69,.16)}
 
+  .btn-chip-success{border-color:rgba(25,135,84,.28); color:#198754; background:rgba(25,135,84,.08)}
+  .btn-chip-success:hover{background:rgba(25,135,84,.16)}
+
   .action-stack{display:flex; justify-content:flex-end; gap:.6rem; flex-wrap:wrap}
 
   /* Spacer agar pagination tidak ketutup bottom-nav */
@@ -175,6 +178,9 @@
               <td>{{ $a->alasan ?: '-' }}</td>
               <td class="text-end">
                 <div class="action-stack">
+                  <a href="{{ route('admin.absensi.export.user.csv', ['user_id' => $a->user_id, 'bulan' => \Carbon\Carbon::parse($a->tanggal)->format('Y-m')]) }}" class="btn-chip btn-chip-success">
+                    <i class="bi bi-download"></i> Export
+                  </a>
                   <button
                     class="btn-chip btn-chip-primary"
                     data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"

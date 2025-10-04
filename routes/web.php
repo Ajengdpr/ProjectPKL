@@ -62,6 +62,7 @@ Route::middleware(['auth', IsAdmin::class])
         Route::put('absensi/{absensi}', [AdminAbsensiController::class, 'update'])->name('absensi.update');
         Route::delete('absensi/{absensi}', [AdminAbsensiController::class, 'destroy'])->name('absensi.destroy');
         Route::get('absensi/export/csv', [AdminAbsensiController::class, 'exportCsv'])->name('absensi.export.csv');
+        Route::get('absensi/export/user', [AdminAbsensiController::class, 'exportCsvUser'])->name('absensi.export.user.csv');
 
         // Settings
         Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
