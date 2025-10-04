@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Kreait\Firebase\Contract\Database;
 use App\Notifications\AbsenceReported;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
 class AbsensiController extends Controller
@@ -448,5 +449,58 @@ class AbsensiController extends Controller
                 'Tanpa Keterangan' => '#e0e0e0'
             ],
         ]);
+    }
+
+    public function exportCsvUser(Request $r): StreamedResponse
+    {
+        $user = $r->user();
+        $bulan = $r->input('bulan', now()->format('Y-m'));
+        $tz = config('app.timezone', 'Asia/Makassar');
+        $filename = 'rekap_absensi_' . $user->username . '_' . $bulan . '.csv';
+
+        $carbonBulan = Carbon::parse($bulan . '-01', $tz);
+        $maxHari = $carbonBulan->daysInMonth;
+        if ($carbonBulan->isFuture()) {
+            $maxHari = 0;
+        } elseif ($carbonBulan->isSameMonth(now($tz))) {
+            $maxHari = now($tz)->day;
+        }
+
+        $absensiBulan = Absensi::where('user_id', $user->id)
+            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->get()
+            ->keyBy('tanggal');
+
+        $cutoffTime = config('absensi.cutoff', '16:00:00');
+
+        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
+
+            for ($i = 1; $i <= $maxHari; $i++) {
+                $tanggalLoop = $carbonBulan->copy()->day($i);
+                $tanggalString = $tanggalLoop->toDateString();
+                $absen = $absensiBulan->get($tanggalString);
+
+                if ($absen) {
+                    fputcsv($out, [
+                        $absen->tanggal,
+                        $absen->status,
+                        $absen->jam,
+                        $absen->alasan,
+                    ]);
+                } else {
+                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                        fputcsv($out, [
+                            $tanggalString,
+                            'Tanpa Keterangan',
+                            '',
+                            '',
+                        ]);
+                    }
+                }
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 }

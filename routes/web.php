@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/statistik', [AbsensiController::class, 'statistik'])->name('statistik');
     Route::get('/rekap-absensi', [AbsensiController::class, 'rekap'])->name('rekap.absensi');
     Route::get('/statistik/rekap', [AbsensiController::class, 'rekapHarian'])->name('statistik.rekapHarian');
+    Route::get('/statistik/export/csv', [AbsensiController::class, 'exportCsvUser'])->name('statistik.export.csv');
 
     // Notifications 
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])

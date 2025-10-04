@@ -83,6 +83,7 @@ $adaData = array_sum($rekapData) > 0;
     <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
         <input type="month" id="bulanPicker" value="{{ $bulan }}" class="form-control form-control-sm" style="max-width:150px">
         <button id="btnLihatRekap" class="btn btn-primary btn-sm">Lihat Rekap</button>
+        <a href="#" id="btnExportCsv" class="btn btn-success btn-sm">Export CSV</a>
         <button id="btnTutupRekap" class="btn btn-secondary btn-sm" style="display:none;">Tutup</button>
     </div>
 
@@ -248,6 +249,12 @@ btnTutup.addEventListener('click',function(){
     container.style.display='none';
     btnLihat.style.display='inline-block';
     btnTutup.style.display='none';
+});
+
+document.getElementById('btnExportCsv').addEventListener('click', function(e){
+    e.preventDefault();
+    const bulan = document.getElementById('bulanPicker').value;
+    window.location.href = "/statistik/export/csv?bulan=" + bulan;
 });
 </script>
 @endpush
