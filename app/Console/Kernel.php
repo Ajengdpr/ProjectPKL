@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
          */
         if (config('absensi.auto_absent_enabled')) {
             $schedule->command('auto:absent')
+                ->weekdays()
                 ->timezone($tz)
                 ->dailyAt('16:01');
         }

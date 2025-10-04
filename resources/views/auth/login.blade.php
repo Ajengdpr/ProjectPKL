@@ -35,7 +35,12 @@
         </div>
         <div class="mb-2">
           <label class="form-label">Password</label>
-          <input class="form-control form-control-lg" type="password" name="password" required>
+          <div class="input-group">
+            <input class="form-control form-control-lg" type="password" name="password" id="password" required>
+            <span class="input-group-text" id="togglePassword">
+              <i class="bi bi-eye-slash"></i>
+            </span>
+          </div>
         </div>
         <div class="form-check mb-3">
           <input class="form-check-input" type="checkbox" id="remember" name="remember">
@@ -49,3 +54,19 @@
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+  const togglePassword = document.querySelector('#togglePassword');
+  const password = document.querySelector('#password');
+
+  togglePassword.addEventListener('click', function (e) {
+    // toggle the type attribute
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    // toggle the eye slash icon
+    this.querySelector('i').classList.toggle('bi-eye-slash');
+    this.querySelector('i').classList.toggle('bi-eye');
+  });
+</script>
+@endpush

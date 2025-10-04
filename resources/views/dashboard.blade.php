@@ -82,12 +82,11 @@
           <i class="bi bi-x-circle"></i><h6>Cuti</h6>
         </a>
       </div>
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-4 text-center">
         <a class="tile red w-100 text-decoration-none {{ $terlambatDisabled ? 'disabled' : '' }}"
            data-bs-toggle="modal" data-bs-target="#absenModal"
            onclick="setStatus('Terlambat')">
           <i class="bi bi-alarm"></i><h6>Terlambat</h6>
-          @if($terlambatDisabled) <small class="text-danger">Sudah lewat jam 16:00</small> @endif
         </a>
       </div>
     </div>
@@ -159,13 +158,13 @@
     <div class="col-12 mt-4"> <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Keterangan Point:</h6>
         <ul class="small mb-0">
-          <li>Hadir Apel <span class="text-success">+1</span></li>
-          <li>Cuti <span class="text-secondary">+0</span></li>
-          <li>Tugas Luar <span class="text-secondary">+0</span></li>
-          <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat <span class="text-warning">-3</span></li>
-          <li>Tanpa keterangan <span class="text-danger">-5</span></li>
-          <li>Izin<span class="text-secondary">+0</span></li>
+          <li>Hadir Apel <span class="text-success">+{{ $poinConfig['hadir'] ?? 1 }}</span></li>
+          <li>Cuti <span class="text-secondary">+{{ $poinConfig['cuti'] ?? 0 }}</span></li>
+          <li>Tugas Luar <span class="text-secondary">+{{ $poinConfig['tugas_luar'] ?? 0 }}</span></li>
+          <li>Sakit <span class="text-secondary">+{{ $poinConfig['sakit'] ?? 0 }}</span></li>
+          <li>Terlambat <span class="text-warning">{{ $poinConfig['terlambat'] ?? -3 }}</span></li>
+          <li>Tanpa keterangan <span class="text-danger">{{ $poinConfig['alpha'] ?? -5 }}</span></li>
+          <li>Izin<span class="text-secondary">+{{ $poinConfig['izin'] ?? 0 }}</span></li>
         </ul>
       </div>
     </div>

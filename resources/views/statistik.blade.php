@@ -4,6 +4,11 @@
 @section('content')
 @php
 use Carbon\Carbon;
+use App\Models\Absensi;
+
+// Ambil pemetaan status terpusat
+$statuses = Absensi::getStatuses();
+$statusLabels = array_values($statuses);
 
 $bulan = request('bulan', date('Y-m'));
 $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y-m') === $bulan);
@@ -30,40 +35,37 @@ $statusColors = [
     'Tanpa Keterangan' => '#e0e0e0'
 ];
 
-$rekapData = [
-    'Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0
-];
+// Inisialisasi rekap data dari sumber terpusat
+$rekapData = array_fill_keys($statusLabels, 0);
 
 $totalPoin = 0;
 
-// Definisikan pemetaan dari status di database ke kunci di poinConfig
-$poinKeyMap = [
-    'Hadir'            => 'hadir',
-    'Terlambat'        => 'terlambat',
-    'Izin'             => 'izin',
-    'Sakit'            => 'sakit',
-    'Cuti'             => 'cuti',
-    'Tugas Luar'       => 'tugas_luar',
-    'Tanpa Keterangan' => 'alpha',
-];
-
 // Hitung rekap dan poin hanya sampai maxHari
 for($i=1; $i<=$maxHari; $i++){
-    $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
+    $tgl_loop = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT));
+
+    if ($tgl_loop->isWeekend()) {
+        continue;
+    }
+
+    $tgl = $tgl_loop->format('Y-m-d');
     $absen = $absensiBulan->firstWhere('tanggal',$tgl);
     
     if($absen){
-        $status = $absen->status;
-        $rekapData[$status] += 1;
+        $statusKey = $absen->status; // e.g., 'hadir', 'alpha'
+        $statusLabel = $statuses[$statusKey] ?? null; // e.g., 'Hadir', 'Tanpa Keterangan'
+
+        if ($statusLabel && isset($rekapData[$statusLabel])) {
+            $rekapData[$statusLabel] += 1;
+        }
         
         // Ambil kunci poin yang sesuai
-        $key = $poinKeyMap[$status] ?? null;
-        if($key && isset($poinConfig[$key])){
+        if(isset($poinConfig[$statusKey])){
             // Kasus khusus untuk terlambat tanpa alasan
-            if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
+            if($statusKey === 'terlambat' && empty(trim($absen->alasan ?? '')) ){
                 $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
             } else {
-                $totalPoin += (int) $poinConfig[$key];
+                $totalPoin += (int) $poinConfig[$statusKey];
             }
         }
     } else {
@@ -152,42 +154,73 @@ $adaData = array_sum($rekapData) > 0;
         <table class="table table-bordered table-sm text-center">
             <thead class="table-light">
                 <tr>
-                    @for($d=0;$d<7;$d++)
-                        <th>{{ Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
-                    @endfor
+                    <th>Sen</th>
+                    <th>Sel</th>
+                    <th>Rab</th>
+                    <th>Kam</th>
+                    <th>Jum</th>
                 </tr>
             </thead>
             <tbody>
                 @php
-                $startDay = Carbon::parse($bulan.'-01')->dayOfWeek;
-                $currentDay = 1;
+                    $cal_firstDay = Carbon::parse($bulan.'-01');
+                    $cal_dayCounter = $cal_firstDay->copy();
+                    $cal_calendarDays = [];
+
+                    // Add empty cells for Monday-Friday before the month starts
+                    $cal_startOffset = $cal_firstDay->dayOfWeekIso - 1; // 0 for Mon, 6 for Sun
+                    for ($i = 0; $i < $cal_startOffset; $i++) {
+                        $cal_calendarDays[] = null;
+                    }
+
+                    // Loop through the actual days of the month and add only weekdays
+                    while ($cal_dayCounter->month == $cal_firstDay->month) {
+                        if (!$cal_dayCounter->isWeekend()) {
+                            $cal_calendarDays[] = $cal_dayCounter->copy();
+                        }
+                        $cal_dayCounter->addDay();
+                    }
+                    
+                    // Chunk the flat array of weekdays into weeks (rows) of 5 days
+                    $cal_weeks = array_chunk($cal_calendarDays, 5);
                 @endphp
-                @for($week=0; $currentDay<=$hariDalamBulan; $week++)
+
+                @foreach($cal_weeks as $week)
                     <tr>
-                        @for($d=0;$d<7;$d++)
-                            @if($week===0 && $d<$startDay)
+                        @foreach($week as $day)
+                            @if($day === null)
                                 <td></td>
-                            @elseif($currentDay <= $hariDalamBulan)
+                            @else
                                 @php
-                                    $tgl = Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
-                                    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
-                                    if($currentDay <= $maxHari){
-                                        $status = $absen->status ?? 'Tanpa Keterangan';
-                                    } else {
-                                        $status = '';
+                                    $dayOfMonth = $day->day;
+                                    $tgl = $day->format('Y-m-d');
+                                    $absen = $absensiBulan->firstWhere('tanggal', $tgl);
+                                    $statusLabel = ''; // Default to empty
+
+                                    if ($day->isPast() || $day->isToday()) {
+                                        if ($absen) {
+                                            $statusLabel = $statuses[$absen->status] ?? $absen->status;
+                                        } else {
+                                            $statusLabel = $statuses['alpha']; // Tanpa Keterangan
+                                        }
                                     }
                                 @endphp
-                                <td @if($status) style="background-color: {{ $statusColors[$status] ?? '#fff' }}; color:#000;" @endif>
-                                    <div>{{ $currentDay }}</div>
-                                    @if($status)<small class="text-muted">{{ $status }}</small>@endif
+                                <td style="background-color: {{ $statusColors[$statusLabel] ?? '#fff' }}; color: #000;">
+                                    <div>{{ $dayOfMonth }}</div>
+                                    @if($statusLabel)
+                                        <small class="text-muted">{{ $statusLabel }}</small>
+                                    @endif
                                 </td>
-                                @php $currentDay++; @endphp
-                            @else
-                                <td></td>
                             @endif
-                        @endfor
+                        @endforeach
+                        {{-- Pad the last row with empty cells if it's not a full 5-day week --}}
+                        @if(count($week) < 5)
+                            @for($i = count($week); $i < 5; $i++)
+                                <td></td>
+                            @endfor
+                        @endif
                     </tr>
-                @endfor
+                @endforeach
             </tbody>
         </table>
     </div>
@@ -210,17 +243,9 @@ $adaData = array_sum($rekapData) > 0;
 <script>
 const ctx = document.getElementById('pieChart').getContext('2d');
 const pieData = {
-    labels: ['Hadir','Izin','Cuti','Sakit','Terlambat','Tugas Luar','Tanpa Keterangan'],
+    labels: @json($statusLabels),
     datasets:[{
-        data:[
-            {{ $rekapData['Hadir'] }},
-            {{ $rekapData['Izin'] }},
-            {{ $rekapData['Cuti'] }},
-            {{ $rekapData['Sakit'] }},
-            {{ $rekapData['Terlambat'] }},
-            {{ $rekapData['Tugas Luar'] }},
-            {{ $rekapData['Tanpa Keterangan'] }}
-        ],
+        data: @json(array_values($rekapData)),
         backgroundColor:['#36A2EB','#FFCE56','#9966FF','#FF6384','#4BC0C0','#FF9F40','#e0e0e0'],
         borderWidth:1
     }]
