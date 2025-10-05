@@ -126,7 +126,7 @@
 
       <h6 class="fw-bold mb-2">Poin</h6>
       <div class="row g-2 mb-3">
-        @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
+        @foreach(\App\Models\Absensi::getStatuses() as $key=>$label)
           <div class="col-6 col-md-2">
             <label class="form-label small text-body-secondary">{{ $label }}</label>
             <input type="number" class="form-control" name="poin[{{ $key }}]" value="{{ $poin[$key] ?? 0 }}">
