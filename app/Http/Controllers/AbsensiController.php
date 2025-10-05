@@ -205,10 +205,23 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
         }
 
-        // Simpan absensi
+        $deviceId = $request->input('device_id');
+        $today = now('Asia/Makassar')->toDateString();
+
+        // Cek apakah device sudah absen hari ini
+        $already = Absensi::where('device_id', $deviceId)
+            ->whereDate('tanggal', $today)
+            ->exists();
+
+        if($already){
+            return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
+        }
+
+        // Simpan absensi beserta device_id
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
+        $absen->device_id = $deviceId;
         $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
