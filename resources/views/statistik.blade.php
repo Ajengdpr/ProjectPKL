@@ -153,13 +153,13 @@ $adaData = array_sum($rekapData) > 0;
             <thead class="table-light">
                 <tr>
                     @for($d=0;$d<7;$d++)
-                        <th>{{ Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
+                        <th>{{ Carbon\Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
                     @endfor
                 </tr>
             </thead>
             <tbody>
                 @php
-                $startDay = Carbon::parse($bulan.'-01')->dayOfWeek;
+                $startDay = Carbon\Carbon::parse($bulan.'-01')->dayOfWeek;
                 $currentDay = 1;
                 @endphp
                 @for($week=0; $currentDay<=$hariDalamBulan; $week++)
@@ -169,7 +169,7 @@ $adaData = array_sum($rekapData) > 0;
                                 <td></td>
                             @elseif($currentDay <= $hariDalamBulan)
                                 @php
-                                    $tgl = Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
+                                    $tgl = Carbon\Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
                                     $absen = $absensiBulan->firstWhere('tanggal',$tgl);
                                     if($currentDay <= $maxHari){
                                         $status = $absen->status ?? 'Tanpa Keterangan';
