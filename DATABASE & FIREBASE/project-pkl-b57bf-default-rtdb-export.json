@@ -1,0 +1,333 @@
+{
+  "rekap": {
+    "2025-09-25": {
+      "KPPI": {
+        "bidang": "KPPI",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PHL": {
+        "bidang": "PHL",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PPKLH": {
+        "bidang": "PPKLH",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "SEKRETARIAT": {
+        "bidang": "SEKRETARIAT",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "1",
+        "tugas_luar": "0"
+      },
+      "TALING": {
+        "bidang": "TALING",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      }
+    },
+    "2025-09-29": {
+      "KPPI": {
+        "bidang": "KPPI",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PHL": {
+        "bidang": "PHL",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PPKLH": {
+        "bidang": "PPKLH",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "SEKRETARIAT": {
+        "bidang": "SEKRETARIAT",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "2",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "TALING": {
+        "bidang": "TALING",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      }
+    },
+    "2025-09-30": {
+      "KPPI": {
+        "bidang": "KPPI",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PHL": {
+        "bidang": "PHL",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PPKLH": {
+        "bidang": "PPKLH",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "SEKRETARIAT": {
+        "bidang": "SEKRETARIAT",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "1",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "TALING": {
+        "bidang": "TALING",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      }
+    },
+    "2025-10-02": {
+      "KPPI": {
+        "bidang": "KPPI",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PHL": {
+        "bidang": "PHL",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PPKLH": {
+        "bidang": "PPKLH",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "SEKRETARIAT": {
+        "bidang": "SEKRETARIAT",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "1",
+        "tugas_luar": "0"
+      },
+      "TALING": {
+        "bidang": "TALING",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      }
+    },
+    "2025-10-03": {
+      "KPPI": {
+        "bidang": "KPPI",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PHL": {
+        "bidang": "PHL",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "PPKLH": {
+        "bidang": "PPKLH",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "SEKRETARIAT": {
+        "bidang": "SEKRETARIAT",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "1",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      },
+      "TALING": {
+        "bidang": "TALING",
+        "cuti": "0",
+        "hadir": "0",
+        "izin": "0",
+        "sakit": "0",
+        "terlambat": "0",
+        "tugas_luar": "0"
+      }
+    },
+    "2025-10-04": {
+      "KPPI": {
+        "alpha": 13,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "PHL": {
+        "alpha": 11,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "PPKLH": {
+        "alpha": 15,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "SEKRETARIAT": {
+        "alpha": 38,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "TALING": {
+        "alpha": 17,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      }
+    },
+    "2025-10-05": {
+      "KPPI": {
+        "alpha": 13,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "PHL": {
+        "alpha": 11,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "PPKLH": {
+        "alpha": 15,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "SEKRETARIAT": {
+        "alpha": 38,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      },
+      "TALING": {
+        "alpha": 17,
+        "cuti": 0,
+        "hadir": 0,
+        "izin": 0,
+        "sakit": 0,
+        "terlambat": 0,
+        "tugas_luar": 0
+      }
+    }
+  }
+}
