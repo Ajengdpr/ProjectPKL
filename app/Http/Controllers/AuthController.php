@@ -43,7 +43,7 @@ public function login(Request $request)
 
     // 1) Password sudah bcrypt
     if (strlen($user->password) > 32 && Hash::check($cred['password'], $user->password)) {
-        Auth::login($user, $request->boolean('remember'));
+        Auth::login($user, $request->has('remember'));
         $request->session()->regenerate();
         return $redirectByRole($user, $request);
     }
@@ -56,7 +56,7 @@ public function login(Request $request)
         $user->password = Hash::make($cred['password']);
         $user->save();
 
-        Auth::login($user, $request->boolean('remember'));
+        Auth::login($user, $request->has('remember'));
         $request->session()->regenerate();
         return $redirectByRole($user, $request);
     }

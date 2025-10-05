@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/statistik', [AbsensiController::class, 'statistik'])->name('statistik');
     Route::get('/rekap-absensi', [AbsensiController::class, 'rekap'])->name('rekap.absensi');
     Route::get('/statistik/rekap', [AbsensiController::class, 'rekapHarian'])->name('statistik.rekapHarian');
+    Route::get('/statistik/export/csv', [AbsensiController::class, 'exportCsvUser'])->name('statistik.export.csv');
 
     // Notifications 
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])
@@ -61,6 +62,7 @@ Route::middleware(['auth', IsAdmin::class])
         Route::put('absensi/{absensi}', [AdminAbsensiController::class, 'update'])->name('absensi.update');
         Route::delete('absensi/{absensi}', [AdminAbsensiController::class, 'destroy'])->name('absensi.destroy');
         Route::get('absensi/export/csv', [AdminAbsensiController::class, 'exportCsv'])->name('absensi.export.csv');
+        Route::get('absensi/export/user', [AdminAbsensiController::class, 'exportCsvUser'])->name('absensi.export.user.csv');
 
         // Settings
         Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');

@@ -73,67 +73,46 @@
       <div class="alert alert-danger w-100">{{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="/login" class="login-card">
-      @csrf
-      <div class="mb-3">
-        <label class="form-label">Username</label>
-        <input class="form-control form-control-lg" name="username" value="{{ old('username') }}" required autofocus>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Password</label>
-        <input class="form-control form-control-lg" type="password" name="password" required>
-      </div>
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="remember" name="remember">
-        <label class="form-check-label" for="remember">Ingat saya</label>
-      </div>
-      <button class="btn btn-dark btn-lg w-100" type="submit">
-        <i class="bi bi-box-arrow-in-right me-1"></i> Log In
-      </button>
-    </form>
-  </div>
-</div>
-
-<!-- Section Tentang -->
-<section id="tentang" class="py-1 mt-1">
-  <div class="container">
-    <div class="row g-4">
-      <!-- Kolom Kiri -->
-      <div class="col-md-5 position-relative rounded overflow-hidden">
-        <!-- Background foto + overlay merah -->
-        <div style="
-          background: url('{{ asset('img/lingkungan.jpg') }}') center/cover no-repeat;
-          width: 100%; height: 100%; position: absolute; inset: 0;">
+      <form method="POST" action="/login" class="mt-3">
+        @csrf
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input class="form-control form-control-lg" name="username" value="{{ old('username') }}" required autofocus>
         </div>
-        <div style="
-          background-color: rgba(243,93,93,0.7);
-          width: 100%; height: 100%; position: absolute; inset: 0;">
+        <div class="mb-2">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <input class="form-control form-control-lg" type="password" name="password" id="password" required>
+            <span class="input-group-text" id="togglePassword">
+              <i class="bi bi-eye-slash"></i>
+            </span>
+          </div>
         </div>
-
-        <!-- Konten teks -->
-        <div class="d-flex flex-column justify-content-center align-items-center p-5 text-center position-relative text-white" style="z-index:2; height:100%;">
-          <i class="bi bi-info-circle fs-1 mb-3"></i>
-          <h4 class="fw-bold">TENTANG</h4>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="remember" name="remember">
+          <label class="form-check-label" for="remember">Ingat saya</label>
         </div>
-      </div>
-
-      <!-- Kolom Kanan -->
-      <div class="col-md-7 p-5 rounded shadow-sm"
-           style="background-color: rgba(255,255,255,0.85);">
-        <h3 class="fw-bold" style="color:#f35d5d;">Sistem Absensi DLH Kalsel</h3>
-        <p class="mt-3 text-secondary">
-          <strong>Sistem Absensi Pegawai</strong> Dinas Lingkungan Hidup Provinsi Kalimantan Selatan
-          merupakan sistem terintegrasi yang digunakan untuk mendukung pengelolaan kehadiran pegawai.
-          Sistem ini dirancang agar lebih <em>transparan</em>, <em>efisien</em>, dan <em>terstruktur</em>.
-        </p>
-        <ul class="text-secondary">
-          <li>Akuntabel</li>
-          <li>Transparan</li>
-          <li>Efisien</li>
-          <li>Terdepan dalam pelayanan publik</li>
-        </ul>
-      </div>
+        <button class="btn btn-brand btn-lg w-100" type="submit">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Log In
+        </button>
+      </form>
     </div>
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+  const togglePassword = document.querySelector('#togglePassword');
+  const password = document.querySelector('#password');
+
+  togglePassword.addEventListener('click', function (e) {
+    // toggle the type attribute
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    // toggle the eye slash icon
+    this.querySelector('i').classList.toggle('bi-eye-slash');
+    this.querySelector('i').classList.toggle('bi-eye');
+  });
+</script>
+@endpush
