@@ -169,12 +169,12 @@
 
 <div class="row g-3 mt-1 match-height">
   {{-- Log Absensi Terbaru --}}
-  <div class="col-md-6 d-flex flex-column" id="log-absensi">
+  <div class="col-md-8 d-flex flex-column" id="log-absensi">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-bold">Log Absensi Terbaru</span>
         <span class="badge bg-primary rounded-pill">
-          {{ $logTerbaru->total() }} sudah absen
+          {{ $logTerbaru->count() }} sudah absen
         </span>
       </div>
       <div class="card-body p-0">
@@ -211,16 +211,17 @@
           @endif
         </div>
       </div>
+
     </div>
   </div>
 
   {{-- Pegawai yang Belum Absen --}}
-  <div class="col-md-6 d-flex flex-column" id="belum-absen">
+  <div class="col-md-4 d-flex flex-column" id="belum-absen">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-bold">Pegawai Belum Absen</span>
         <span class="badge bg-danger rounded-pill">
-          {{ $belumAbsen->total() }} belum absen
+          {{ $belumAbsen->count() }} belum absen
         </span>
       </div>
       <div class="card-body p-0">

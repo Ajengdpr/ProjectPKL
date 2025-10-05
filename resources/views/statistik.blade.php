@@ -6,76 +6,12 @@
 use Carbon\Carbon;
 use App\Models\Absensi;
 
-// Ambil pemetaan status terpusat
+// Ambil pemetaan status terpusat yang dibutuhkan oleh kalender rekap
 $statuses = Absensi::getStatuses();
-$statusLabels = array_values($statuses);
-
 $bulan = request('bulan', date('Y-m'));
 $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y-m') === $bulan);
 
-$hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
-$now = Carbon::now();
-
-// Tentukan batas hari yang dihitung
-if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
-    $maxHari = $hariDalamBulan; // bulan lalu
-} elseif(Carbon::parse($bulan.'-01')->format('Y-m') == $now->format('Y-m')){
-    $maxHari = $now->day; // bulan ini
-} else {
-    $maxHari = 0; // bulan depan
-}
-
-$statusColors = [
-    'Hadir' => '#36A2EB',
-    'Izin' => '#FFCE56',
-    'Cuti' => '#9966FF',
-    'Sakit' => '#FF6384',
-    'Terlambat' => '#4BC0C0',
-    'Tugas Luar' => '#FF9F40',
-    'Tanpa Keterangan' => '#e0e0e0'
-];
-
-// Inisialisasi rekap data dari sumber terpusat
-$rekapData = array_fill_keys($statusLabels, 0);
-
-$totalPoin = 0;
-
-// Hitung rekap dan poin hanya sampai maxHari
-for($i=1; $i<=$maxHari; $i++){
-    $tgl_loop = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT));
-
-    if ($tgl_loop->isWeekend()) {
-        continue;
-    }
-
-    $tgl = $tgl_loop->format('Y-m-d');
-    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
-    
-    if($absen){
-        $statusKey = $absen->status; // e.g., 'hadir', 'alpha'
-        $statusLabel = $statuses[$statusKey] ?? null; // e.g., 'Hadir', 'Tanpa Keterangan'
-
-        if ($statusLabel && isset($rekapData[$statusLabel])) {
-            $rekapData[$statusLabel] += 1;
-        }
-        
-        // Ambil kunci poin yang sesuai
-        if(isset($poinConfig[$statusKey])){
-            // Kasus khusus untuk terlambat tanpa alasan
-            if($statusKey === 'terlambat' && empty(trim($absen->alasan ?? '')) ){
-                $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
-            } else {
-                $totalPoin += (int) $poinConfig[$statusKey];
-            }
-        }
-    } else {
-        $rekapData['Tanpa Keterangan'] += 1;
-        // Tambahkan poin untuk alpha (Tanpa Keterangan)
-        $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
-    }
-}
-
-$adaData = array_sum($rekapData) > 0;
+// statusColors, totalPoin, dan rekapData sudah di-pass dari controller
 @endphp
 
 <div class="container" style="max-width:900px">
@@ -242,20 +178,43 @@ $adaData = array_sum($rekapData) > 0;
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('pieChart').getContext('2d');
+
+// Data dari PHP
+const rekapData = @json($rekapData);
+const statusLabels = @json($statusLabels);
+const statusColors = @json($statusColors);
+
+// Memastikan urutan data dan warna cocok dengan urutan label
+const orderedData = statusLabels.map(label => rekapData[label] || 0);
+const orderedColors = statusLabels.map(label => statusColors[label] || '#e0e0e0');
+
 const pieData = {
-    labels: @json($statusLabels),
-    datasets:[{
-        data: @json(array_values($rekapData)),
-        backgroundColor:['#36A2EB','#FFCE56','#9966FF','#FF6384','#4BC0C0','#FF9F40','#e0e0e0'],
-        borderWidth:1
+    labels: statusLabels,
+    datasets: [{
+        data: orderedData,
+        backgroundColor: orderedColors,
+        borderWidth: 1
     }]
 };
-if(!{{ $adaData ? 'true':'false' }}){
-    pieData.datasets[0].data=[1];
-    pieData.labels=['Tidak ada data'];
-    pieData.datasets[0].backgroundColor=['#e0e0e0'];
+
+if (!{{ $adaData ? 'true':'false' }}) {
+    pieData.datasets[0].data = [1];
+    pieData.labels = ['Tidak ada data'];
+    pieData.datasets[0].backgroundColor = ['#e0e0e0'];
 }
-new Chart(ctx,{type:'doughnut',data:pieData,options:{responsive:true,plugins:{legend:{display:false}}}});
+
+new Chart(ctx, {
+    type: 'doughnut',
+    data: pieData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
 
 document.getElementById('bulanPicker').addEventListener('change',function(){
     window.location.href="?bulan="+this.value;

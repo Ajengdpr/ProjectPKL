@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Absensi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AdminDashboardController extends Controller
 {
@@ -17,14 +18,14 @@ class AdminDashboardController extends Controller
 
         // 1. Jika hari libur, semua statistik nol
         if ($carbonDate->isWeekend()) {
-            $hadir = $terlambat = $izin = $sakit = $alpha = $cuti = $tugas_luar = $belumAbsenCount = 0;
-            $logTerbaru = collect();
-            $belumAbsen = collect();
+            $hadir = $terlambat = $izin = $sakit = $alpha = $cuti = $tugasLuar = $belumAbsenCount = 0;
+            $logTerbaru = new LengthAwarePaginator([], 0, 10, 1, ['path' => $request->url(), 'query' => $request->query()]);;
+            $belumAbsen = new LengthAwarePaginator([], 0, 20, 1, ['path' => $request->url(), 'query' => $request->query()]);;
             $byBidang = [];
             $totalPegawai = User::count();
 
             return view('admin.dashboard', compact(
-                'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
+                'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugasLuar',
                 'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
             ));
         }
@@ -44,7 +45,7 @@ class AdminDashboardController extends Controller
         $izin = $stats->get('izin', 0);
         $sakit = $stats->get('sakit', 0);
         $cuti = $stats->get('cuti', 0);
-        $tugas_luar = $stats->get('tugas luar', 0);
+        $tugasLuar = $stats->get('tugas luar', 0);
         
         // 4. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang KONSISTEN
         $alphaFromDb = $stats->get('alpha', 0);
@@ -52,10 +53,10 @@ class AdminDashboardController extends Controller
         $alpha = $alphaFromDb + $alphaFromNoRecord;
         
         $belumAbsenCount = $alpha;
-        $belumAbsen = User::whereNotIn('id', $sudahAbsenUserIds)->orderBy('nama')->limit(20)->get();
+        $belumAbsen = User::whereNotIn('id', $sudahAbsenUserIds)->orderBy('nama')->paginate(20, ['*'], 'belumAbsenPage');
 
         // 5. Log Absensi Terbaru
-        $logTerbaru = $absensiHariIni->sortByDesc('id')->take(10);
+        $logTerbaru = Absensi::whereDate('tanggal', $date)->orderByDesc('id')->paginate(10, ['*'], 'logTerbaruPage');
 
         // 6. Ringkasan per Bidang
         $usersByBidang = User::whereNotNull('bidang')->where('bidang', '!=', '')->get()->groupBy('bidang');

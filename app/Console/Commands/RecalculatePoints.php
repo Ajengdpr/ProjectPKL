@@ -25,9 +25,13 @@ class RecalculatePoints extends Command
             foreach ($users as $user) {
                 $point = 0;
 
-                $riwayat = Absensi::where('user_id', $user->id)->get(['status','alasan']);
+                $riwayat = Absensi::where('user_id', $user->id)->get(['status', 'alasan', 'tanggal']);
 
                 foreach ($riwayat as $row) {
+                    if (\Carbon\Carbon::parse($row->tanggal)->isWeekend()) {
+                        continue;
+                    }
+
                     switch ($row->status) {
                         case 'Hadir':
                             $point += 1;

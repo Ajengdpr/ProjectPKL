@@ -321,6 +321,11 @@ class AbsensiController extends Controller
     }
     private function updateFirebaseRekap(string $tanggal): array
     {
+        // Jangan hitung rekap untuk hari libur
+        if (\Carbon\Carbon::parse($tanggal)->isWeekend()) {
+            return [];
+        }
+
         $usersByBidang = User::whereNotNull('bidang')->where('bidang', '!=', '')->get()->groupBy('bidang');
         $absensiHariIni = Absensi::whereDate('tanggal', $tanggal)->get();
         $rekapData = [];
@@ -335,7 +340,7 @@ class AbsensiController extends Controller
             $i = $stats->get('izin', 0);
             $s = $stats->get('sakit', 0);
             $c = $stats->get('cuti', 0);
-            $tl = $stats->get('tugas_luar', 0);
+            $tl = $stats->get('tugas luar', 0);
 
             $alphaFromDb = $stats->get('alpha', 0);
             $sudahAbsenInBidang = $absensiInBidang->pluck('user_id')->unique();
@@ -450,6 +455,11 @@ class AbsensiController extends Controller
 
         for ($i = 1; $i <= $maxHari; $i++) {
             $tanggalLoop = $carbonBulan->copy()->day($i);
+
+            if ($tanggalLoop->isWeekend()) {
+                continue;
+            }
+            
             $absen = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
             if ($absen) {
@@ -476,6 +486,10 @@ class AbsensiController extends Controller
 
         $adaData = array_sum($rekapData) > 0;
 
+        // Definisikan label status untuk dikirim ke view (dibutuhkan oleh chart)
+        $statuses = \App\Models\Absensi::getStatuses();
+        $statusLabels = array_values($statuses);
+
         return view('statistik', [
             'user'          => $user,
             'absensi'       => $absensi,
@@ -485,6 +499,7 @@ class AbsensiController extends Controller
             'totalPoin'     => $totalPoin,
             'rekapData'     => $rekapData,
             'adaData'       => $adaData,
+            'statusLabels'  => $statusLabels, // Variabel baru untuk chart labels
             'statusColors'  => [
                 'Hadir' => '#36A2EB', 'Izin' => '#FFCE56', 'Cuti' => '#9966FF',
                 'Sakit' => '#FF6384', 'Terlambat' => '#4BC0C0', 'Tugas Luar' => '#FF9F40',
