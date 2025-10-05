@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('title', 'Dashboard')
-
-{{-- LETAK PERBAIKANNYA ADA DI SINI --}}
 @push('styles')
 <style>
   .tile {
@@ -254,137 +252,78 @@
 
 @push('scripts')
 <script>
-  function setStatus(s){
-    const field   = document.getElementById('statusField');
-    const preview = document.getElementById('statusPreview');
-    const alasan  = document.getElementById('alasanInput');
-    const label   = document.getElementById('alasanLabel');
-    const terlambatInfo = document.getElementById('terlambatInfo');
+  // --- Konfigurasi lokasi kantor ---
+  const officeLat    = {{ $office['lat'] }};
+  const officeLng    = {{ $office['lng'] }};
+  const officeRadius = {{ $office['radius'] }}; // meter
 
-    field.value = s;
-    preview.value = s;
-
-    // Sesuaikan tampilan kolom alasan berdasarkan status
-    if (s === 'Hadir' || s === 'Cuti') {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'none';
-      label.textContent = '';
-      terlambatInfo.classList.add('d-none');
-    } else if (s === 'Terlambat') {
-      alasan.setAttribute('required', 'required');
-      alasan.style.display = 'block';
-      label.textContent = 'Alasan (wajib untuk terlambat)';
-      alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
-      terlambatInfo.classList.remove('d-none');
-    } else if (s === 'Izin') {
-      alasan.setAttribute('required', 'required');
-      alasan.style.display = 'block';
-      label.textContent = 'Alasan';
-      alasan.placeholder = 'Isi alasan untuk izin';
-      terlambatInfo.classList.add('d-none');
-    } else {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'block';
-      label.textContent = 'Keterangan (opsional)';
-      alasan.placeholder = 'Masukkan keterangan';
-      terlambatInfo.classList.add('d-none');
-    }
+  // --- Fungsi jarak Haversine ---
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
+  // --- Enable/disable tombol Hadir & Terlambat ---
+  function setBtnState(id, enable) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('disabled', !enable);
+    btn.style.pointerEvents = enable ? 'auto' : 'none';
+    btn.style.opacity = enable ? 1 : .5;
+  }
+
+  // --- Cek lokasi user ---
+  function decide(lat, lng, acc) {
+    const dist = getDistance(lat, lng, officeLat, officeLng);
+    const inArea = dist <= officeRadius + acc;
+    setBtnState('btnHadir', inArea);
+    setBtnState('btnTerlambat', inArea);
+    window.absenLokasiValid = inArea;
+  }
+
+  function handlePos(pos) {
+    decide(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+  }
+  function handleErr() {
+    setBtnState('btnHadir', false);
+    setBtnState('btnTerlambat', false);
+    window.absenLokasiValid = false;
+  }
+
+  // --- Geolocation watcher ---
+  if (navigator.geolocation) {
+    const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+    navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
+    const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
+    setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
+  } else {
+    handleErr();
+  }
+
+  // --- Validasi sebelum buka modal absen ---
+  function setStatus(s){
+    if ((s === 'Hadir' || s === 'Terlambat') && window.absenLokasiValid === false) {
+      alert('Anda berada di luar area kantor. Tidak dapat absen ' + s + '.');
+      return false;
+    }
+    document.getElementById('statusField').value = s;
+    document.getElementById('statusPreview').value = s;
+    // Sederhanakan pengaturan alasan
+    const alasan = document.getElementById('alasanInput');
+    alasan.style.display = (s === 'Hadir' || s === 'Cuti') ? 'none' : 'block';
+    alasan.required = (s === 'Terlambat' || s === 'Izin');
+    document.getElementById('alasanLabel').textContent = (s === 'Terlambat') ? 'Alasan (wajib untuk terlambat)' : (s === 'Izin' ? 'Alasan' : '');
+  }
+
+  // --- Lock submit tombol ---
   function lockSubmit(form){
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.querySelector('.btn-text').classList.add('d-none');
     btn.querySelector('.spinner-border').classList.remove('d-none');
     return true;
-  }
-
-  const officeLat    = {{ $office['lat'] }};
-  const officeLng    = {{ $office['lng'] }};
-  const officeRadius = {{ $office['radius'] }}; // meter
-
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2)**2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLon/2)**2;
-    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
-
-  function enableHadir() {
-    const btn = document.getElementById('btnHadir');
-    if (!btn) return;
-    btn.classList.remove('disabled');
-    btn.style.pointerEvents = 'auto';
-    btn.style.opacity = 1;
-  }
-  function disableHadir() {
-    const btn = document.getElementById('btnHadir');
-    if (!btn) return;
-    btn.classList.add('disabled');
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = .5;
-  }
-
-
-  function showDebug(lat, lng, acc, dist) {
-    let box = document.getElementById('geoDebug');
-    if (!box) {
-      box = document.createElement('div');
-      box.id = 'geoDebug';
-      box.style.cssText = 'position:fixed;right:8px;bottom:68px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08);font:12px/1.4 system-ui,Arial;';
-      document.body.appendChild(box);
-    }
-    box.innerHTML = `
-      <div><b>Office</b> : ${officeLat.toFixed(6)}, ${officeLng.toFixed(6)} (R:${officeRadius}m)</div>
-      <div><b>User</b>   : ${lat?.toFixed(6)}, ${lng?.toFixed(6)}</div>
-      <div><b>Accuracy</b>: ${Math.round(acc)} m</div>
-      <div><b>Distance</b>: ${Math.round(dist)} m</div>
-    `;
-  }
-
-  // Logika keputusan dengan mempertimbangkan akurasi:
-  // terima jika (jarak ≤ radius + accuracy)
-  function decide(lat, lng, acc) {
-    const dist = getDistance(lat, lng, officeLat, officeLng);
-    showDebug(lat, lng, acc, dist);
-    console.log({userLat:lat, userLng:lng, accuracy_m:acc, dist_m:Math.round(dist), officeLat, officeLng, officeRadius});
-
-    if (dist <= officeRadius + acc) {
-      enableHadir();
-    } else {
-      disableHadir();
-    }
-  }
-
-  function handlePos(pos) {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const acc = pos.coords.accuracy; // meter (semakin kecil semakin baik)
-    decide(lat, lng, acc);
-  }
-
-  function handleErr(err) {
-    console.warn('Geolocation error:', err);
-    alert('Tidak bisa mengambil lokasi: ' + err.message);
-    disableHadir();
-  }
-
-  if (navigator.geolocation) {
-    const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
-
-    // Ambil posisi sekali (cepat)
-    navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
-
-    // Pantau beberapa detik — biasanya akurasi akan membaik setelah 5–15 dtk
-    const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
-    setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
-  } else {
-    alert('Browser tidak mendukung geolocation.');
-    disableHadir();
   }
 </script>
 @endpush

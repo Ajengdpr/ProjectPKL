@@ -10,16 +10,17 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $date = $request->query('date', now()->toDateString());
 
-        // 1. Ambil data dasar
+        // 1. Data dasar
         $totalPegawai = User::count();
-        $sudahAbsenUserIds = DB::table('absensi')->whereDate('tanggal', $date)->pluck('user_id');
+        $sudahAbsenUserIds = DB::table('absensi')
+            ->whereDate('tanggal', $date)
+            ->pluck('user_id');
 
-        // 2. Hitung statistik berdasarkan data yang sudah masuk di tabel absensi
-        // [FIX FINAL] Menggunakan LOWER(status) untuk mengatasi masalah case-sensitivity
+        // 2. Statistik absensi
         $stats = DB::table('absensi')
             ->whereDate('tanggal', $date)
             ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
@@ -31,26 +32,28 @@ public function index(Request $request)
         $izin = $stats->get('izin', 0);
         $sakit = $stats->get('sakit', 0);
         $cuti = $stats->get('cuti', 0);
-        $tugas_luar = $stats->get('tugas luar', 0); // Sesuaikan dengan nilai di DB
-        
-        // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar
+        $tugasLuar = $stats->get('tugas luar', 0) + $stats->get('tugasLuar', 0);
+
+        // 3. Hitung Alpha
         $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
         $alpha = (clone $belumAbsenQuery)->count();
-        
-        $belumAbsenCount = $alpha;
-        $belumAbsen = $belumAbsenQuery->orderBy('nama')->limit(20)->get();
 
-        // 4. Log Absensi Terbaru
+        // Pagination Pegawai Belum Absen
+        $belumAbsen = $belumAbsenQuery
+            ->orderBy('nama')
+            ->paginate(5, ['*'], 'belum_page');
+
+        // 4. Log Absensi Terbaru (pagination)
         $logTerbaru = Absensi::with('user')
             ->whereDate('tanggal', $date)
             ->orderByDesc('id')
-            ->limit(10)
-            ->get();
+            ->paginate(5, ['*'], 'log_page');
 
-        // 5. Ringkasan per Bidang (tidak perlu diubah, karena sudah pakai DB::raw)
+        // 5. Ringkasan per Bidang
         $totalPerBidang = User::select('bidang', DB::raw('COUNT(1) as total'))
             ->whereNotNull('bidang')->where('bidang', '!=', '')
-            ->groupBy('bidang')->pluck('total', 'bidang');
+            ->groupBy('bidang')
+            ->pluck('total', 'bidang');
 
         $statsPerBidang = DB::table('absensi')
             ->join('users', 'users.id', '=', 'absensi.user_id')
@@ -71,7 +74,7 @@ public function index(Request $request)
             $h = $statBidang->hadir ?? 0;
             $t = $statBidang->terlambat ?? 0;
             $a = $statBidang->alpha ?? 0;
-            
+
             $byBidang[] = [
                 'bidang' => $namaBidang,
                 'total' => $total,
@@ -84,10 +87,10 @@ public function index(Request $request)
         }
         usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
 
-        // Data lengkap dikirim ke view
         return view('admin.dashboard', compact(
-            'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
-            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
+            'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit',
+            'alpha', 'cuti', 'tugasLuar',
+            'logTerbaru', 'belumAbsen', 'byBidang'
         ));
     }
 }
