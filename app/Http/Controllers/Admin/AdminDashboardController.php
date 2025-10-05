@@ -13,67 +13,79 @@ class AdminDashboardController extends Controller
     public function index(Request $request)
     {
         $date = $request->query('date', now()->toDateString());
+        $carbonDate = \Carbon\Carbon::parse($date);
 
-        // 1. Data dasar
+        // 1. Jika hari libur, semua statistik nol
+        if ($carbonDate->isWeekend()) {
+            $hadir = $terlambat = $izin = $sakit = $alpha = $cuti = $tugas_luar = $belumAbsenCount = 0;
+            $logTerbaru = collect();
+            $belumAbsen = collect();
+            $byBidang = [];
+            $totalPegawai = User::count();
+
+            return view('admin.dashboard', compact(
+                'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
+                'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
+            ));
+        }
+
+        // --- Jika Hari Kerja ---
+
+        // 2. Ambil data dasar
         $totalPegawai = User::count();
-        $sudahAbsenUserIds = DB::table('absensi')
-            ->whereDate('tanggal', $date)
-            ->pluck('user_id');
+        $absensiHariIni = Absensi::whereDate('tanggal', $date)->get();
+        $sudahAbsenUserIds = $absensiHariIni->pluck('user_id')->unique();
 
-        // 2. Statistik absensi
-        $stats = DB::table('absensi')
-            ->whereDate('tanggal', $date)
-            ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
-            ->groupBy('status')
-            ->pluck('jumlah', 'status');
+        // 3. Hitung statistik berdasarkan data yang sudah masuk
+        $stats = $absensiHariIni->countBy(fn($item) => strtolower($item->status));
 
         $hadir = $stats->get('hadir', 0);
         $terlambat = $stats->get('terlambat', 0);
         $izin = $stats->get('izin', 0);
         $sakit = $stats->get('sakit', 0);
         $cuti = $stats->get('cuti', 0);
-        $tugasLuar = $stats->get('tugas luar', 0) + $stats->get('tugasLuar', 0);
+        $tugas_luar = $stats->get('tugas luar', 0);
+        
+        // 4. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang KONSISTEN
+        $alphaFromDb = $stats->get('alpha', 0);
+        $alphaFromNoRecord = User::whereNotIn('id', $sudahAbsenUserIds)->count();
+        $alpha = $alphaFromDb + $alphaFromNoRecord;
+        
+        $belumAbsenCount = $alpha;
+        $belumAbsen = User::whereNotIn('id', $sudahAbsenUserIds)->orderBy('nama')->limit(20)->get();
 
-        // 3. Hitung Alpha
-        $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
-        $alpha = (clone $belumAbsenQuery)->count();
+        // 5. Log Absensi Terbaru
+        $logTerbaru = $absensiHariIni->sortByDesc('id')->take(10);
 
-        // Pagination Pegawai Belum Absen
-        $belumAbsen = $belumAbsenQuery
-            ->orderBy('nama')
-            ->paginate(5, ['*'], 'belum_page');
-
-        // 4. Log Absensi Terbaru (pagination)
-        $logTerbaru = Absensi::with('user')
-            ->whereDate('tanggal', $date)
-            ->orderByDesc('id')
-            ->paginate(5, ['*'], 'log_page');
-
-        // 5. Ringkasan per Bidang
-        $totalPerBidang = User::select('bidang', DB::raw('COUNT(1) as total'))
-            ->whereNotNull('bidang')->where('bidang', '!=', '')
-            ->groupBy('bidang')
-            ->pluck('total', 'bidang');
-
+        // 6. Ringkasan per Bidang
+        $usersByBidang = User::whereNotNull('bidang')->where('bidang', '!=', '')->get()->groupBy('bidang');
+        
         $statsPerBidang = DB::table('absensi')
             ->join('users', 'users.id', '=', 'absensi.user_id')
             ->whereDate('absensi.tanggal', $date)
             ->select(
                 'users.bidang',
-                DB::raw("COUNT(CASE WHEN absensi.status = 'hadir' THEN 1 END) as hadir"),
-                DB::raw("COUNT(CASE WHEN absensi.status = 'terlambat' THEN 1 END) as terlambat"),
-                DB::raw("COUNT(CASE WHEN absensi.status = 'alpha' THEN 1 END) as alpha")
+                DB::raw("LOWER(absensi.status) as status"),
+                DB::raw("COUNT(1) as jumlah")
             )
-            ->groupBy('users.bidang')
-            ->get()
-            ->keyBy('bidang');
+            ->groupBy('users.bidang', 'absensi.status')
+            ->get();
 
         $byBidang = [];
-        foreach ($totalPerBidang as $namaBidang => $total) {
-            $statBidang = $statsPerBidang->get($namaBidang);
-            $h = $statBidang->hadir ?? 0;
-            $t = $statBidang->terlambat ?? 0;
-            $a = $statBidang->alpha ?? 0;
+        foreach ($usersByBidang as $namaBidang => $usersInBidang) {
+            $total = $usersInBidang->count();
+            $userIdsInBidang = $usersInBidang->pluck('id');
+
+            // Ambil statistik untuk bidang saat ini
+            $statsForCurrentBidang = $statsPerBidang->where('bidang', $namaBidang);
+            $h = $statsForCurrentBidang->where('status', 'hadir')->first()->jumlah ?? 0;
+            $t = $statsForCurrentBidang->where('status', 'terlambat')->first()->jumlah ?? 0;
+            
+            // Logika Alpha yang konsisten
+            $alphaFromDb = $statsForCurrentBidang->where('status', 'alpha')->first()->jumlah ?? 0;
+            $sudahAbsenInBidang = $absensiHariIni->whereIn('user_id', $userIdsInBidang)->pluck('user_id')->unique();
+            $alphaFromNoRecord = $userIdsInBidang->diff($sudahAbsenInBidang)->count();
+            $a = $alphaFromDb + $alphaFromNoRecord;
 
             $byBidang[] = [
                 'bidang' => $namaBidang,

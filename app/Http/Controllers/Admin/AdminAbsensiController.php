@@ -46,6 +46,7 @@ class AdminAbsensiController extends Controller
         $data = $r->validate([
             'user_id' => 'required|exists:users,id',
             'tanggal' => 'required|date',
+            'jam'     => 'required|date_format:H:i',
             'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
             'alasan'  => 'nullable|string',
         ]);
@@ -83,15 +84,18 @@ class AdminAbsensiController extends Controller
             ->orderBy('tanggal')->orderBy('id')
             ->get();
 
-        return response()->streamDownload(function() use ($rows) {
+        $statuses = Absensi::getStatuses();
+
+        return response()->streamDownload(function() use ($rows, $statuses) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Tanggal','Nama','Username','Status','Alasan']);
             foreach ($rows as $r) {
+                $statusText = $statuses[$r->status] ?? $r->status;
                 fputcsv($out, [
                     optional($r->tanggal)->format('Y-m-d'),
                     $r->user->nama ?? '',
                     $r->user->username ?? '',
-                    strtoupper($r->status),
+                    $statusText,
                     $r->alasan,
                 ]);
             }
@@ -125,8 +129,9 @@ class AdminAbsensiController extends Controller
             ->keyBy(fn($item) => Carbon::parse($item->tanggal)->toDateString());
 
         $cutoffTime = config('absensi.cutoff', '16:00:00');
+        $statuses = Absensi::getStatuses();
 
-        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {
+        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime, $statuses) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
 
@@ -136,9 +141,10 @@ class AdminAbsensiController extends Controller
                 $absen = $absensiBulan->get($tanggalString);
 
                 if ($absen) {
+                    $statusText = $statuses[$absen->status] ?? $absen->status;
                     fputcsv($out, [
                         $absen->tanggal,
-                        $absen->status,
+                        $statusText,
                         $absen->jam,
                         $absen->alasan,
                     ]);
@@ -146,7 +152,7 @@ class AdminAbsensiController extends Controller
                     if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
                         fputcsv($out, [
                             $tanggalString,
-                            'Tanpa Keterangan',
+                            $statuses['alpha'],
                             '',
                             '',
                         ]);

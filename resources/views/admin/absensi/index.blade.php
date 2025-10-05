@@ -117,7 +117,7 @@
           <label class="form-label">Filter Berdasarkan Status</label>
           <select name="status" class="form-select">
             <option value="">-- Semua Status --</option>
-            @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
+            @foreach(\App\Models\Absensi::getStatuses() as $key=>$label)
               <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
             @endforeach
           </select>
@@ -172,7 +172,7 @@
               <td>
               @php $badge = $badgeStyles($a->status); @endphp
               <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">
-                {{ strtoupper($a->status) }}
+                {{ \App\Models\Absensi::getStatuses()[$a->status] ?? strtoupper($a->status) }}
               </span>
             </td>
               <td>{{ $a->alasan ?: '-' }}</td>
@@ -224,7 +224,7 @@
   <div class="app-card p-3">
     <form method="post" action="{{ route('admin.absensi.store') }}" class="row g-2">
       @csrf
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-3">
         <select name="user_id" class="form-select" required>
           <option value="">-- Pilih Pegawai --</option>
           @foreach($users as $u)
@@ -236,17 +236,16 @@
         <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
       </div>
       <div class="col-6 col-md-2">
+        <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
+      </div>
+      <div class="col-6 col-md-2">
         <select name="status" class="form-select" required>
-          <option value="hadir">Hadir</option>
-          <option value="terlambat">Terlambat</option>
-          <option value="izin">Izin</option>
-          <option value="sakit">Sakit</option>
-          <option value="cuti">Cuti</option>
-          <option value="tugas_luar">Tugas Luar</option>
-          <option value="alpha">Tanpa Keterangan</option>
+          @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
+          <option value="{{ $key }}">{{ $label }}</option>
+          @endforeach
         </select>
       </div>
-      <div class="col-12 col-md-3">
+      <div class="col-12 col-md-2">
         <input name="alasan" class="form-control" placeholder="Alasan (opsional)">
       </div>
       <div class="col-12 col-md-1 d-grid">
@@ -276,13 +275,9 @@
             <div class="col-12">
               <label class="form-label">Status</label>
               <select name="status" id="edit-status" class="form-select" required>
-                <option value="hadir">Hadir</option>
-                <option value="terlambat">Terlambat</option>
-                <option value="izin">Izin</option>
-                <option value="sakit">Sakit</option>
-                <option value="cuti">Cuti</option>
-                <option value="tugas_luar">Tugas Luar</option>
-                <option value="alpha">Tanpa Keterangan</option>
+                @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
+                <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
               </select>
             </div>
             <div class="col-12">
