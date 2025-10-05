@@ -2,86 +2,12 @@
 @section('title','Statistik Kehadiran')
 
 @section('content')
-@php
-use Carbon\Carbon;
-
-$bulan = request('bulan', date('Y-m'));
-$absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y-m') === $bulan);
-
-$hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
-$now = Carbon::now();
-
-// Tentukan batas hari yang dihitung
-if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
-    $maxHari = $hariDalamBulan; // bulan lalu
-} elseif(Carbon::parse($bulan.'-01')->format('Y-m') == $now->format('Y-m')){
-    $maxHari = $now->day; // bulan ini
-} else {
-    $maxHari = 0; // bulan depan
-}
-
-$statusColors = [
-    'Hadir' => '#36A2EB',
-    'Izin' => '#FFCE56',
-    'Cuti' => '#9966FF',
-    'Sakit' => '#FF6384',
-    'Terlambat' => '#4BC0C0',
-    'Tugas Luar' => '#FF9F40',
-    'Tanpa Keterangan' => '#e0e0e0'
-];
-
-$rekapData = [
-    'Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0
-];
-
-$totalPoin = 0;
-
-// Definisikan pemetaan dari status di database ke kunci di poinConfig
-$poinKeyMap = [
-    'Hadir'            => 'hadir',
-    'Terlambat'        => 'terlambat',
-    'Izin'             => 'izin',
-    'Sakit'            => 'sakit',
-    'Cuti'             => 'cuti',
-    'Tugas Luar'       => 'tugas_luar',
-    'Tanpa Keterangan' => 'alpha',
-];
-
-// Hitung rekap dan poin hanya sampai maxHari
-for($i=1; $i<=$maxHari; $i++){
-    $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
-    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
-    
-    if($absen){
-        $status = $absen->status;
-        $rekapData[$status] += 1;
-        
-        // Ambil kunci poin yang sesuai
-        $key = $poinKeyMap[$status] ?? null;
-        if($key && isset($poinConfig[$key])){
-            // Kasus khusus untuk terlambat tanpa alasan
-            if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
-                $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
-            } else {
-                $totalPoin += (int) $poinConfig[$key];
-            }
-        }
-    } else {
-        $rekapData['Tanpa Keterangan'] += 1;
-        // Tambahkan poin untuk alpha (Tanpa Keterangan)
-        $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
-    }
-}
-
-$adaData = array_sum($rekapData) > 0;
-@endphp
-
 <div class="container" style="max-width:900px">
     <h3 class="fw-bold mb-3">Statistik Kehadiran {{ $user->nama }}</h3>
 
     {{-- Pilih Bulan --}}
     <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
-        <input type="month" id="bulanPicker" value="{{ $bulan }}" class="form-control form-control-sm" style="max-width:150px">
+        <input type="month" id="bulanPicker" value="{{ request('bulan', date('Y-m')) }}" class="form-control form-control-sm" style="max-width:150px">
         <button id="btnLihatRekap" class="btn btn-primary btn-sm">Lihat Rekap</button>
         <a href="#" id="btnExportCsv" class="btn btn-success btn-sm">Export CSV</a>
         <button id="btnTutupRekap" class="btn btn-secondary btn-sm" style="display:none;">Tutup</button>
@@ -148,18 +74,20 @@ $adaData = array_sum($rekapData) > 0;
 
     {{-- Rekap Harian --}}
     <div id="rekapHarianContainer" class="card p-3 mt-4" style="display:none;">
-        <h5>Rekap Kehadiran Bulan {{ Carbon::parse($bulan.'-01')->isoFormat('MMMM YYYY') }}</h5>
+        <h5>Rekap Kehadiran Bulan {{ \Carbon\Carbon::parse(request('bulan', date('Y-m')).'-01')->isoFormat('MMMM YYYY') }}</h5>
         <table class="table table-bordered table-sm text-center">
             <thead class="table-light">
                 <tr>
                     @for($d=0;$d<7;$d++)
-                        <th>{{ Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
+                        <th>{{ \Carbon\Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
                     @endfor
                 </tr>
             </thead>
             <tbody>
                 @php
-                $startDay = Carbon::parse($bulan.'-01')->dayOfWeek;
+                $bulan = request('bulan', date('Y-m'));
+                $hariDalamBulan = \Carbon\Carbon::parse($bulan.'-01')->daysInMonth;
+                $startDay = \Carbon\Carbon::parse($bulan.'-01')->dayOfWeek;
                 $currentDay = 1;
                 @endphp
                 @for($week=0; $currentDay<=$hariDalamBulan; $week++)
@@ -169,12 +97,18 @@ $adaData = array_sum($rekapData) > 0;
                                 <td></td>
                             @elseif($currentDay <= $hariDalamBulan)
                                 @php
-                                    $tgl = Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
-                                    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
-                                    if($currentDay <= $maxHari){
-                                        $status = $absen->status ?? 'Tanpa Keterangan';
+                                    $tgl = \Carbon\Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
+                                    $absen = $absensi->firstWhere('tanggal',$tgl);
+                                    $status = '';
+                                    if($absen){
+                                        $status = $absen->status;
                                     } else {
-                                        $status = '';
+                                        $isToday = $tgl === now('Asia/Makassar')->toDateString();
+                                        $isPast = \Carbon\Carbon::parse($tgl)->lt(now('Asia/Makassar')->startOfDay());
+                                        $afterCutoff = now('Asia/Makassar')->format('H:i:s') > '16:00:00';
+                                        if($isPast || ($isToday && $afterCutoff)){
+                                            $status = 'Tanpa Keterangan';
+                                        }
                                     }
                                 @endphp
                                 <td @if($status) style="background-color: {{ $statusColors[$status] ?? '#fff' }}; color:#000;" @endif>
