@@ -71,8 +71,7 @@
   {{-- Header --}}
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <h1 class="h4 fw-bold mb-0">Manajemen Absensi</h1>
-    <a href="{{ route('admin.absensi.export.csv', request()->only('from','to','user_id','bidang','status')) }}"
-       class="btn btn-outline-secondary"><i class="bi bi-download me-1"></i>Export CSV</a>
+    <button type="button" id="btn-main-export" class="btn btn-success"><i class="bi bi-download me-1"></i>Export CSV</button>
   </div>
 
 
@@ -85,10 +84,10 @@
       <input type="text" name="q" class="form-control" placeholder="Cari alasan atau nama pegawai..." value="{{ request('q') }}">
     </div>
     <div class="col-md-2">
-      <input type="date" name="from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
+      <input type="date" name="from" id="filter-from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
     </div>
     <div class="col-md-2">
-      <input type="date" name="to" value="{{ request('to') }}" class="form-control" title="Sampai Tanggal">
+      <input type="date" name="to" id="filter-to" value="{{ request('to') }}" class="form-control" title="Sampai Tanggal">
     </div>
 
     {{-- DIUBAH: ms-auto mendorong grup ini ke kanan & col-md-auto membuat lebarnya pas --}}
@@ -178,9 +177,6 @@
               <td>{{ $a->alasan ?: '-' }}</td>
               <td class="text-end">
                 <div class="action-stack">
-                  <a href="{{ route('admin.absensi.export.user.csv', ['user_id' => $a->user_id, 'bulan' => \Carbon\Carbon::parse($a->tanggal)->format('Y-m')]) }}" class="btn-chip btn-chip-success">
-                    <i class="bi bi-download"></i> Export
-                  </a>
                   <button
                     class="btn-chip btn-chip-primary"
                     data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"
@@ -316,6 +312,20 @@
   </div>
 </div>
 
+{{-- Filter Lanjutan yang Tersembunyi --}}
+<div class="collapse mt-3" id="advancedFilter">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <label class="form-label">Filter Berdasarkan Bulan</label>
+      <input type="month" name="bulan" value="{{ request('bulan', now()->format('Y-m')) }}" class="form-control" />
+    </div>
+    <!-- Filter Berdasarkan Pegawai dan Status tetap di sini -->
+  </div>
+</div>
+
+
+
+
 <script>
 /* ==== Modal konfirmasi universal (hapus) ==== */
 const confirmModal = document.getElementById('confirmModal');
@@ -353,6 +363,43 @@ modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
 
   const form = document.getElementById('formEditAbsensi');
   form.action = "{{ url('admin/absensi') }}/" + id;
+});
+
+/* ==== Main Export Button Handler ==== */
+document.addEventListener('DOMContentLoaded', function() {
+    const mainExportBtn = document.getElementById('btn-main-export');
+    if (mainExportBtn) {
+        mainExportBtn.addEventListener('click', function() {
+            const currentMonth = new Date().toISOString().slice(0, 7); // format YYYY-MM
+            const bulan = prompt(`Masukkan bulan (format YYYY-MM) untuk memulai export:`, currentMonth);
+
+            if (!bulan) {
+                return; // User cancelled
+            }
+
+            if (!/^\d{4}-\d{2}$/.test(bulan)) {
+                alert('Format bulan tidak valid. Harap gunakan format YYYY-MM.');
+                return;
+            }
+
+            const firstDay = new Date(bulan + '-02'); // Use day 02 to avoid timezone issues
+            const lastDay = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0);
+
+            const formatDate = (date) => {
+                const d = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+                return d.toISOString().split('T')[0];
+            }
+
+            const fromDate = formatDate(firstDay);
+            const toDate = formatDate(lastDay);
+
+            const url = new URL("{{ route('admin.absensi.export.csv') }}");
+            url.searchParams.append('from', fromDate);
+            url.searchParams.append('to', toDate);
+
+            window.location.href = url.toString();
+        });
+    }
 });
 </script>
 @endsection
