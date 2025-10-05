@@ -47,7 +47,10 @@
   .btn-chip-danger{border-color:rgba(220,53,69,.28); color:#b42318; background:rgba(220,53,69,.08)}
   .btn-chip-danger:hover{background:rgba(220,53,69,.16)}
 
-  .action-stack{display:flex; justify-content:flex-end; gap:.6rem; flex-wrap:wrap}
+  .btn-chip-green{border-color:rgba(25,135,84,.4);color:#fff;background:#198754}
+  .btn-chip-green:hover{background:#146c43}
+
+  .action-stack{display:flex; flex-direction:column; align-items:flex-end; gap:.4rem}
 
   /* Hanya ikon di dalam tombol/link yang distandardkan ukurannya */
   .users-page .btn .bi,
@@ -169,6 +172,11 @@
                   data-message="Hapus pengguna ini? Tindakan tidak dapat dibatalkan."
                 >
                   <i class="bi bi-trash"></i> Hapus
+                </button>
+
+                {{-- Export Rekap --}}
+                <button type="button" class="btn-chip btn-chip-green btn-export-user" data-user-id="{{ $u->id }}" data-user-name="{{ $u->nama }}">
+                    <i class="bi bi-download"></i> Export Rekap Absensi
                 </button>
               </div>
             </td>
@@ -348,6 +356,38 @@ confirmModal?.addEventListener('show.bs.modal', function (event) {
     spoof.removeAttribute('name');
     spoof.value = '';
   }
+});
+</script>
+
+<script>
+/* ==== Export Rekap Absensi per User ==== */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-export-user').forEach(button => {
+        button.addEventListener('click', function () {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const currentMonth = new Date().toISOString().slice(0, 7); // format YYYY-MM
+
+            const bulan = prompt(`Masukkan bulan (format YYYY-MM) untuk export data ${userName}:`, currentMonth);
+
+            if (!bulan) {
+                // User cancelled the prompt
+                return;
+            }
+
+            // Simple validation for YYYY-MM format
+            if (!/^\d{4}-\d{2}$/.test(bulan)) {
+                alert('Format bulan tidak valid. Harap gunakan format YYYY-MM.');
+                return;
+            }
+
+            const url = new URL("{{ route('admin.absensi.export.user.csv') }}");
+            url.searchParams.append('user_id', userId);
+            url.searchParams.append('bulan', bulan);
+
+            window.location.href = url.toString();
+        });
+    });
 });
 </script>
 @endsection

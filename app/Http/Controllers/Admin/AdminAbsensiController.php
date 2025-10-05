@@ -100,60 +100,67 @@ class AdminAbsensiController extends Controller
     }
 
     public function exportCsvUser(Request $r): StreamedResponse
-    {
-        $r->validate([
-            'user_id' => 'required|exists:users,id',
-            'bulan' => 'required|date_format:Y-m',
-        ]);
+{
+    // Validasi parameter
+    $r->validate([
+        'user_id' => 'required|exists:users,id',
+        'bulan' => 'required|date_format:Y-m', // Validasi format bulan
+    ]);
 
-        $user = User::findOrFail($r->user_id);
-        $bulan = $r->bulan;
-        $tz = config('app.timezone', 'Asia/Makassar');
-        $filename = 'rekap_absensi_' . $user->username . '_' . $bulan . '.csv';
+    $user = User::findOrFail($r->user_id);
+    $bulan = $r->bulan;
+    $tz = config('app.timezone', 'Asia/Makassar');
+    $filename = 'rekap_absensi_' . $user->username . '_' . $bulan . '.csv';
 
-        $carbonBulan = Carbon::parse($bulan . '-01', $tz);
-        $maxHari = $carbonBulan->daysInMonth;
-        if ($carbonBulan->isFuture()) {
-            $maxHari = 0;
-        } elseif ($carbonBulan->isSameMonth(now($tz))) {
-            $maxHari = now($tz)->day;
-        }
+    // Ambil data absensi sesuai bulan yang dipilih
+    $carbonBulan = Carbon::parse($bulan . '-01', $tz);
+    $maxHari = $carbonBulan->daysInMonth;
+    if ($carbonBulan->isFuture()) {
+        $maxHari = 0;
+    } elseif ($carbonBulan->isSameMonth(now($tz))) {
+        $maxHari = now($tz)->day;
+    }
 
-        $absensiBulan = Absensi::where('user_id', $user->id)
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-            ->get()
-            ->keyBy(fn($item) => Carbon::parse($item->tanggal)->toDateString());
+    $absensiBulan = Absensi::where('user_id', $user->id)
+        ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+        ->get()
+        ->keyBy(fn($item) => Carbon::parse($item->tanggal)->toDateString());
 
-        $cutoffTime = config('absensi.cutoff', '16:00:00');
+    // Batas waktu (cutoff) absen
+    $cutoffTime = config('absensi.cutoff', '16:00:00');
 
-        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
+    // Stream CSV download
+    return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
 
-            for ($i = 1; $i <= $maxHari; $i++) {
-                $tanggalLoop = $carbonBulan->copy()->day($i);
-                $tanggalString = $tanggalLoop->toDateString();
-                $absen = $absensiBulan->get($tanggalString);
+        // Loop untuk setiap hari di bulan tersebut
+        for ($i = 1; $i <= $maxHari; $i++) {
+            $tanggalLoop = $carbonBulan->copy()->day($i);
+            $tanggalString = $tanggalLoop->toDateString();
+            $absen = $absensiBulan->get($tanggalString);
 
-                if ($absen) {
+            if ($absen) {
+                fputcsv($out, [
+                    $absen->tanggal,
+                    $absen->status,
+                    $absen->jam,
+                    $absen->alasan,
+                ]);
+            } else {
+                // Jika tanggal sudah lewat atau hari ini dan melewati cutoff time, beri keterangan
+                if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
                     fputcsv($out, [
-                        $absen->tanggal,
-                        $absen->status,
-                        $absen->jam,
-                        $absen->alasan,
+                        $tanggalString,
+                        'Tanpa Keterangan',
+                        '',
+                        '',
                     ]);
-                } else {
-                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
-                        fputcsv($out, [
-                            $tanggalString,
-                            'Tanpa Keterangan',
-                            '',
-                            '',
-                        ]);
-                    }
                 }
             }
-            fclose($out);
-        }, $filename, ['Content-Type' => 'text/csv']);
-    }
+        }
+        fclose($out);
+    }, $filename, ['Content-Type' => 'text/csv']);
+}
+
 }
