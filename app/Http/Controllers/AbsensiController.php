@@ -138,17 +138,25 @@ class AbsensiController extends Controller
             $absen = $absensiBulan->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
             if ($absen) {
-                $status = $absen->status;
-                $key = $poinKeyMap[$status] ?? null;
-                if ($key && isset($poinConfig[$key])) {
-                    if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                        $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
-                    } else {
-                        $totalPoinBulanan += (int)($poinConfig[$key] ?? 0);
+                // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+                if (!Carbon::parse($absen->tanggal)->isWeekend()) {
+                    $status = $absen->status;
+                    $key = $poinKeyMap[$status] ?? null;
+                    if ($key && isset($poinConfig[$key])) {
+                        if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                            $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            $totalPoinBulanan += (int)($poinConfig[$key] ?? 0);
+                        }
                     }
                 }
             } else {
-                if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                // Logika baru untuk menghitung alpha
+                $isWeekend = $tanggalLoop->isWeekend();
+                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                if (!$isWeekend && !$isTodayBeforeCutoff) {
                     $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
                 }
             }
@@ -175,6 +183,11 @@ class AbsensiController extends Controller
 
     public function store(Request $request)
     {
+        // Cek jika hari ini adalah weekend (Sabtu/Minggu)
+        if (now('Asia/Makassar')->isWeekend()) {
+            return redirect()->route('dashboard')->with('err', 'Absensi tidak dapat dilakukan pada hari Sabtu atau Minggu.');
+        }
+
         $user  = $request->user();
         $tz    = 'Asia/Makassar';
         $today = now($tz)->toDateString();
@@ -374,19 +387,25 @@ class AbsensiController extends Controller
                 $absen = $userAbsensiLoop->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
                 if ($absen) {
-                    $status = $absen->status;
-                    $key = $poinKeyMap[$status] ?? null;
-                    if ($key && isset($poinConfig[$key])) {
-                        if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                            $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
-                        } else {
-                            $totalPoinLoop += (int)($poinConfig[$key] ?? 0);
+                    // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+                    if (!Carbon::parse($absen->tanggal)->isWeekend()) {
+                        $status = $absen->status;
+                        $key = $poinKeyMap[$status] ?? null;
+                        if ($key && isset($poinConfig[$key])) {
+                            if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                                $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
+                            } else {
+                                $totalPoinLoop += (int)($poinConfig[$key] ?? 0);
+                            }
                         }
                     }
                 } else {
-                    // LOGIKA BARU YANG BENAR:
-                    // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam cutoff
-                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                    // Logika baru untuk menghitung alpha
+                    $isWeekend = $tanggalLoop->isWeekend();
+                    $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                    // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                    if (!$isWeekend && !$isTodayBeforeCutoff) {
                         $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
                     }
                 }
@@ -423,9 +442,12 @@ class AbsensiController extends Controller
                     }
                 }
             } else {
-                $rekapData['Tanpa Keterangan']++;
-                // LOGIKA BARU YANG BENAR:
-                if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                $isWeekend = $tanggalLoop->isWeekend();
+                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                if (!$isWeekend && !$isTodayBeforeCutoff) {
+                    $rekapData['Tanpa Keterangan']++;
                     $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                 }
             }

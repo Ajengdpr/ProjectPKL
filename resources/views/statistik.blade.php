@@ -53,23 +53,33 @@ for($i=1; $i<=$maxHari; $i++){
     $absen = $absensiBulan->firstWhere('tanggal',$tgl);
     
     if($absen){
-        $status = $absen->status;
-        $rekapData[$status] += 1;
-        
-        // Ambil kunci poin yang sesuai
-        $key = $poinKeyMap[$status] ?? null;
-        if($key && isset($poinConfig[$key])){
-            // Kasus khusus untuk terlambat tanpa alasan
-            if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
-                $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
-            } else {
-                $totalPoin += (int) $poinConfig[$key];
+        $tanggalAbsen = Carbon::parse($absen->tanggal);
+        // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+        if (!$tanggalAbsen->isWeekend()) {
+            $status = $absen->status;
+            $rekapData[$status] += 1;
+            
+            // Ambil kunci poin yang sesuai
+            $key = $poinKeyMap[$status] ?? null;
+            if($key && isset($poinConfig[$key])){
+                // Kasus khusus untuk terlambat tanpa alasan
+                if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
+                    $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+                } else {
+                    $totalPoin += (int) $poinConfig[$key];
+                }
             }
         }
     } else {
-        $rekapData['Tanpa Keterangan'] += 1;
-        // Tambahkan poin untuk alpha (Tanpa Keterangan)
-        $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+        $tanggalLoop = Carbon::parse($tgl);
+        $isWeekend = $tanggalLoop->isWeekend();
+        $isTodayBeforeCutoff = $tanggalLoop->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
+
+        if (!$isWeekend && !$isTodayBeforeCutoff) {
+            $rekapData['Tanpa Keterangan'] += 1;
+            // Tambahkan poin untuk alpha (Tanpa Keterangan)
+            $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+        }
     }
 }
 
@@ -152,42 +162,68 @@ $adaData = array_sum($rekapData) > 0;
         <table class="table table-bordered table-sm text-center">
             <thead class="table-light">
                 <tr>
-                    @for($d=0;$d<7;$d++)
-                        <th>{{ Carbon\Carbon::create()->startOfWeek()->addDays($d)->isoFormat('ddd') }}</th>
-                    @endfor
+                    @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum'] as $dayName)
+                        <th>{{ $dayName }}</th>
+                    @endforeach
                 </tr>
             </thead>
             <tbody>
                 @php
-                $startDay = Carbon\Carbon::parse($bulan.'-01')->dayOfWeek;
-                $currentDay = 1;
+                    $startDate = Carbon::parse($bulan.'-01');
+                    $firstDayPadding = $startDate->dayOfWeekIso - 1;
                 @endphp
-                @for($week=0; $currentDay<=$hariDalamBulan; $week++)
-                    <tr>
-                        @for($d=0;$d<7;$d++)
-                            @if($week===0 && $d<$startDay)
-                                <td></td>
-                            @elseif($currentDay <= $hariDalamBulan)
-                                @php
-                                    $tgl = Carbon\Carbon::parse($bulan.'-'.str_pad($currentDay,2,'0',STR_PAD_LEFT))->format('Y-m-d');
-                                    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
-                                    if($currentDay <= $maxHari){
-                                        $status = $absen->status ?? 'Tanpa Keterangan';
-                                    } else {
-                                        $status = '';
-                                    }
-                                @endphp
-                                <td @if($status) style="background-color: {{ $statusColors[$status] ?? '#fff' }}; color:#000;" @endif>
-                                    <div>{{ $currentDay }}</div>
-                                    @if($status)<small class="text-muted">{{ $status }}</small>@endif
-                                </td>
-                                @php $currentDay++; @endphp
-                            @else
-                                <td></td>
-                            @endif
-                        @endfor
-                    </tr>
+                <tr>
+                {{-- Render sel kosong untuk padding di awal bulan --}}
+                @for ($i = 0; $i < $firstDayPadding; $i++)
+                    <td></td>
                 @endfor
+
+                @for ($day = 1; $day <= $hariDalamBulan; $day++)
+                    @php
+                        $currentDate = Carbon::parse($bulan.'-'.$day);
+                        // Jika hari Senin (dan bukan hari pertama), mulai baris baru
+                        if ($currentDate->dayOfWeekIso == 1 && $day > 1) {
+                            echo '</tr><tr>';
+                        }
+                    @endphp
+
+                    {{-- Hanya render sel jika hari kerja --}}
+                    @if (!$currentDate->isWeekend())
+                        @php
+                            $absen = $absensiBulan->firstWhere('tanggal', $currentDate->toDateString());
+                            $status = ''; // Default status kosong
+
+                            if ($day <= $maxHari) {
+                                if ($absen) {
+                                    $status = $absen->status;
+                                } else {
+                                    // Logika untuk menentukan 'Tanpa Keterangan'
+                                    $isTodayBeforeCutoff = $currentDate->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
+                                    if (!$isTodayBeforeCutoff) {
+                                        $status = 'Tanpa Keterangan';
+                                    }
+                                }
+                            }
+                        @endphp
+                        <td @if($status) style="background-color: {{ $statusColors[$status] ?? '#fff' }}; color:#000;" @endif>
+                            <div>{{ $day }}</div>
+                            @if($status)<small class="text-muted">{{ $status }}</small>@endif
+                        </td>
+                    @endif
+                @endfor
+
+                {{-- Render sel kosong untuk padding di akhir bulan --}}
+                @php
+                    $lastDayOfMonth = Carbon::parse($bulan.'-'.$hariDalamBulan);
+                    // Hanya pad jika bulan tidak berakhir di hari Jumat
+                    if ($lastDayOfMonth->dayOfWeekIso < 5) {
+                        $lastDayPadding = 5 - $lastDayOfMonth->dayOfWeekIso;
+                        for ($i = 0; $i < $lastDayPadding; $i++) {
+                            echo '<td></td>';
+                        }
+                    }
+                @endphp
+                </tr>
             </tbody>
         </table>
     </div>
