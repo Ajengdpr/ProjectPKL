@@ -215,29 +215,6 @@
     </div>
   </div>
 
-  {{-- Bottom Nav --}}
-  <nav class="bottom-nav mt-4">
-    <div class="container">
-      <ul class="nav justify-content-around py-2">
-        <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-            <i class="bi bi-house-door me-1"></i> Home
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
-            <i class="bi bi-graph-up me-1"></i> Statistik
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
-            <i class="bi bi-person me-1"></i> Account
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-
   <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">

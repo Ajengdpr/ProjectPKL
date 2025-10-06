@@ -43,21 +43,6 @@
     .tile.red{background:#de3d3d}
     .tile.dark{background:#1f2533}
 
-    .bottom-nav{
-      position:sticky; bottom:0; left:0; right:0; backdrop-filter:blur(8px);
-      background:#ffffffcc; border-top:1px solid #e9edf5; z-index:10
-    }
-    .bottom-nav .nav-link{color:#4b5563; font-weight:600}
-    .bottom-nav .nav-link.active{color:var(--brand)}
-    table thead th{font-weight:700}
-
-    .form-control:disabled,
-    .form-control[readonly] {
-      background: #f7f9fc;
-      color: #111827;
-      opacity: 1;
-    }
-
     /* Sidebar */
     .app-sidebar {
       position: fixed; top: 0; left: 0; width: 260px; height: 100%;
