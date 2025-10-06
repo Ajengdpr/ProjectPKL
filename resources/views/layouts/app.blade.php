@@ -81,7 +81,8 @@
 
     <div class="ms-auto d-flex align-items-center gap-3">
 
-      {{-- Notifikasi --}}
+      {{-- Notifikasi (hanya tampil untuk non-admin) --}}
+      @if((auth()->user()->role ?? 'user') !== 'admin')
       <a href="{{ route('notifications.index') }}" class="position-relative text-white fs-5" title="Notifikasi">
         <i class="bi bi-bell"></i>
         @if($unread > 0)
@@ -90,6 +91,7 @@
           </span>
         @endif
       </a>
+      @endif
 
       {{-- Info User --}}
       <div class="d-flex align-items-center gap-2 text-white">

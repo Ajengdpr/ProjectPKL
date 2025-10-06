@@ -202,7 +202,7 @@
         <h6 class="fw-bold mb-2">Pegawai Belum Absen ({{ $belumAbsenCount }})</h6>
         <div class="overflow-auto flex-grow-1">
           @if($belumAbsen->isEmpty())
-            <div class="p-3 text-center text-body-secondary">Semua pegawai sudah melakukan absensi. Bagus!</div>
+            <div class="p-3 text-center text-body-secondary">Tidak ada data.</div>
           @else
             <ul class="list-group list-group-flush">
               @foreach($belumAbsen as $u)

@@ -16,7 +16,6 @@ public function index(Request $request)
 
         // 1. Ambil data dasar
         $totalPegawai = User::count();
-        $sudahAbsenUserIds = DB::table('absensi')->whereDate('tanggal', $date)->pluck('user_id');
 
         // 2. Hitung statistik berdasarkan data yang sudah masuk di tabel absensi
         // [FIX FINAL] Menggunakan LOWER(status) untuk mengatasi masalah case-sensitivity
@@ -33,12 +32,29 @@ public function index(Request $request)
         $cuti = $stats->get('cuti', 0);
         $tugas_luar = $stats->get('tugas luar', 0); // Sesuaikan dengan nilai di DB
         
-        // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar
-        $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
-        $alpha = (clone $belumAbsenQuery)->count();
-        
-        $belumAbsenCount = $alpha;
-        $belumAbsen = $belumAbsenQuery->orderBy('nama')->limit(20)->get();
+        // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar dan kondisional
+        $tz = 'Asia/Makassar';
+        $carbonDate = \Carbon\Carbon::parse($date, $tz);
+        $cutoffTime = config('absensi.cutoff', '16:00:00');
+
+        // Default alpha ke 0
+        $alpha = 0;
+        $belumAbsen = collect();
+        $belumAbsenCount = 0;
+
+        // Cek kondisi kapan alpha harus dihitung
+        $isWeekend = $carbonDate->isWeekend();
+        $isFuture = $carbonDate->isFuture();
+        $isTodayBeforeCutoff = $carbonDate->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+        // Hitung alpha hanya jika ini adalah hari kerja yang sudah lewat, atau hari ini setelah jam cutoff
+        if (!$isWeekend && !$isFuture && !$isTodayBeforeCutoff) {
+            $sudahAbsenUserIds = DB::table('absensi')->whereDate('tanggal', $date)->pluck('user_id');
+            $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds);
+            $alpha = (clone $belumAbsenQuery)->count();
+            $belumAbsenCount = $alpha;
+            $belumAbsen = $belumAbsenQuery->orderBy('nama')->limit(20)->get();
+        }
 
         // 4. Log Absensi Terbaru
         $logTerbaru = Absensi::with('user')

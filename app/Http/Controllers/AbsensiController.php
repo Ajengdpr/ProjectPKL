@@ -292,19 +292,22 @@ class AbsensiController extends Controller
 
             // Kirim (hindari duplikasi untuk att_id sama)
             $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz) {
-                $sudahAda = $atasan->notifications()
-                    ->where('type', \App\Notifications\AbsenceReported::class)
-                    ->where('data->att_id', $absen->id)
-                    ->exists();
+                // JANGAN KIRIM KE ADMIN & hindari duplikasi notif
+                if ($atasan->role !== 'admin') {
+                    $sudahAda = $atasan->notifications()
+                        ->where('type', \App\Notifications\AbsenceReported::class)
+                        ->where('data->att_id', $absen->id)
+                        ->exists();
 
-                if (!$sudahAda) {
-                    $atasan->notify(new AbsenceReported(
-                        attId:  $absen->id,
-                        namaPegawai: $user->nama,
-                        status: $status,
-                        alasan: $data['alasan'] ?? null,
-                        waktu: now($tz)->format('Y-m-d H:i')
-                    ));
+                    if (!$sudahAda) {
+                        $atasan->notify(new AbsenceReported(
+                            attId:  $absen->id,
+                            namaPegawai: $user->nama,
+                            status: $status,
+                            alasan: $data['alasan'] ?? null,
+                            waktu: now($tz)->format('Y-m-d H:i')
+                        ));
+                    }
                 }
             });
         }
