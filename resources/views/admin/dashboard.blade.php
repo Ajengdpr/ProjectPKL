@@ -40,16 +40,7 @@
     <form method="get" class="d-flex align-items-center gap-2">
       <input type="date" name="date" value="{{ $date }}" class="form-control" style="width: 180px;">
       <button class="btn btn-primary">Terapkan</button>
-      <div class="dropdown">
-        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-three-dots-vertical"></i>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Tampilkan Hari Ini</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="{{ route('admin.absensi.export.csv', ['from'=>$date,'to'=>$date]) }}"><i class="bi bi-download me-2"></i>Export CSV</a></li>
-        </ul>
-      </div>
+      <a class="btn btn-outline-secondary" href="{{ route('admin.dashboard') }}">Hari Ini</a>
     </form>
   </div>
 
