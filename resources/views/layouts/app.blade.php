@@ -112,8 +112,8 @@
     $u = auth()->user();
     $isAdmin = ($u->role ?? 'user') === 'admin';
     $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
-    $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
-    $profileRouteParams = $isAdmin ? ['tab' => 'account'] : [];
+    $profileRouteName = $isAdmin ? 'admin.account' : 'account';
+    $profileRouteParams = [];
     $unread = (method_exists($u, 'unreadNotifications') && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
         ? $u->unreadNotifications()->count()
         : 0;
@@ -141,7 +141,7 @@
           <div class="fw-semibold">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
           <div class="small text-white-50">{{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}</div>
         </div>
-        <a href="{{ route($profileRouteName, $profileRouteParams) }}">
+        <a href="{{ route($profileRouteName, $profileRouteParams)  }}" title="Pengaturan Akun">
           <img src="{{ $avatar }}" alt="avatar" class="rounded-circle border border-light-subtle" style="width:36px;height:36px;object-fit:cover;">
         </a>
       </div>
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
       {{-- Menu untuk User Biasa --}}
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}" href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> Home</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('statistik')?'active':'' }}" href="{{ route('statistik') }}"><i class="bi bi-graph-up"></i> Statistik</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('account')?'active':'' }}" href="{{ route('account') }}"><i class="bi bi-person"></i> Account</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('account')?'active':'' }}" href="{{ route('account') }}"><i class="bi bi-person"></i> Akun</a></li>
     @endif
 
     {{-- Menu yang sama untuk Admin & User --}}

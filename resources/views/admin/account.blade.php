@@ -61,30 +61,6 @@
     </div>
   </div>
 
-  {{-- Quick admin shortcuts --}}
-  <div class="row g-2 mb-3">
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-speedometer2 me-1"></i> Dashboard
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.users.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-people me-1"></i> Users
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-calendar-check me-1"></i> Absensi
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.settings.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-gear me-1"></i> Settings
-      </a>
-    </div>
-  </div>
-
   {{-- Informasi Akun (readonly seperti user) --}}
   <div class="app-card p-3 mb-3">
     <h6 class="fw-bold mb-3">Informasi Akun</h6>
