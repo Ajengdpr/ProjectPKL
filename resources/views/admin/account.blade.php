@@ -35,6 +35,11 @@
           <button class="btn btn-danger"><i class="bi bi-trash me-1"></i>Delete picture</button>
         </form>
         @endif
+        {{-- Tombol Logout --}}
+        <form method="post" action="{{ route('logout') }}">
+          @csrf
+          <button class="btn btn-outline-danger"><i class="bi bi-box-arrow-right me-1"></i> Logout</button>
+        </form>
       </div>
     </div>
 
@@ -102,14 +107,6 @@
       </div>
     </div>
   </div>
-
-  {{-- Logout --}}
-  <form method="post" action="{{ route('logout') }}" class="text-center">
-    @csrf
-    <button class="btn btn-outline-danger">
-      <i class="bi bi-box-arrow-right me-1"></i> Logout
-    </button>
-  </form>
 
   <div class="my-3"></div>
 </div>

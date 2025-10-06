@@ -91,8 +91,12 @@ class AbsensiController extends Controller
             ->orderByDesc('jam')
             ->first();
             
-        $jamConfig = Setting::get('jam', ['batas_hadir' => '08:00:00']);
+        $jamConfig = Setting::get('jam', [
+            'batas_hadir' => '08:00:00',
+            'batas_akhir' => '16:00:00',
+        ]);
         $hadirDisabled = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_hadir'];
+        $akhirExpired = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_akhir'];
 
         // =================================================================
         // KALKULASI POIN BULANAN LIVE UNTUK DASHBOARD (LOGIKA BARU)
@@ -158,6 +162,7 @@ class AbsensiController extends Controller
             'sudahAbsenToday'  => $sudahAbsenToday,
             'lastToday'        => $lastToday,
             'hadirDisabled'    => $hadirDisabled,
+            'akhirExpired'     => $akhirExpired,
             'poinConfig'       => $poinConfig,
         ]);
     }
@@ -192,6 +197,12 @@ class AbsensiController extends Controller
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
+            'berkas' => [
+                'nullable',
+                'file', // Bisa berupa gambar atau dokumen
+                'mimes:jpg,jpeg,png,pdf,doc,docx', // Tipe file yang diizinkan
+                'max:2048' // Ukuran maksimum 2MB
+            ],
         ]);
 
         $status = trim($data['status']);
@@ -214,26 +225,33 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
         }
 
-        $deviceId = $request->input('device_id');
-        $today = now('Asia/Makassar')->toDateString();
+        // $deviceId = $request->input('device_id');
+        // $today = now('Asia/Makassar')->toDateString();
 
-        // Cek apakah device sudah absen hari ini
-        $already = Absensi::where('device_id', $deviceId)
-            ->whereDate('tanggal', $today)
-            ->exists();
+        // // Cek apakah device sudah absen hari ini
+        // $already = Absensi::where('device_id', $deviceId)
+        //     ->whereDate('tanggal', $today)
+        //     ->exists();
 
-        if($already){
-            return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
+        // if($already){
+        //     return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
+        // }
+
+        // Handle file upload jika ada
+        $berkasPath = null;
+        if ($request->hasFile('berkas')) {
+            $berkasPath = $request->file('berkas')->store('absensi_berkas', 'public');
         }
 
         // Simpan absensi beserta device_id
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
-        $absen->device_id = $deviceId;
+        //$absen->device_id = $deviceId;
         $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
+        $absen->berkas  = $berkasPath;
         $absen->save();
 
         // ==========================================================

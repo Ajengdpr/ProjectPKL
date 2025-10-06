@@ -35,6 +35,7 @@ CREATE TABLE `absensi` (
   `jam` time NOT NULL,
   `status` enum('Hadir','Izin','Cuti','Sakit','Terlambat','Tugas Luar','alpha') NOT NULL,
   `alasan` text DEFAULT NULL,
+  `berkas` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

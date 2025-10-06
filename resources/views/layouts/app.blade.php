@@ -123,7 +123,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background:linear-gradient(90deg,var(--brand),var(--brand-900))">
   <div class="container d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-primary" id="sidebarToggle">
+      <button class="btn btn-primary d-lg-none" id="sidebarToggle">
         <i class="bi bi-list"></i>
       </button>
       <a class="navbar-brand m-0" href="{{ $isAdmin ? route('admin.dashboard') : route('dashboard') }}">E-Absensi</a>
@@ -153,9 +153,9 @@
 <div class="app-sidebar" id="appSidebar">
   <div class="sidebar-header d-flex align-items-center justify-content-between">
   <!-- Logo + Marquee Wrapper -->
-  <div class="d-flex align-items-center overflow-hidden" style="flex:1; gap:0.5rem;">
+  <div class="d-flex align-items-center gap:0.5rem;">
   <img src="{{ asset('img/logo_provinsi.png') }}" alt="Logo Provinsi" style="width:40px; height:30px; object-fit:contain; flex-shrink:0;">
-  <div class="marquee-wrapper flex-grow-1">
+  <div class="marquee-wrapper" style="width: calc(100% - 50px); overflow: hidden;">
     <h4 class="marquee-text text-primary fw-bold mb-0" style="font-size:1.2rem;">
       Dinas Lingkungan Hidup Provinsi Kalimantan Selatan
     </h4>
@@ -168,17 +168,15 @@
   </button>
 </div>
 
-<style>
-.marquee-wrapper {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.marquee-text {
-  display: inline-block;
-  padding-left: 100%;
-  will-change: transform;
-}
+<style> .marquee-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee-text {
+    display: inline-block;
+    padding-left: 100%;
+    will-change: transform;
+  }
 </style>
 
 <script>
@@ -193,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function step() {
       start -= 0.5; // kecepatan scroll
-      if (start < -textWidth) start = wrapperWidth;
+      if (start < - textWidth) start = wrapperWidth;
       marquee.style.transform = translateX(${start}px);
       requestAnimationFrame(step);
     }
@@ -208,9 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <ul class="nav flex-column sidebar-nav">
     @if($isAdmin)
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard')?'active':'' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*')?'active':'' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*')?'active':'' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*')?'active':'' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.account') ? 'active' : '' }}" href="{{ route('admin.account') }}"><i class="bi bi-person-circle"></i> Akun</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
     @else
       {{-- Menu untuk User Biasa --}}
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}" href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> Home</a></li>
@@ -295,4 +294,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 @stack('scripts')
 </body>
+
+<!--
+[PROMPT_SUGGESTION]Bagaimana cara memperlambat kecepatan teks marquee?[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]Bagaimana cara membuat teks marquee berhenti bergulir saat di-hover?[/PROMPT_SUGGESTION]
+-->
+<!--
+[PROMPT_SUGGESTION]Bagaimana cara agar teks marquee berhenti bergulir saat di-hover?[/PROMPT_SUGGESTION]
+[PROMPT_SUGGESTION]Bagaimana membuat teks marquee lebih responsif terhadap berbagai ukuran layar?[/PROMPT_SUGGESTION]
+-->
 </html>

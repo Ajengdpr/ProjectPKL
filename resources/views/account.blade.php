@@ -53,6 +53,14 @@
             @csrf @method('DELETE')
             <button class="btn btn-danger btn-profile" {{ $u->foto ? '' : 'disabled' }}>Delete picture</button>
           </form>
+
+          {{-- Logout --}}
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="btn btn-outline-danger btn-profile">
+              <i class="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -81,39 +89,7 @@
     </div>
   </div>
 
-  {{-- Logout di PALING BAWAH --}}
-  <div class="text-center my-4">
-    <form method="POST" action="{{ route('logout') }}">
-      @csrf
-      <button class="btn btn-outline-danger px-4">
-        <i class="bi bi-box-arrow-right me-1"></i> Logout
-      </button>
-    </form>
-  </div>
 </div>
-
-{{-- Bottom Nav --}}
-<nav class="bottom-nav mt-4">
-  <div class="container">
-    <ul class="nav justify-content-around py-2">
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-          <i class="bi bi-house-door me-1"></i> Home
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('statistik') ? 'active' : '' }}" href="{{ route('statistik') }}">
-          <i class="bi bi-graph-up me-1"></i> Statistik
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}" href="{{ route('account') }}">
-          <i class="bi bi-person me-1"></i> Account
-        </a>
-      </li>
-    </ul>
-  </div>
-</nav>
 
 @push('head')
 <style>

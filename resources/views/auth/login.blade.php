@@ -9,7 +9,7 @@
   }
   .login-left {
     flex: 1;
-    background: url('{{ asset('img/depan.jpeg') }}') center/cover no-repeat;
+    background: url('{{ asset('img/bg.jpg') }}') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
