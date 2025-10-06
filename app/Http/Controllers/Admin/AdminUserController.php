@@ -11,20 +11,23 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
-        $q      = trim($request->get('q', ''));
-        $bidang = $request->get('bidang', '');
+        $q = $request->query('q');
+        $bidang = $request->query('bidang');
 
         $users = User::query()
-            ->when($q, function ($query) use ($q) {
-                $query->where(function ($x) use ($q) {
-                    $x->where('nama', 'like', "%{$q}%")
-                      ->orWhere('username', 'like', "%{$q}%")
-                      ->orWhere('jabatan', 'like', "%{$q}%")
-                      ->orWhere('bidang', 'like', "%{$q}%");
+            ->when($request->filled('q'), function ($query) use ($q) {
+                $lowerQ = strtolower(trim($q));
+                $query->where(function ($subQuery) use ($lowerQ) {
+                    $subQuery->where(\Illuminate\Support\Facades\DB::raw('LOWER(nama)'), 'like', "%{$lowerQ}%")
+                             ->orWhere(\Illuminate\Support\Facades\DB::raw('LOWER(username)'), 'like', "%{$lowerQ}%")
+                             ->orWhere(\Illuminate\Support\Facades\DB::raw('LOWER(jabatan)'), 'like', "%{$lowerQ}%")
+                             ->orWhere(\Illuminate\Support\Facades\DB::raw('LOWER(bidang)'), 'like', "%{$lowerQ}%");
                 });
             })
-            ->when($bidang !== '', fn($q2) => $q2->where('bidang', $bidang))
-            ->orderBy('nama') // pastikan kolomnya `nama`, bukan `name`
+            ->when($request->filled('bidang'), function ($query) use ($bidang) {
+                $query->where('bidang', $bidang);
+            })
+            ->orderBy('nama')
             ->paginate(12)
             ->withQueryString();
 
@@ -37,7 +40,12 @@ class AdminUserController extends Controller
             ->pluck('bidang')
             ->all();
 
-        return view('admin.users.index', compact('users', 'q', 'bidang', 'listBidang'));
+        return view('admin.users.index', [
+            'users' => $users,
+            'q' => $request->query('q', ''),
+            'bidang' => $request->query('bidang', ''),
+            'listBidang' => $listBidang
+        ]);
     }
 
     public function store(Request $request)

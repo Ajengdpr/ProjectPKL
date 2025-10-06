@@ -81,7 +81,7 @@
   {{-- Filter Utama yang Selalu Terlihat --}}
   <div class="row g-2 align-items-center">
     <div class="col-md-3">
-      <input type="text" name="q" class="form-control" placeholder="Cari alasan atau nama pegawai..." value="{{ request('q') }}">
+      <input type="text" name="q" class="form-control" placeholder="Cari nama pegawai" value="{{ request('q') }}">
     </div>
     <div class="col-md-2">
       <input type="date" name="from" id="filter-from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
