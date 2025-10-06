@@ -63,7 +63,23 @@ class AbsensiController extends Controller
             ->orderBy('u.bidang')
             ->get();
 
-        $rekapPerBidang = collect($this->updateFirebaseRekap($tanggal));
+        $rekapPerBidang = DB::table('users as u')
+            ->leftJoin('absensi as a', function ($join) use ($tanggal) {
+                $join->on('a.user_id', '=', 'u.id')
+                     ->whereDate('a.tanggal', $tanggal);
+            })
+            ->select(
+                'u.bidang',
+                DB::raw("SUM(CASE WHEN a.status = 'Hadir'      THEN 1 ELSE 0 END) AS hadir"),
+                DB::raw("SUM(CASE WHEN a.status = 'Cuti'       THEN 1 ELSE 0 END) AS cuti"),
+                DB::raw("SUM(CASE WHEN a.status = 'Sakit'      THEN 1 ELSE 0 END) AS sakit"),
+                DB::raw("SUM(CASE WHEN a.status = 'Tugas Luar' THEN 1 ELSE 0 END) AS tugas_luar"),
+                DB::raw("SUM(CASE WHEN a.status = 'Terlambat'  THEN 1 ELSE 0 END) AS terlambat"),
+                DB::raw("SUM(CASE WHEN a.status = 'Izin'       THEN 1 ELSE 0 END) AS izin")
+            )
+            ->groupBy('u.bidang')
+            ->get()
+            ->keyBy('bidang');
 
         // ==========================================================
         // PERUBAHAN LOKASI: Mengambil data dari Settings
@@ -114,30 +130,33 @@ class AbsensiController extends Controller
         $totalPoinBulanan = 0;
         $poinKeyMap = [
             'Hadir'       => 'hadir', 'Terlambat'   => 'terlambat', 'Izin'        => 'izin',
-            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'alpha' => 'alpha',
+            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'Alpha' => 'alpha',
         ];
 
         for ($i = 1; $i <= $maxHari; $i++) {
             $tanggalLoop = $carbonBulan->copy()->day($i);
-
-            if ($tanggalLoop->isWeekend()) {
-                continue;
-            }
-
             $absen = $absensiBulan->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
             if ($absen) {
-                $status = $absen->status;
-                $key = $poinKeyMap[$status] ?? null;
-                if ($key && isset($poinConfig[$key])) {
-                    if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                        $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
-                    } else {
-                        $totalPoinBulanan += (int)($poinConfig[$key] ?? 0);
+                // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+                if (!Carbon::parse($absen->tanggal)->isWeekend()) {
+                    $status = $absen->status;
+                    $key = $poinKeyMap[$status] ?? null;
+                    if ($key && isset($poinConfig[$key])) {
+                        if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                            $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            $totalPoinBulanan += (int)($poinConfig[$key] ?? 0);
+                        }
                     }
                 }
             } else {
-                if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                // Logika baru untuk menghitung alpha
+                $isWeekend = $tanggalLoop->isWeekend();
+                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                if (!$isWeekend && !$isTodayBeforeCutoff) {
                     $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
                 }
             }
@@ -163,27 +182,13 @@ class AbsensiController extends Controller
     }
 
 
-    public function create(string $status)
-    {
-        // Konversi status dari URL (e.g., 'tugas-luar') menjadi format yang benar ('Tugas Luar')
-        $preset = \Illuminate\Support\Str::title(str_replace('-', ' ', $status));
-
-        // Validasi sederhana, pastikan status yang di-pass valid
-        if (!in_array($preset, self::ALLOWED_STATUSES, true)) {
-            return redirect()->route('dashboard')->with('err', 'Status absensi tidak valid.');
-        }
-
-        // Cek apakah hari ini sudah absen
-        if (Absensi::where('user_id', auth()->id())->whereDate('tanggal', now('Asia/Makassar')->toDateString())->exists()) {
-            return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini.');
-        }
-
-        return view('absensi.form', compact('preset'));
-    }
-
-
     public function store(Request $request)
     {
+        // Cek jika hari ini adalah weekend (Sabtu/Minggu)
+        if (now('Asia/Makassar')->isWeekend()) {
+            return redirect()->route('dashboard')->with('err', 'Absensi tidak dapat dilakukan pada hari Sabtu atau Minggu.');
+        }
+
         $user  = $request->user();
         $tz    = 'Asia/Makassar';
         $today = now($tz)->toDateString();
@@ -214,23 +219,10 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
         }
 
-        $deviceId = $request->input('device_id');
-        $today = now('Asia/Makassar')->toDateString();
-
-        // Cek apakah device sudah absen hari ini
-        $already = Absensi::where('device_id', $deviceId)
-            ->whereDate('tanggal', $today)
-            ->exists();
-
-        if($already){
-            return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
-        }
-
-        // Simpan absensi beserta device_id
+        // Simpan absensi
         $absen = new Absensi();
         $absen->user_id = $user->id;
         $absen->tanggal = $today;
-        $absen->device_id = $deviceId;
         $absen->jam     = now($tz)->format('H:i:s');
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
@@ -319,44 +311,27 @@ class AbsensiController extends Controller
 
         return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
     }
-    private function updateFirebaseRekap(string $tanggal): array
+    private function updateFirebaseRekap(string $tanggal)
     {
-        // Jangan hitung rekap untuk hari libur
-        if (\Carbon\Carbon::parse($tanggal)->isWeekend()) {
-            return [];
-        }
-
-        $usersByBidang = User::whereNotNull('bidang')->where('bidang', '!=', '')->get()->groupBy('bidang');
-        $absensiHariIni = Absensi::whereDate('tanggal', $tanggal)->get();
-        $rekapData = [];
-
-        foreach ($usersByBidang as $namaBidang => $usersInBidang) {
-            $userIdsInBidang = $usersInBidang->pluck('id');
-            $absensiInBidang = $absensiHariIni->whereIn('user_id', $userIdsInBidang);
-            $stats = $absensiInBidang->countBy(fn($item) => strtolower(trim($item->status)));
-
-            $h = $stats->get('hadir', 0);
-            $t = $stats->get('terlambat', 0);
-            $i = $stats->get('izin', 0);
-            $s = $stats->get('sakit', 0);
-            $c = $stats->get('cuti', 0);
-            $tl = $stats->get('tugas luar', 0);
-
-            $alphaFromDb = $stats->get('alpha', 0);
-            $sudahAbsenInBidang = $absensiInBidang->pluck('user_id')->unique();
-            $alphaFromNoRecord = $userIdsInBidang->diff($sudahAbsenInBidang)->count();
-            $a = $alphaFromDb + $alphaFromNoRecord;
-
-            $rekapData[$namaBidang] = (object)[
-                'hadir' => $h,
-                'terlambat' => $t,
-                'izin' => $i,
-                'sakit' => $s,
-                'cuti' => $c,
-                'tugas_luar' => $tl,
-                'alpha' => $a,
-            ];
-        }
+        $rekapData = DB::table('users as u')
+            ->leftJoin('absensi as a', function ($join) use ($tanggal) {
+                $join->on('a.user_id', '=', 'u.id')
+                     ->whereDate('a.tanggal', $tanggal);
+            })
+            ->select(
+                'u.bidang',
+                DB::raw("SUM(CASE WHEN a.status = 'Hadir'      THEN 1 ELSE 0 END) AS hadir"),
+                DB::raw("SUM(CASE WHEN a.status = 'Cuti'       THEN 1 ELSE 0 END) AS cuti"),
+                DB::raw("SUM(CASE WHEN a.status = 'Sakit'      THEN 1 ELSE 0 END) AS sakit"),
+                DB::raw("SUM(CASE WHEN a.status = 'Tugas Luar' THEN 1 ELSE 0 END) AS tugas_luar"),
+                DB::raw("SUM(CASE WHEN a.status = 'Terlambat'  THEN 1 ELSE 0 END) AS terlambat"),
+                DB::raw("SUM(CASE WHEN a.status = 'Izin'       THEN 1 ELSE 0 END) AS izin")
+            )
+            ->whereNotNull('u.bidang')
+            ->groupBy('u.bidang')
+            ->get()
+            ->keyBy('bidang')
+            ->toArray();
 
         $firebasePath = 'rekap/' . $tanggal;
 
@@ -365,8 +340,6 @@ class AbsensiController extends Controller
         } catch (\Exception $e) {
             \Log::error('Firebase update failed: ' . $e->getMessage());
         }
-
-        return $rekapData;
     }
 
     public function statistik(Request $request)
@@ -385,7 +358,7 @@ class AbsensiController extends Controller
         // Definisikan pemetaan dari status di database ke kunci di poinConfig
         $poinKeyMap = [
             'Hadir'       => 'hadir', 'Terlambat'   => 'terlambat', 'Izin'        => 'izin',
-            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'alpha'       => 'alpha',
+            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'Alpha'       => 'alpha',
         ];
 
         // Tentukan rentang hari untuk dihitung
@@ -412,28 +385,28 @@ class AbsensiController extends Controller
 
             for ($i = 1; $i <= $maxHari; $i++) {
                 $tanggalLoop = $carbonBulan->copy()->day($i);
-
-                // JANGAN HITUNG POIN DI HARI LIBUR (SABTU/MINGGU)
-                if ($tanggalLoop->isWeekend()) {
-                    continue;
-                }
-
                 $absen = $userAbsensiLoop->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
                 if ($absen) {
-                    $status = $absen->status;
-                    $key = $poinKeyMap[$status] ?? null;
-                    if ($key && isset($poinConfig[$key])) {
-                        if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                            $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
-                        } else {
-                            $totalPoinLoop += (int)($poinConfig[$key] ?? 0);
+                    // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+                    if (!Carbon::parse($absen->tanggal)->isWeekend()) {
+                        $status = $absen->status;
+                        $key = $poinKeyMap[$status] ?? null;
+                        if ($key && isset($poinConfig[$key])) {
+                            if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                                $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
+                            } else {
+                                $totalPoinLoop += (int)($poinConfig[$key] ?? 0);
+                            }
                         }
                     }
                 } else {
-                    // LOGIKA BARU YANG BENAR:
-                    // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam cutoff
-                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                    // Logika baru untuk menghitung alpha
+                    $isWeekend = $tanggalLoop->isWeekend();
+                    $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                    // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                    if (!$isWeekend && !$isTodayBeforeCutoff) {
                         $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
                     }
                 }
@@ -455,11 +428,6 @@ class AbsensiController extends Controller
 
         for ($i = 1; $i <= $maxHari; $i++) {
             $tanggalLoop = $carbonBulan->copy()->day($i);
-
-            if ($tanggalLoop->isWeekend()) {
-                continue;
-            }
-            
             $absen = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
             if ($absen) {
@@ -475,20 +443,19 @@ class AbsensiController extends Controller
                     }
                 }
             } else {
-                $rekapData['Tanpa Keterangan']++;
-                // LOGIKA BARU YANG BENAR:
-                if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                $isWeekend = $tanggalLoop->isWeekend();
+                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
+                if (!$isWeekend && !$isTodayBeforeCutoff) {
+                    $rekapData['Tanpa Keterangan']++;
                     $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                 }
             }
         }
-        unset($rekapData['alpha']);
+        unset($rekapData['Alpha']);
 
         $adaData = array_sum($rekapData) > 0;
-
-        // Definisikan label status untuk dikirim ke view (dibutuhkan oleh chart)
-        $statuses = \App\Models\Absensi::getStatuses();
-        $statusLabels = array_values($statuses);
 
         return view('statistik', [
             'user'          => $user,
@@ -499,7 +466,6 @@ class AbsensiController extends Controller
             'totalPoin'     => $totalPoin,
             'rekapData'     => $rekapData,
             'adaData'       => $adaData,
-            'statusLabels'  => $statusLabels, // Variabel baru untuk chart labels
             'statusColors'  => [
                 'Hadir' => '#36A2EB', 'Izin' => '#FFCE56', 'Cuti' => '#9966FF',
                 'Sakit' => '#FF6384', 'Terlambat' => '#4BC0C0', 'Tugas Luar' => '#FF9F40',
@@ -529,9 +495,8 @@ class AbsensiController extends Controller
             ->keyBy('tanggal');
 
         $cutoffTime = config('absensi.cutoff', '16:00:00');
-        $statuses = Absensi::getStatuses();
 
-        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime, $statuses) {
+        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
 
@@ -541,10 +506,9 @@ class AbsensiController extends Controller
                 $absen = $absensiBulan->get($tanggalString);
 
                 if ($absen) {
-                    $statusText = $statuses[$absen->status] ?? $absen->status;
                     fputcsv($out, [
                         $absen->tanggal,
-                        $statusText,
+                        $absen->status,
                         $absen->jam,
                         $absen->alasan,
                     ]);
@@ -552,7 +516,7 @@ class AbsensiController extends Controller
                     if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
                         fputcsv($out, [
                             $tanggalString,
-                            $statuses['alpha'],
+                            'Tanpa Keterangan',
                             '',
                             '',
                         ]);

@@ -149,7 +149,7 @@ class AdminAbsensiController extends Controller
                         $absen->alasan,
                     ]);
                 } else {
-                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->gt(Carbon::parse($cutoffTime, $tz)))) {
                         fputcsv($out, [
                             $tanggalString,
                             $statuses['alpha'],

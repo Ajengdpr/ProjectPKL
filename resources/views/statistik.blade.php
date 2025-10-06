@@ -4,14 +4,86 @@
 @section('content')
 @php
 use Carbon\Carbon;
-use App\Models\Absensi;
 
-// Ambil pemetaan status terpusat yang dibutuhkan oleh kalender rekap
-$statuses = Absensi::getStatuses();
 $bulan = request('bulan', date('Y-m'));
 $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y-m') === $bulan);
 
-// statusColors, totalPoin, dan rekapData sudah di-pass dari controller
+$hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
+$now = Carbon::now();
+
+// Tentukan batas hari yang dihitung
+if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
+    $maxHari = $hariDalamBulan; // bulan lalu
+} elseif(Carbon::parse($bulan.'-01')->format('Y-m') == $now->format('Y-m')){
+    $maxHari = $now->day; // bulan ini
+} else {
+    $maxHari = 0; // bulan depan
+}
+
+$statusColors = [
+    'Hadir' => '#36A2EB',
+    'Izin' => '#FFCE56',
+    'Cuti' => '#9966FF',
+    'Sakit' => '#FF6384',
+    'Terlambat' => '#4BC0C0',
+    'Tugas Luar' => '#FF9F40',
+    'Tanpa Keterangan' => '#e0e0e0'
+];
+
+$rekapData = [
+    'Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0
+];
+
+$totalPoin = 0;
+
+// Definisikan pemetaan dari status di database ke kunci di poinConfig
+$poinKeyMap = [
+    'Hadir'            => 'hadir',
+    'Terlambat'        => 'terlambat',
+    'Izin'             => 'izin',
+    'Sakit'            => 'sakit',
+    'Cuti'             => 'cuti',
+    'Tugas Luar'       => 'tugas_luar',
+    'Tanpa Keterangan' => 'alpha',
+];
+
+// Hitung rekap dan poin hanya sampai maxHari
+for($i=1; $i<=$maxHari; $i++){
+    $tgl = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT))->format('Y-m-d');
+    $absen = $absensiBulan->firstWhere('tanggal',$tgl);
+    
+    if($absen){
+        $tanggalAbsen = Carbon::parse($absen->tanggal);
+        // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
+        if (!$tanggalAbsen->isWeekend()) {
+            $status = $absen->status;
+            $rekapData[$status] += 1;
+            
+            // Ambil kunci poin yang sesuai
+            $key = $poinKeyMap[$status] ?? null;
+            if($key && isset($poinConfig[$key])){
+                // Kasus khusus untuk terlambat tanpa alasan
+                if($status === 'Terlambat' && empty(trim($absen->alasan ?? '')) ){
+                    $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+                } else {
+                    $totalPoin += (int) $poinConfig[$key];
+                }
+            }
+        }
+    } else {
+        $tanggalLoop = Carbon::parse($tgl);
+        $isWeekend = $tanggalLoop->isWeekend();
+        $isTodayBeforeCutoff = $tanggalLoop->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
+
+        if (!$isWeekend && !$isTodayBeforeCutoff) {
+            $rekapData['Tanpa Keterangan'] += 1;
+            // Tambahkan poin untuk alpha (Tanpa Keterangan)
+            $totalPoin += (int) ($poinConfig['alpha'] ?? 0);
+        }
+    }
+}
+
+$adaData = array_sum($rekapData) > 0;
 @endphp
 
 <div class="container" style="max-width:900px">
@@ -19,7 +91,7 @@ $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y
 
     {{-- Pilih Bulan --}}
     <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
-        <input type="month" id="bulanPicker" value="{{ request('bulan', date('Y-m')) }}" class="form-control form-control-sm" style="max-width:150px">
+        <input type="month" id="bulanPicker" value="{{ $bulan }}" class="form-control form-control-sm" style="max-width:150px">
         <button id="btnLihatRekap" class="btn btn-primary btn-sm">Lihat Rekap</button>
         <a href="#" id="btnExportCsv" class="btn btn-success btn-sm">Export CSV</a>
         <button id="btnTutupRekap" class="btn btn-secondary btn-sm" style="display:none;">Tutup</button>
@@ -86,77 +158,72 @@ $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y
 
     {{-- Rekap Harian --}}
     <div id="rekapHarianContainer" class="card p-3 mt-4" style="display:none;">
-        <h5>Rekap Kehadiran Bulan {{ \Carbon\Carbon::parse(request('bulan', date('Y-m')).'-01')->isoFormat('MMMM YYYY') }}</h5>
+        <h5>Rekap Kehadiran Bulan {{ Carbon::parse($bulan.'-01')->isoFormat('MMMM YYYY') }}</h5>
         <table class="table table-bordered table-sm text-center">
             <thead class="table-light">
                 <tr>
-                    <th>Sen</th>
-                    <th>Sel</th>
-                    <th>Rab</th>
-                    <th>Kam</th>
-                    <th>Jum</th>
+                    @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum'] as $dayName)
+                        <th>{{ $dayName }}</th>
+                    @endforeach
                 </tr>
             </thead>
             <tbody>
                 @php
-                    $cal_firstDay = Carbon::parse($bulan.'-01');
-                    $cal_dayCounter = $cal_firstDay->copy();
-                    $cal_calendarDays = [];
-
-                    // Add empty cells for Monday-Friday before the month starts
-                    $cal_startOffset = $cal_firstDay->dayOfWeekIso - 1; // 0 for Mon, 6 for Sun
-                    for ($i = 0; $i < $cal_startOffset; $i++) {
-                        $cal_calendarDays[] = null;
-                    }
-
-                    // Loop through the actual days of the month and add only weekdays
-                    while ($cal_dayCounter->month == $cal_firstDay->month) {
-                        if (!$cal_dayCounter->isWeekend()) {
-                            $cal_calendarDays[] = $cal_dayCounter->copy();
-                        }
-                        $cal_dayCounter->addDay();
-                    }
-                    
-                    // Chunk the flat array of weekdays into weeks (rows) of 5 days
-                    $cal_weeks = array_chunk($cal_calendarDays, 5);
+                    $startDate = Carbon::parse($bulan.'-01');
+                    $firstDayPadding = $startDate->dayOfWeekIso - 1;
                 @endphp
+                <tr>
+                {{-- Render sel kosong untuk padding di awal bulan --}}
+                @for ($i = 0; $i < $firstDayPadding; $i++)
+                    <td></td>
+                @endfor
 
-                @foreach($cal_weeks as $week)
-                    <tr>
-                        @foreach($week as $day)
-                            @if($day === null)
-                                <td></td>
-                            @else
-                                @php
-                                    $dayOfMonth = $day->day;
-                                    $tgl = $day->format('Y-m-d');
-                                    $absen = $absensiBulan->firstWhere('tanggal', $tgl);
-                                    $statusLabel = ''; // Default to empty
+                @for ($day = 1; $day <= $hariDalamBulan; $day++)
+                    @php
+                        $currentDate = Carbon::parse($bulan.'-'.$day);
+                        // Jika hari Senin (dan bukan hari pertama), mulai baris baru
+                        if ($currentDate->dayOfWeekIso == 1 && $day > 1) {
+                            echo '</tr><tr>';
+                        }
+                    @endphp
 
-                                    if ($day->isPast() || $day->isToday()) {
-                                        if ($absen) {
-                                            $statusLabel = $statuses[$absen->status] ?? $absen->status;
-                                        } else {
-                                            $statusLabel = $statuses['alpha']; // Tanpa Keterangan
-                                        }
+                    {{-- Hanya render sel jika hari kerja --}}
+                    @if (!$currentDate->isWeekend())
+                        @php
+                            $absen = $absensiBulan->firstWhere('tanggal', $currentDate->toDateString());
+                            $status = ''; // Default status kosong
+
+                            if ($day <= $maxHari) {
+                                if ($absen) {
+                                    $status = $absen->status;
+                                } else {
+                                    // Logika untuk menentukan 'Tanpa Keterangan'
+                                    $isTodayBeforeCutoff = $currentDate->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
+                                    if (!$isTodayBeforeCutoff) {
+                                        $status = 'Tanpa Keterangan';
                                     }
-                                @endphp
-                                <td style="background-color: {{ $statusColors[$statusLabel] ?? '#fff' }}; color: #000;">
-                                    <div>{{ $dayOfMonth }}</div>
-                                    @if($statusLabel)
-                                        <small class="text-muted">{{ $statusLabel }}</small>
-                                    @endif
-                                </td>
-                            @endif
-                        @endforeach
-                        {{-- Pad the last row with empty cells if it's not a full 5-day week --}}
-                        @if(count($week) < 5)
-                            @for($i = count($week); $i < 5; $i++)
-                                <td></td>
-                            @endfor
-                        @endif
-                    </tr>
-                @endforeach
+                                }
+                            }
+                        @endphp
+                        <td @if($status) style="background-color: {{ $statusColors[$status] ?? '#fff' }}; color:#000;" @endif>
+                            <div>{{ $day }}</div>
+                            @if($status)<small class="text-muted">{{ $status }}</small>@endif
+                        </td>
+                    @endif
+                @endfor
+
+                {{-- Render sel kosong untuk padding di akhir bulan --}}
+                @php
+                    $lastDayOfMonth = Carbon::parse($bulan.'-'.$hariDalamBulan);
+                    // Hanya pad jika bulan tidak berakhir di hari Jumat
+                    if ($lastDayOfMonth->dayOfWeekIso < 5) {
+                        $lastDayPadding = 5 - $lastDayOfMonth->dayOfWeekIso;
+                        for ($i = 0; $i < $lastDayPadding; $i++) {
+                            echo '<td></td>';
+                        }
+                    }
+                @endphp
+                </tr>
             </tbody>
         </table>
     </div>
@@ -178,43 +245,28 @@ $absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('pieChart').getContext('2d');
-
-// Data dari PHP
-const rekapData = @json($rekapData);
-const statusLabels = @json($statusLabels);
-const statusColors = @json($statusColors);
-
-// Memastikan urutan data dan warna cocok dengan urutan label
-const orderedData = statusLabels.map(label => rekapData[label] || 0);
-const orderedColors = statusLabels.map(label => statusColors[label] || '#e0e0e0');
-
 const pieData = {
-    labels: statusLabels,
-    datasets: [{
-        data: orderedData,
-        backgroundColor: orderedColors,
-        borderWidth: 1
+    labels: ['Hadir','Izin','Cuti','Sakit','Terlambat','Tugas Luar','Tanpa Keterangan'],
+    datasets:[{
+        data:[
+            {{ $rekapData['Hadir'] }},
+            {{ $rekapData['Izin'] }},
+            {{ $rekapData['Cuti'] }},
+            {{ $rekapData['Sakit'] }},
+            {{ $rekapData['Terlambat'] }},
+            {{ $rekapData['Tugas Luar'] }},
+            {{ $rekapData['Tanpa Keterangan'] }}
+        ],
+        backgroundColor:['#36A2EB','#FFCE56','#9966FF','#FF6384','#4BC0C0','#FF9F40','#e0e0e0'],
+        borderWidth:1
     }]
 };
-
-if (!{{ $adaData ? 'true':'false' }}) {
-    pieData.datasets[0].data = [1];
-    pieData.labels = ['Tidak ada data'];
-    pieData.datasets[0].backgroundColor = ['#e0e0e0'];
+if(!{{ $adaData ? 'true':'false' }}){
+    pieData.datasets[0].data=[1];
+    pieData.labels=['Tidak ada data'];
+    pieData.datasets[0].backgroundColor=['#e0e0e0'];
 }
-
-new Chart(ctx, {
-    type: 'doughnut',
-    data: pieData,
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: false
-            }
-        }
-    }
-});
+new Chart(ctx,{type:'doughnut',data:pieData,options:{responsive:true,plugins:{legend:{display:false}}}});
 
 document.getElementById('bulanPicker').addEventListener('change',function(){
     window.location.href="?bulan="+this.value;

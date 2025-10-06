@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\Setting;
 
 class AutoAbsent extends Command
 {
@@ -26,10 +25,7 @@ class AutoAbsent extends Command
 
         $tz         = config('absensi.timezone', 'Asia/Makassar');
         $cutoffStr  = config('absensi.cutoff', '16:00');
-        
-        // Mengambil nilai penalti dari database (tabel settings) agar dinamis
-        $poinConfig = Setting::get('poin', ['alpha' => -5]);
-        $penalty    = abs((int)($poinConfig['alpha'] ?? -5));
+        $penalty    = (int) config('absensi.alpha_penalty', 5);
 
         $today = Carbon::now($tz);
         $date  = $this->option('date')
