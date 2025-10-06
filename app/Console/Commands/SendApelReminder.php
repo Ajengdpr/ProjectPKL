@@ -17,7 +17,7 @@ class SendApelReminder extends Command
 
         // Kirim ke semua user (kecuali admin bila mau)
         $targets = User::query()
-            // ->where('jabatan','!=','ADMIN')   // uncomment kalau mau exclude admin
+            ->where('role', '!=', 'admin')
             ->get();
 
         foreach ($targets as $u) {
