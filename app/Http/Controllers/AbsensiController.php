@@ -177,6 +177,7 @@ class AbsensiController extends Controller
             'sudahAbsenToday'  => $sudahAbsenToday,
             'lastToday'        => $lastToday,
             'hadirDisabled'    => $hadirDisabled,
+            'poinConfig'       => $poinConfig,
         ]);
     }
 

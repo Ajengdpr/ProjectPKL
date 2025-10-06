@@ -158,14 +158,31 @@
     {{-- Keterangan Point (bawah) --}}
     <div class="col-12 mt-4"> <div class="app-card p-3">
         <h6 class="fw-bold mb-3">Keterangan Point:</h6>
+        @php
+            // Peta untuk mengubah kunci konfigurasi menjadi label yang lebih ramah pengguna
+            $poinLabels = [
+                'hadir'      => 'Hadir Apel',
+                'izin'       => 'Izin',
+                'sakit'      => 'Sakit',
+                'cuti'       => 'Cuti',
+                'tugas_luar' => 'Tugas Luar',
+                'terlambat'  => 'Terlambat',
+                'alpha'      => 'Tanpa Keterangan',
+            ];
+        @endphp
         <ul class="small mb-0">
-          <li>Hadir Apel <span class="text-success">+1</span></li>
-          <li>Cuti <span class="text-secondary">+0</span></li>
-          <li>Tugas Luar <span class="text-secondary">+0</span></li>
-          <li>Sakit <span class="text-secondary">+0</span></li>
-          <li>Terlambat <span class="text-warning">-3</span></li>
-          <li>Tanpa keterangan <span class="text-danger">-5</span></li>
-          <li>Izin<span class="text-secondary">+0</span></li>
+            @foreach($poinLabels as $key => $label)
+                @php
+                    $poin = $poinConfig[$key] ?? 0;
+                    $class = 'text-secondary'; // Warna default untuk poin 0
+                    if ($poin > 0) $class = 'text-success';
+                    if ($poin < 0) {
+                        // Khusus untuk terlambat, gunakan warna kuning jika negatif
+                        $class = ($key === 'terlambat') ? 'text-warning' : 'text-danger';
+                    }
+                @endphp
+                <li>{{ $label }} <span class="{{ $class }}">@if($poin > 0)+@endif{{ $poin }}</span></li>
+            @endforeach
         </ul>
       </div>
     </div>
