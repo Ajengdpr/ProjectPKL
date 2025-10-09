@@ -174,7 +174,14 @@
                 {{ strtoupper($a->status) }}
               </span>
             </td>
-              <td>{{ $a->alasan ?: '-' }}</td>
+              <td>
+                {{ $a->alasan ?: '-' }}
+                @if($a->berkas)
+                  <a href="{{ asset('storage/' . $a->berkas) }}" target="_blank" class="d-block small mt-1">
+                    <i class="bi bi-paperclip"></i> Lihat Berkas
+                  </a>
+                @endif
+              </td>
               <td class="text-end">
                 <div class="action-stack">
                   <button

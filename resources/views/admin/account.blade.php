@@ -33,6 +33,10 @@
         <form method="post" action="{{ route('account.photo.delete') }}">
           @csrf @method('delete')
           <button class="btn btn-danger"><i class="bi bi-trash me-1"></i>Delete picture</button>
+        {{-- Tombol Logout --}}
+        <form method="post" action="{{ route('logout') }}">
+          @csrf
+          <button class="btn btn-outline-danger"><i class="bi bi-box-arrow-right me-1"></i> Logout</button>
         </form>
         @endif
       </div>
@@ -53,30 +57,6 @@
         <button class="btn btn-danger w-100"><i class="bi bi-trash me-1"></i>Delete</button>
       </form>
       @endif
-    </div>
-  </div>
-
-  {{-- Quick admin shortcuts --}}
-  <div class="row g-2 mb-3">
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-speedometer2 me-1"></i> Dashboard
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.users.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-people me-1"></i> Users
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-calendar-check me-1"></i> Absensi
-      </a>
-    </div>
-    <div class="col-6 col-md-3">
-      <a href="{{ route('admin.settings.index') }}" class="btn btn-outline-primary w-100">
-        <i class="bi bi-gear me-1"></i> Settings
-      </a>
     </div>
   </div>
 
@@ -102,15 +82,6 @@
       </div>
     </div>
   </div>
-
-  {{-- Logout --}}
-  <form method="post" action="{{ route('logout') }}" class="text-center">
-    @csrf
-    <button class="btn btn-outline-danger">
-      <i class="bi bi-box-arrow-right me-1"></i> Logout
-    </button>
-  </form>
-
   <div class="my-3"></div>
 </div>
 @endsection

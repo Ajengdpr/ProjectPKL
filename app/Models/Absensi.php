@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Absensi extends Model
 {
     protected $table = 'absensi';
-    protected $fillable = ['user_id','tanggal','jam','status','alasan'];
+    protected $fillable = ['user_id','tanggal','jam','status','alasan','berkas'];
 
     public $timestamps = false;
 

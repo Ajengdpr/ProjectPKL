@@ -179,9 +179,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let start = wrapperWidth;
     
     function step() {
-      start -= 0.5; // kecepatan scroll
+      start -= 1
       if (start < -textWidth) start = wrapperWidth;
-      marquee.style.transform = translateX(${start}px);
+      marquee.style.transform = `translateX(${start}px)`;
       requestAnimationFrame(step);
     }
     
@@ -195,9 +195,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <ul class="nav flex-column sidebar-nav">
     @if($isAdmin)
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard')?'active':'' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*')?'active':'' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*')?'active':'' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*')?'active':'' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.account') ? 'active' : '' }}" href="{{ route('admin.account') }}"><i class="bi bi-person-circle"></i> Akun</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
     @else
       {{-- Menu untuk User Biasa --}}
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}" href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> Home</a></li>
