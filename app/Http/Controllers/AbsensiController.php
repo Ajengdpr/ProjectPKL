@@ -71,7 +71,7 @@ class AbsensiController extends Controller
         $lokasiConfig = Setting::get('lokasi', [
             'lat'    => -3.489179,
             'lng'    => 114.828158,
-            'radius' => 200,
+            'radius' => 100,
         ]);
 
         $office = [
@@ -240,17 +240,17 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
         }
 
-        // $deviceId = $request->input('device_id');
-        // $today = now('Asia/Makassar')->toDateString();
+        $deviceId = $request->input('device_id');
+        $today = now('Asia/Makassar')->toDateString();
 
-        // // Cek apakah device sudah absen hari ini
-        // $already = Absensi::where('device_id', $deviceId)
-        //     ->whereDate('tanggal', $today)
-        //     ->exists();
+        // Cek apakah device sudah absen hari ini
+        $already = Absensi::where('device_id', $deviceId)
+            ->whereDate('tanggal', $today)
+            ->exists();
 
-        // if($already){
-        //     return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
-        // }
+        if($already){
+            return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
+        }
 
         // Handle file upload jika ada
         $berkasPath = null;

@@ -54,13 +54,10 @@
             <button class="btn btn-danger btn-profile" {{ $u->foto ? '' : 'disabled' }}>Delete picture</button>
           </form>
 
-          {{-- Logout --}}
-          <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button class="btn btn-outline-danger btn-profile">
-              <i class="bi bi-box-arrow-right me-1"></i> Logout
-            </button>
-          </form>
+          {{-- Tombol Ganti Password (Modal Trigger) --}}
+          <button type="button" class="btn btn-warning btn-profile" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+            <i class="bi bi-key-fill me-1"></i> Change Password
+          </button>
         </div>
       </div>
     </div>
@@ -89,6 +86,41 @@
     </div>
   </div>
 
+</div>
+
+{{-- Modal untuk Ganti Password --}}
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{{ route('account.password.update') }}">
+          @csrf
+          <div class="modal-header">
+            <h5 class="modal-title" id="changePasswordModalLabel">Ganti Password</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Password Lama</label>
+                    <input type="password" class="form-control" name="password_lama" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Password Baru</label>
+                    <input type="password" class="form-control" name="password_baru" required minlength="8">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Konfirmasi Password Baru</label>
+                    <input type="password" class="form-control" name="password_baru_confirmation" required>
+                </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary">Update Password</button>
+          </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 @push('head')

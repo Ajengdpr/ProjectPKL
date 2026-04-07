@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
@@ -55,5 +57,42 @@ class UserController extends Controller
         $user->save();
 
         return back()->with('success', 'Foto profile berhasil dikembalikan ke default.');
+    }
+
+    /**
+     * Mengupdate informasi dasar akun pengguna (nama).
+     */
+    public function updateAccount(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('account')->with('ok', 'Informasi akun berhasil diperbarui.');
+    }
+
+    /**
+     * Mengupdate password pengguna yang sedang login.
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'password_lama' => 'required|string',
+            'password_baru' => ['required', 'string', 'confirmed', Password::min(8)],
+        ]);
+
+        if (!Hash::check($validated['password_lama'], $user->password)) {
+            return back()->withErrors(['password_lama' => 'Password lama yang Anda masukkan tidak sesuai.'])->withInput();
+        }
+
+        $user->update(['password' => Hash::make($validated['password_baru'])]);
+
+        return redirect()->route('account')->with('ok', 'Password berhasil diperbarui.');
     }
 }

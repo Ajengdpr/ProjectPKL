@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [UserController::class, 'account'])->name('account');
     Route::post('/account/photo', [UserController::class, 'updatePhoto'])->name('account.photo');
     Route::delete('/account/photo', [UserController::class, 'deletePhoto'])->name('account.photo.delete');
+    Route::post('/account/password', [\App\Http\Controllers\AccountController::class, 'updatePassword'])->name('account.password.update');
 
     // Absen
     Route::get('/absen/{status}', [AbsensiController::class, 'create'])

@@ -81,8 +81,8 @@
              {{-- Jika waktu habis, tampilkan alert --}}
              onclick="showCustomAlert('Anda melewati batas waktu hadir', 'warning')"
            @else
-             {{-- Jika normal, buka modal --}}
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Hadir')"
+             {{-- Jika normal, buka modal (setStatus dipindah ke listener modal) --}}
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Hadir"
            @endif >
           <i class="bi bi-person"></i><h6>Hadir</h6>
         </a>
@@ -95,7 +95,7 @@
            @elseif($akhirExpired)
              onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
            @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Izin')"
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Izin"
            @endif >
           <i class="bi bi-phone"></i><h6>Izin</h6>
         </a>
@@ -108,7 +108,7 @@
            @elseif($akhirExpired)
              onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
            @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Sakit')"
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Sakit"
            @endif >
           <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
         </a>
@@ -121,7 +121,7 @@
            @elseif($akhirExpired)
              onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
            @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Tugas Luar')"
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Tugas Luar"
            @endif >
           <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
         </a>
@@ -134,7 +134,7 @@
            @elseif($akhirExpired)
              onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
            @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Cuti')"
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Cuti"
            @endif >
           <i class="bi bi-x-circle"></i><h6>Cuti</h6>
         </a>
@@ -147,7 +147,7 @@
            @elseif($akhirExpired)
              onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
            @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" onclick="setStatus('Terlambat')"
+             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Terlambat"
            @endif >
           <i class="bi bi-alarm"></i><h6>Terlambat</h6>
         </a>
@@ -421,6 +421,17 @@
     return true;
   }
 
+  // Fungsi baru untuk menonaktifkan semua tombol setelah absen
+  function disableAllTiles() {
+    const tiles = document.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+      tile.classList.add('disabled');
+      tile.style.pointerEvents = 'none';
+      tile.style.opacity = '.5';
+      tile.removeAttribute('data-bs-toggle'); // Hapus kemampuan membuka modal
+    });
+  }
+
   // ---------- Variabel lokasi & util ----------
   const officeLat    = {{ $office['lat'] }};
   const officeLng    = {{ $office['lng'] }};
@@ -522,21 +533,15 @@
 
     // saat modal akan ditampilkan, event 'show.bs.modal' memberikan relatedTarget
     modalEl.addEventListener('show.bs.modal', function (e) {
-      // Ambil status dari field (setStatus biasanya dipanggil saat klik)
-      let status = null;
-      const statusField = document.getElementById('statusField');
-      if (statusField) status = statusField.value;
+      // Ambil status dari atribut data-status pada tombol yang diklik
+      const triggerButton = e.relatedTarget;
+      const status = triggerButton.getAttribute('data-status');
 
-      // jika belum ada, cobalah ambil dari trigger (relatedTarget)
-      if (!status && e && e.relatedTarget) {
-        const trg = e.relatedTarget;
-        // coba cari text di <h6> atau textContent tombol
-        const h6 = trg.querySelector && trg.querySelector('h6');
-        status = (h6 && h6.textContent) ? h6.textContent.trim() : (trg.textContent || '').trim();
-      }
+      // Panggil setStatus HANYA jika modal akan dibuka
+      if (status) setStatus(status);
 
       // Hanya lakukan pengecekan lokasi untuk HADIR & TERLAMBAT
-      if (status === 'Hadir' || status === 'Terlambat') {
+      if (status === 'Hadir' || status === 'Terlambat') { // Gunakan status yang baru didapat
         // LOGIKA BARU: Langsung percaya pada status 'insideOffice' yang sudah di-update secara real-time.
         // Tidak perlu getCurrentPosition() lagi, untuk membuat proses lebih cepat.
         if (!insideOffice) {
@@ -553,6 +558,13 @@
         // else -> insideOffice=true sehingga modal akan ditampilkan normal
       }
       // Untuk status selain Hadir/Terlambat, modal tetap akan muncul (tidak dicegah)
+    });
+
+    // Setelah modal ditutup, panggil fungsi untuk menonaktifkan semua tombol
+    // Ini akan berjalan setelah pengguna menekan tombol "Simpan" dan form disubmit
+    const form = modalEl.querySelector('form');
+    form.addEventListener('submit', function() {
+        setTimeout(disableAllTiles, 100); // Beri jeda sedikit agar form sempat terkirim
     });
   });
 </script>
