@@ -28,6 +28,18 @@
     </div>
 
     {{-- Alerts --}}
+    @if(!($isAbsensiActive ?? true))
+      <div class="alert alert-danger shadow-sm border-start border-4 border-danger py-3 mb-4">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+          <div>
+            <div class="fw-bold fs-5">Sistem Absensi Nonaktif</div>
+            <div class="">{{ $disableReason ?? 'Sistem absensi sedang dinonaktifkan sementara.' }}</div>
+          </div>
+        </div>
+      </div>
+    @endif
+
     @if(session('ok'))
       <div class="alert alert-success">{{ session('ok') }}</div>
     @endif
@@ -59,13 +71,14 @@
         </div>
       </div>
     </div>
-    
+
     @php
       // Logika baru: Pisahkan kondisi terkunci karena sudah absen dan karena waktu habis
-      $absenLocked = $sudahAbsenToday ?? false;
-      $hadirExpired = $hadirDisabled ?? false;
+      $isSystemDisabled = !($isAbsensiActive ?? true);
+      $absenLocked = ($sudahAbsenToday ?? false) || $isSystemDisabled;
+      $hadirExpired = ($hadirDisabled ?? false) || $isSystemDisabled;
       // Gunakan variabel dari controller jika ada, jika tidak, gunakan default 16:00
-      $akhirExpired = $akhirExpired ?? (now('Asia/Makassar')->format('H:i:s') > '16:00:00');
+      $akhirExpired = ($akhirExpired ?? (now('Asia/Makassar')->format('H:i:s') > '16:00:00')) || $isSystemDisabled;
     @endphp
     
 
@@ -508,7 +521,7 @@
     insideOffice = false;
     updateLocationInfo('Gagal', null, null);
     // optionally inform user
-    // showCustomAlert('Tidak bisa mengambil lokasi: ' + err.message);
+    showCustomAlert('Tidak bisa mengambil lokasi: ' + err.message);
   }
 
   // start sekali untuk update status lokasi (jika browser mendukung)

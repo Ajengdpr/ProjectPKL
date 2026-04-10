@@ -35,7 +35,12 @@ class AdminSettingController extends Controller
             'batas_akhir' => '16:00:00',
         ]);
 
-        return view('admin.settings.index', compact('tab','user','poin','lokasi','jam'));
+        $status = Setting::get('status', [
+            'reason' => 'Hari Libur Nasional / Kantor Tutup',
+            'hari_libur' => '',
+        ]);
+
+        return view('admin.settings.index', compact('tab','user','poin','lokasi','jam','status'));
     }
 
     public function save(Request $request)
@@ -46,19 +51,25 @@ class AdminSettingController extends Controller
             'lokasi.lng' => 'nullable|numeric',
             'lokasi.radius' => 'nullable|numeric',
             'jam.batas_hadir' => 'required',
-            // Tambahkan validasi untuk batas akhir
             'jam.batas_akhir' => 'nullable',
+            'status.reason' => 'nullable|string|max:255',
+            'status.hari_libur' => 'nullable|string',
         ]);
 
-        // Pastikan selalu menyimpan kedua nilai jam
         $jam = [
             'batas_hadir' => $data['jam']['batas_hadir'] ?? '08:00:00',
             'batas_akhir' => $data['jam']['batas_akhir'] ?? '16:00:00',
         ];
 
+        $status = [
+            'reason' => $data['status']['reason'] ?? 'Hari Libur Nasional / Kantor Tutup',
+            'hari_libur' => $data['status']['hari_libur'] ?? '',
+        ];
+
         Setting::set('poin',   $data['poin']   ?? []);
         Setting::set('lokasi', $data['lokasi'] ?? []);
         Setting::set('jam',    $jam);
+        Setting::set('status', $status);
 
         return back()->with('ok', 'Pengaturan disimpan');
     }

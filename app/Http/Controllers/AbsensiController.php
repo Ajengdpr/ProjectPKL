@@ -96,8 +96,28 @@ class AbsensiController extends Controller
             'batas_akhir' => '16:00:00',
         ], Setting::get('jam', []));
 
+        $statusConfig = Setting::get('status', [
+            'reason' => 'Hari Libur Nasional / Kantor Tutup',
+            'hari_libur' => '',
+        ]);
+
+        $disableReason   = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
+        $isAbsensiActive = true;
+        
+        // Cek jika hari ini ada dalam daftar tanggal libur
+        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
+            $isAbsensiActive = false;
+        }
+
         $hadirDisabled = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_hadir'];
         $akhirExpired = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_akhir'];
+
+        // Jika sistem dinonaktifkan admin, anggap sudah expired agar tombol tidak bisa diklik
+        if (!$isAbsensiActive) {
+            $hadirDisabled = true;
+            $akhirExpired = true;
+        }
 
         // =================================================================
         // KALKULASI POIN BULANAN LIVE UNTUK DASHBOARD (LOGIKA BARU)
@@ -124,8 +144,10 @@ class AbsensiController extends Controller
 
         for ($i = 1; $i <= $maxHari; $i++) {
             $tanggalLoop = $carbonBulan->copy()->day($i);
+            $tanggalLoopString = $tanggalLoop->toDateString();
 
-            if ($tanggalLoop->isWeekend()) {
+            // JANGAN HITUNG ALPHA JIKA: Weekend ATAU Hari Libur yang diatur Admin
+            if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
                 continue;
             }
 
@@ -172,12 +194,27 @@ class AbsensiController extends Controller
             'hadirDisabled'    => $hadirDisabled,
             'akhirExpired'     => $akhirExpired,
             'poinConfig'       => $poinConfig,
+            'isAbsensiActive'  => $isAbsensiActive,
+            'disableReason'    => $disableReason,
         ]);
     }
 
 
     public function create(string $status)
     {
+        $statusConfig = Setting::get('status', ['reason' => 'Hari Libur', 'hari_libur' => '']);
+        $isAbsensiActive = true;
+        
+        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
+            $isAbsensiActive = false;
+        }
+
+        if (!$isAbsensiActive) {
+            $reason = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
+            return redirect()->route('dashboard')->with('err', "Absensi Ditutup: {$reason}");
+        }
+
         // Konversi status dari URL (e.g., 'tugas-luar') menjadi format yang benar ('Tugas Luar')
         $preset = \Illuminate\Support\Str::title(str_replace('-', ' ', $status));
 
@@ -197,6 +234,18 @@ class AbsensiController extends Controller
 
     public function store(Request $request)
     {
+        $statusConfig = Setting::get('status', ['reason' => 'Hari Libur', 'hari_libur' => '']);
+        $isAbsensiActive = true;
+        
+        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
+            $isAbsensiActive = false;
+        }
+
+        if (!$isAbsensiActive) {
+            $reason = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
+            return redirect()->route('dashboard')->with('err', "Absensi Ditutup: {$reason}");
+        }
 
         // Cek jika hari ini adalah weekend (Sabtu/Minggu)
         if (now('Asia/Makassar')->isWeekend()) {
@@ -439,15 +488,20 @@ class AbsensiController extends Controller
         $allUsers = User::where('role', '!=', 'admin')->get();
         $monthlyScores = [];
 
+        // Ambil pengaturan hari libur untuk mengabaikan poin alpha di hari tersebut
+        $statusConfig = Setting::get('status', ['hari_libur' => '']);
+        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+
         foreach ($allUsers as $u) {
             $userAbsensiLoop = $allAbsensiBulan->get($u->id, collect());
             $totalPoinLoop = 0;
 
             for ($i = 1; $i <= $maxHari; $i++) {
                 $tanggalLoop = $carbonBulan->copy()->day($i);
+                $tanggalLoopString = $tanggalLoop->toDateString();
 
-                // JANGAN HITUNG POIN DI HARI LIBUR (SABTU/MINGGU)
-                if ($tanggalLoop->isWeekend()) {
+                // JANGAN HITUNG POIN DI HARI LIBUR (SABTU/MINGGU ATAU TANGGAL LIBUR ADMIN)
+                if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
                     continue;
                 }
 
@@ -496,8 +550,9 @@ class AbsensiController extends Controller
 
         for ($i = 1; $i <= $maxHari; $i++) {
             $tanggalLoop = $carbonBulan->copy()->day($i);
+            $tanggalLoopString = $tanggalLoop->toDateString();
 
-            if ($tanggalLoop->isWeekend()) {
+            if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
                 continue;
             }
             

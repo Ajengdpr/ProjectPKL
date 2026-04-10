@@ -56,6 +56,18 @@
         </div>
       </div>
 
+      <h6 class="fw-bold mb-2">Pengaturan Hari Libur</h6>
+      <div class="mb-3">
+        <label class="form-label small text-body-secondary">Keterangan Libur (Muncul di Dashboard Pengguna)</label>
+        <input type="text" class="form-control" name="status[reason]" value="{{ $status['reason'] ?? '' }}" placeholder="Contoh: Libur Hari Raya atau Cuti Bersama">
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label small text-body-secondary">Daftar Tanggal Libur (Satu baris per tanggal: YYYY-MM-DD)</label>
+        <textarea class="form-control" name="status[hari_libur]" rows="3" placeholder="Contoh:&#10;2026-04-10&#10;2026-04-11">{{ $status['hari_libur'] ?? '' }}</textarea>
+        <div class="form-text text-danger small">Pada tanggal yang tertera di atas, sistem absensi otomatis terkunci.</div>
+      </div>
+
       <div class="d-flex gap-2">
         <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">Kembali ke Dashboard</a>
