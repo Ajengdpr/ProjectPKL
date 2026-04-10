@@ -96,6 +96,18 @@
 @php
     $u = auth()->user();
     $isAdmin = ($u->role ?? 'user') === 'admin';
+    
+    // Daftar username atasan yang berhak menerima/melihat notifikasi
+    $atasanUsernames = [
+        'noorekahasni',   // Sekretariat
+        'emmyariani',     // PPKLH
+        'hajiehariyanie', // KPPI
+        'adhimaulana',    // TALING
+        'hardiniwijayanti', // PHL
+        'fathimatuzzahra'  // PLT Kepala Dinas
+    ];
+    $isAtasan = in_array($u->username, $atasanUsernames);
+
     $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
     $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
     $profileRouteParams = $isAdmin ? ['tab' => 'account'] : [];
@@ -115,7 +127,8 @@
     </div>
 
     <div class="d-flex align-items-center gap-3">
-      @if(!$isAdmin)
+      {{-- Notifikasi hanya untuk Atasan (Admin sudah punya dashboard sendiri) --}}
+      @if($isAtasan)
       <a href="{{ route('notifications.index') }}" class="position-relative text-white fs-5" title="Notifikasi">
         <i class="bi bi-bell"></i>
         @if($unread > 0)
@@ -206,9 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('account')?'active':'' }}" href="{{ route('account') }}"><i class="bi bi-person"></i> Account</a></li>
     @endif
 
-    {{-- Menu yang sama untuk Admin & User --}}
-    
-    @if(!$isAdmin)
+    {{-- Menu Notifikasi hanya untuk Atasan --}}
+    @if($isAtasan)
     <li class="nav-item">
       <a class="nav-link {{ request()->routeIs('notifications.index')?'active':'' }}" href="{{ route('notifications.index') }}"><i class="bi bi-bell"></i> Notifikasi</a>
     </li>
