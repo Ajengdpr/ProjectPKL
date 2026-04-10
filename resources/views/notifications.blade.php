@@ -15,6 +15,15 @@
           <div class="text-muted small">
             {{ \Carbon\Carbon::parse($n->created_at)->diffForHumans() }}
           </div>
+          
+          {{-- Tombol Lihat Lampiran --}}
+          @if(isset($n->data['berkas']) && $n->data['berkas'])
+            <div class="mt-2">
+              <a href="{{ asset('storage/' . $n->data['berkas']) }}" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm">
+                <i class="bi bi-file-earmark-text me-1"></i> Lihat Lampiran
+              </a>
+            </div>
+          @endif
         </div>
         @if(is_null($n->read_at))
           <span class="badge bg-primary">baru</span>

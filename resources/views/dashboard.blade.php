@@ -405,6 +405,16 @@
       label.textContent = 'Alasan';
       alasan.placeholder = 'Isi alasan untuk izin';
       if (terlambatInfo) terlambatInfo.classList.add('d-none');
+    } else if (s === 'Sakit') {
+      alasan.removeAttribute('required');
+      alasan.style.display = 'block';
+      label.textContent = 'Keterangan (opsional)';
+      alasan.placeholder = 'Contoh: Demam, pusing, dsb.';
+      
+      // Tampilkan input file tapi TIDAK wajib
+      fileContainer.style.display = 'block';
+      fileInput.removeAttribute('required');
+      fileLabel.textContent = 'Upload Surat Dokter (opsional)';
     } else if (s === 'Tugas Luar' || s === 'Cuti') {
       alasan.removeAttribute('required');
       alasan.style.display = 'block';

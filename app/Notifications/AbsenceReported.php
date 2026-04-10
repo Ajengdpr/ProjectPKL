@@ -15,7 +15,8 @@ class AbsenceReported extends Notification
         public string $namaPegawai,
         public string $status,      // 'Izin','Sakit','Terlambat','Tugas Luar'
         public ?string $alasan,
-        public string $waktu        // 'Y-m-d H:i'
+        public string $waktu,       // 'Y-m-d H:i'
+        public ?string $berkas = null // Tambahkan berkas
     ) {}
 
     public function via($notifiable) { return ['database']; }
@@ -28,6 +29,7 @@ class AbsenceReported extends Notification
             'body'   => "{$this->namaPegawai} {$this->status}" . ($this->alasan ? " ({$this->alasan})" : ''),
             'time'   => $this->waktu,
             'att_id' => $this->attId,
+            'berkas' => $this->berkas, // Simpan di database
         ]);
     }
 }

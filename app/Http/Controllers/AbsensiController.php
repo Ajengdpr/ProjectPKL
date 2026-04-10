@@ -289,6 +289,7 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
         }
 
+        /*
         $deviceId = $request->input('device_id');
         $today = now('Asia/Makassar')->toDateString();
 
@@ -300,7 +301,7 @@ class AbsensiController extends Controller
         if($already){
             return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
         }
-
+*/
         // Handle file upload jika ada
         $berkasPath = null;
         if ($request->hasFile('berkas')) {
@@ -363,11 +364,11 @@ class AbsensiController extends Controller
 
         /* ============================
            NOTIFIKASI KE ATASAN
-           - Hanya untuk status selain Hadir & Cuti (sesuai permintaanmu)
+           - Hanya untuk status selain Hadir
            - Ke kepala bidang sesuai bidang user
            - Juga ke PLT kepala dinas
            ============================ */
-        if (!in_array($status, ['Hadir','Cuti'], true)) {
+        if ($status !== 'Hadir') {
             $targets = collect();
 
             // Kepala bidang sesuai bidang user
@@ -381,7 +382,7 @@ class AbsensiController extends Controller
             if ($plt) $targets->push($plt);
 
             // Kirim (hindari duplikasi untuk att_id sama)
-            $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz) {
+            $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz, $berkasPath) {
                 $sudahAda = $atasan->notifications()
                     ->where('type', \App\Notifications\AbsenceReported::class)
                     ->where('data->att_id', $absen->id)
@@ -393,7 +394,8 @@ class AbsensiController extends Controller
                         namaPegawai: $user->nama,
                         status: $status,
                         alasan: $data['alasan'] ?? null,
-                        waktu: now($tz)->format('Y-m-d H:i')
+                        waktu: now($tz)->format('Y-m-d H:i'),
+                        berkas: $berkasPath
                     ));
                 }
             });
