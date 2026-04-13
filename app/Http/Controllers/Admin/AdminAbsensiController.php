@@ -86,14 +86,15 @@ class AdminAbsensiController extends Controller
 
         return response()->streamDownload(function() use ($rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Tanggal','Nama','Username','Status','Alasan']);
-            foreach ($rows as $r) {
+            fputcsv($out, ['Tanggal', 'Nama', 'Username', 'Bidang', 'Status', 'Alasan']);
+            foreach ($rows as $row) {
                 fputcsv($out, [
-                    optional($r->tanggal)->format('Y-m-d'),
-                    $r->user->nama ?? '',
-                    $r->user->username ?? '',
-                    strtoupper($r->status),
-                    $r->alasan,
+                    $row->tanggal,
+                    $row->user->nama ?? '',
+                    $row->user->username ?? '',
+                    $row->user->bidang ?? '-',
+                    strtoupper($row->status),
+                    $row->alasan,
                 ]);
             }
             fclose($out);
