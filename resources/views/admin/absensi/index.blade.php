@@ -132,11 +132,12 @@
       <table class="table align-middle table-hover mb-0">
         <thead>
           <tr>
-            <th style="width:130px;">Tanggal</th>
+            <th style="width:110px;">Tanggal</th>
             <th>Nama Pegawai</th>
-            <th style="width:120px;">Status</th>
+            <th style="width:140px;">Bidang</th>
+            <th style="width:110px;">Status</th>
             <th>Alasan</th>
-            <th style="width:260px" class="text-end">Aksi</th>
+            <th style="width:200px" class="text-end">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -167,6 +168,11 @@
                        onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                   <span class="fw-medium">{{ $a->user->nama ?? '-' }}</span>
                 </div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border fw-normal text-wrap">
+                  {{ $a->user->bidang ?? '-' }}
+                </span>
               </td>
               <td>
               @php $badge = $badgeStyles($a->status); @endphp
