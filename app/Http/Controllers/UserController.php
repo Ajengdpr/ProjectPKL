@@ -40,7 +40,7 @@ class UserController extends Controller
         $user->foto = $path;
         $user->save();
 
-        return back()->with('success', 'Foto profile berhasil diperbarui.');
+        return back()->with('ok', 'Foto profile berhasil diperbarui.');
     }
 
     public function deletePhoto()
@@ -56,7 +56,7 @@ class UserController extends Controller
         $user->foto = null;
         $user->save();
 
-        return back()->with('success', 'Foto profile berhasil dikembalikan ke default.');
+        return back()->with('ok', 'Foto profile berhasil dikembalikan ke default.');
     }
 
     /**
