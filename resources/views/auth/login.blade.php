@@ -88,7 +88,6 @@
           <input class="form-check-input" type="checkbox" id="remember" name="remember">
           <label class="form-check-label" for="remember">Ingat saya</label>
         </div>
-        <a href="#" class="small">Lupa Password?</a>
       </div>
       <button class="btn btn-dark btn-lg w-100" type="submit">
         <i class="bi bi-box-arrow-in-right me-1"></i> Log In
