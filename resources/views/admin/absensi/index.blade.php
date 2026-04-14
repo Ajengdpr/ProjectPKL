@@ -277,7 +277,7 @@
 <div class="modal fade" id="modalEditAbsensi" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" id="formEditAbsensi">
+      <form method="post" id="formEditAbsensi" enctype="multipart/form-data">
         @csrf
         @method('put')
         <div class="modal-header">
@@ -305,6 +305,11 @@
             <div class="col-12">
               <label class="form-label">Alasan (opsional)</label>
               <input name="alasan" id="edit-alasan" class="form-control">
+            </div>
+            <div class="col-12">
+                <label class="form-label">Unggah/Ganti Berkas (opsional)</label>
+                <input type="file" name="berkas" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                <div class="form-text small">Biarkan kosong jika tidak ingin mengubah berkas.</div>
             </div>
           </div>
         </div>

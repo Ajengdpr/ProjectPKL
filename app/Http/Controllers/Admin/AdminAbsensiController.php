@@ -66,7 +66,17 @@ class AdminAbsensiController extends Controller
             'tanggal' => 'required|date',
             'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
             'alasan'  => 'nullable|string',
+            'berkas'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
         ]);
+
+        if ($r->hasFile('berkas')) {
+            // Hapus berkas lama jika ada
+            if ($absensi->berkas && \Illuminate\Support\Facades\Storage::disk('public')->exists($absensi->berkas)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($absensi->berkas);
+            }
+            $data['berkas'] = $r->file('berkas')->store('absensi_berkas', 'public');
+        }
+
         $absensi->update($data);
         return back()->with('ok', 'Absensi diperbarui.');
     }
