@@ -231,9 +231,10 @@
     <h2 class="h5 fw-bold mb-0">Input Absensi Manual</h2>
   </div>
   <div class="app-card p-3">
-    <form method="post" action="{{ route('admin.absensi.store') }}" class="row g-2">
+    <form method="post" action="{{ route('admin.absensi.store') }}" enctype="multipart/form-data" class="row g-2">
       @csrf
       <div class="col-12 col-md-3">
+        <label class="form-label small">Pegawai</label>
         <select name="user_id" class="form-select" required>
           <option value="">-- Pilih Pegawai --</option>
           @foreach($users as $u)
@@ -242,23 +243,31 @@
         </select>
       </div>
       <div class="col-6 col-md-2">
+        <label class="form-label small">Tanggal</label>
         <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
       </div>
       <div class="col-6 col-md-2">
+        <label class="form-label small">Jam</label>
         <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
       </div>
       <div class="col-6 col-md-2">
+        <label class="form-label small">Status</label>
         <select name="status" class="form-select" required>
           @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
           <option value="{{ $key }}">{{ $label }}</option>
           @endforeach
         </select>
       </div>
-      <div class="col-12 col-md-2">
-        <input name="alasan" class="form-control" placeholder="Alasan (opsional)">
+      <div class="col-12 col-md-3">
+        <label class="form-label small">Alasan (opsional)</label>
+        <input name="alasan" class="form-control" placeholder="Isi alasan...">
       </div>
-      <div class="col-12 col-md-1 d-grid">
-        <button class="btn btn-primary">Simpan</button>
+      <div class="col-12 col-md-3">
+        <label class="form-label small">Unggah Berkas (opsional)</label>
+        <input type="file" name="berkas" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+      </div>
+      <div class="col-12 col-md-1 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Simpan</button>
       </div>
     </form>
   </div>
