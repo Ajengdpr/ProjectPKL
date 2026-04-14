@@ -71,7 +71,9 @@
   {{-- Header --}}
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <h1 class="h4 fw-bold mb-0">Manajemen Absensi</h1>
-    <button type="button" id="btn-main-export" class="btn btn-success"><i class="bi bi-download me-1"></i>Export CSV</button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalExportCSV">
+      <i class="bi bi-download me-1"></i>Export CSV
+    </button>
   </div>
 
 
@@ -357,6 +359,31 @@
 
 
 
+{{-- =============== Modal: Export CSV =============== --}}
+<div class="modal fade" id="modalExportCSV" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-download me-2"></i>Export Data ke CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Pilih bulan dan tahun data yang ingin Anda unduh.</p>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Pilih Bulan</label>
+                    <input type="month" id="export-month-input" class="form-control" value="{{ now()->format('Y-m') }}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="btn-do-export" class="btn btn-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 /* ==== Modal konfirmasi universal (hapus) ==== */
 const confirmModal = document.getElementById('confirmModal');
@@ -396,24 +423,23 @@ modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
   form.action = "{{ url('admin/absensi') }}/" + id;
 });
 
-/* ==== Main Export Button Handler ==== */
+/* ==== Main Export Button Handler (Using Modal) ==== */
 document.addEventListener('DOMContentLoaded', function() {
-    const mainExportBtn = document.getElementById('btn-main-export');
-    if (mainExportBtn) {
-        mainExportBtn.addEventListener('click', function() {
-            const currentMonth = new Date().toISOString().slice(0, 7); // format YYYY-MM
-            const bulan = prompt(`Masukkan bulan (format YYYY-MM) untuk memulai export:`, currentMonth);
+    const doExportBtn = document.getElementById('btn-do-export');
+    const monthInput = document.getElementById('export-month-input');
+    const exportModalElement = document.getElementById('modalExportCSV');
+
+    if (doExportBtn && monthInput && exportModalElement) {
+        doExportBtn.addEventListener('click', function() {
+            const bulan = monthInput.value;
 
             if (!bulan) {
-                return; // User cancelled
-            }
-
-            if (!/^\d{4}-\d{2}$/.test(bulan)) {
-                alert('Format bulan tidak valid. Harap gunakan format YYYY-MM.');
+                alert('Silakan pilih bulan terlebih dahulu.');
                 return;
             }
 
-            const firstDay = new Date(bulan + '-02'); // Use day 02 to avoid timezone issues
+            // Hitung tanggal awal dan akhir bulan
+            const firstDay = new Date(bulan + '-02'); // Menggunakan tgl 02 utk menghindari zona waktu meleset
             const lastDay = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0);
 
             const formatDate = (date) => {
@@ -429,6 +455,9 @@ document.addEventListener('DOMContentLoaded', function() {
             url.searchParams.append('to', toDate);
 
             window.location.href = url.toString();
+
+            // Tutup modal setelah proses export dimulai
+            bootstrap.Modal.getInstance(exportModalElement).hide();
         });
     }
 });
