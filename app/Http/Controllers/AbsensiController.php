@@ -371,12 +371,12 @@ class AbsensiController extends Controller
         if ($status !== 'Hadir') {
             $targets = collect();
 
-            // 1. Kepala bidang sesuai bidang user (jika yang absen bukan kabid itu sendiri)
+            // 1. Kepala bidang sesuai bidang user (jika yang absen bukan kabid itu sendiri dan bukan kepala dinas itu sendiri)
             if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
                 $kabidUsername = self::KEPALA_BIDANG_USERNAME[$user->bidang];
                 
-                // Jika yang absen bukan Kabid, maka kirim ke Kabid-nya
-                if ($user->username !== $kabidUsername) {
+                // Jika yang absen bukan Kabid dan bukan Kepala Dinas, maka kirim ke Kabid-nya
+                if ($user->username !== $kabidUsername && $user->username !== self::PLT_KEPALA_DINAS_USERNAME) {
                     $kepala = User::where('username', $kabidUsername)->first();
                     if ($kepala) $targets->push($kepala);
                 }
