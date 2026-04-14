@@ -93,6 +93,7 @@ class UserController extends Controller
 
         $user->update(['password' => Hash::make($validated['password_baru'])]);
 
-        return redirect()->route('account')->with('ok', 'Password berhasil diperbarui.');
+        $route = $user->role === 'admin' ? 'admin.account' : 'account';
+        return redirect()->route($route)->with('ok', 'Password berhasil diperbarui.');
     }
 }
