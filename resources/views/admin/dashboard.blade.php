@@ -9,27 +9,82 @@
   .row.match-height > [class*="col-"] { display: flex; flex-direction: column; }
   .row.match-height > [class*="col-"] > .app-card { flex-grow: 1; }
 
-  /* Slider Pegawai Belum Absen */
+  /* Gaya untuk slider pegawai belum absen per bidang */
+  .belum-absen-container {
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 5px;
+  }
+  .bidang-section {
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+  }
+  .bidang-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brand-900);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 5px;
+  }
   .horizontal-scroll-wrapper {
     overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* IE 10+ */
+    cursor: grab;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
   }
+  /* Scrollbar tipis untuk indikator visual */
   .horizontal-scroll-wrapper::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    height: 4px;
+  }
+  .horizontal-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  .horizontal-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+  }
+  .horizontal-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--brand);
+  }
+  .horizontal-scroll-wrapper:active {
+    cursor: grabbing;
   }
   .horizontal-scroll-content {
     display: flex;
+    gap: 12px;
     width: max-content;
   }
-  .user-card {
+  .user-card-mini {
     flex: 0 0 auto;
-    width: 100px; /* Disesuaikan agar muat 5 dalam container */
+    width: 85px;
+    text-align: center;
   }
-  .user-card .avatar-lg {
-    width: 64px;
-    height: 64px;
+  .user-card-mini img {
+    width: 50px;
+    height: 50px;
     object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .user-card-mini .name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-top: 5px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 1.7rem;
   }
 </style>
 @endonce
@@ -222,31 +277,38 @@
     {{-- Pegawai yang Belum Absen --}}
     <div class="col-12 col-lg-5">
       <div class="app-card p-3 h-100 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="mb-3">
             <h6 class="fw-bold mb-0">Pegawai Belum Absen ({{ $belumAbsenCount }})</h6>
-            @if($belumAbsen->count() > 5)
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-secondary" id="scroll-prev-btn" disabled>&lt;</button>
-                <button class="btn btn-sm btn-outline-secondary" id="scroll-next-btn">&gt;</button>
-            </div>
-            @endif
+            <small class="text-body-secondary">Geser ke samping per bidang</small>
         </div>
-        <div class="horizontal-scroll-wrapper flex-grow-1">
+        
+        <div class="belum-absen-container flex-grow-1 pe-2">
           @if($belumAbsen->isEmpty())
-            <div class="p-3 text-center text-body-secondary">Tidak ada data.</div>
-          @else
-            <div class="horizontal-scroll-content d-flex align-items-start gap-3">
-              @foreach($belumAbsen as $u)
-                <div class="user-card text-center">
-                   @php $foto = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg'); @endphp
-                   <img src="{{ $foto }}" class="avatar-lg rounded-circle" alt="avatar">
-                  <div class="mt-2">
-                    <div class="fw-medium small">{{ $u->nama }}</div>
-                    @if($u->bidang)<div class="small text-body-secondary">{{ Str::limit($u->bidang, 15) }}</div>@endif
-                  </div>
-                </div>
-              @endforeach
+            <div class="p-3 text-center text-body-secondary bg-light rounded-3 h-100 d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-person-check fs-2 d-block mb-2 text-success opacity-50"></i>
+                <div>Semua pegawai sudah absen atau hari ini libur.</div>
             </div>
+          @else
+            @foreach($belumAbsen as $namaBidang => $users)
+              <div class="bidang-section shadow-sm">
+                <div class="bidang-title">
+                    <span>{{ $namaBidang ?: 'TANPA BIDANG' }}</span>
+                    <span class="badge bg-white text-dark border rounded-pill shadow-sm" style="font-size: 0.65rem;">{{ count($users) }} Pegawai</span>
+                </div>
+                
+                <div class="horizontal-scroll-wrapper">
+                    <div class="horizontal-scroll-content">
+                        @foreach($users as $u)
+                        <div class="user-card-mini">
+                            @php $foto = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg'); @endphp
+                            <img src="{{ $foto }}" class="rounded-circle" alt="avatar">
+                            <div class="name" title="{{ $u->nama }}">{{ $u->nama }}</div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+              </div>
+            @endforeach
           @endif
         </div>
       </div>
@@ -282,42 +344,39 @@
 @endsection
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const scrollWrapper = document.querySelector('.horizontal-scroll-wrapper');
-    if (!scrollWrapper) return;
+document.addEventListener('DOMContentLoaded', function() {
+    const sliders = document.querySelectorAll('.horizontal-scroll-wrapper');
+    
+    sliders.forEach(slider => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
 
-    const prevBtn = document.getElementById('scroll-prev-btn');
-    const nextBtn = document.getElementById('scroll-next-btn');
-    const cardWidth = 100 + 12; // card width (100px) + gap (12px)
-
-    if (nextBtn && prevBtn) {
-        // Check if we need buttons
-        const maxScrollLeft = scrollWrapper.scrollWidth - scrollWrapper.clientWidth;
-        if (maxScrollLeft <= 0) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            return;
-        }
-
-        nextBtn.addEventListener('click', () => {
-            scrollWrapper.scrollBy({ left: cardWidth * 2, behavior: 'smooth' });
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
         });
-
-        prevBtn.addEventListener('click', () => {
-            scrollWrapper.scrollBy({ left: -cardWidth * 2, behavior: 'smooth' });
+        
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.add('active');
         });
-
-        scrollWrapper.addEventListener('scroll', () => {
-            const currentScroll = scrollWrapper.scrollLeft;
-            const maxScroll = scrollWrapper.scrollWidth - scrollWrapper.clientWidth;
-            prevBtn.disabled = currentScroll < 1;
-            nextBtn.disabled = currentScroll >= maxScroll - 1;
+        
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.add('active');
         });
-
-        // Initial button state
-        prevBtn.disabled = true;
-        nextBtn.disabled = maxScrollLeft <= 0;
-    }
+        
+        slider.addEventListener('mousemove', (e) => {
+            if(!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // Kecepatan scroll
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    });
 });
 </script>
 @endpush

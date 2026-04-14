@@ -57,7 +57,7 @@ public function index(Request $request)
         // Logika untuk menampilkan daftar "Belum Absen"
         // Tampilkan jika bukan hari libur dan bukan tanggal di masa depan
         if (!$isWeekend && !$isFuture) {
-            $belumAbsen = (clone $belumAbsenQuery)->orderBy('nama')->get();
+            $belumAbsen = (clone $belumAbsenQuery)->orderBy('bidang')->orderBy('nama')->get()->groupBy('bidang');
             $belumAbsenCount = (clone $belumAbsenQuery)->count();
         }
 
