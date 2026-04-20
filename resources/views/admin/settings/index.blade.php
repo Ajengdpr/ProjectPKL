@@ -70,7 +70,6 @@
 
       <div class="d-flex gap-2">
         <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">Kembali ke Beranda</a>
       </div>
     </form>
   <div class="my-3"></div>

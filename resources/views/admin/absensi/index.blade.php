@@ -80,49 +80,43 @@
 {{-- Toolbar Filter --}}
 <div class="app-card p-3 mb-3 toolbar">
   <form method="get">
-  {{-- Filter Utama yang Selalu Terlihat --}}
-  <div class="row g-2 align-items-center">
-    <div class="col-md-3">
-      <input type="text" name="q" class="form-control" placeholder="Cari nama pegawai" value="{{ request('q') }}">
-    </div>
-    <div class="col-md-2">
-      <input type="date" name="from" id="filter-from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
-    </div>
-    <div class="col-md-2">
-      <input type="date" name="to" id="filter-to" value="{{ request('to') }}" class="form-control" title="Sampai Tanggal">
-    </div>
+    <div class="row g-2 align-items-end">
+      {{-- Filter Pegawai --}}
+      <div class="col-md-3">
+        <label class="form-label small fw-bold text-muted mb-1">Pilih Pegawai</label>
+        <select name="user_id" class="form-select">
+          <option value="">-- Semua Pegawai --</option>
+          @foreach($users as $u)
+            <option value="{{ $u->id }}" @selected(request('user_id')==$u->id)>{{ $u->nama }}</option>
+          @endforeach
+        </select>
+      </div>
 
-    {{-- DIUBAH: ms-auto mendorong grup ini ke kanan & col-md-auto membuat lebarnya pas --}}
-    <div class="col-md-auto ms-auto d-flex gap-2">
-      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedFilter" aria-expanded="false" aria-controls="advancedFilter">
-        <i class="bi bi-sliders me-1"></i> Filter Lanjutan
-      </button>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
-      <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-dark">Reset</a>
-    </div>
-  </div>
+      {{-- Filter Status --}}
+      <div class="col-md-2">
+        <label class="form-label small fw-bold text-muted mb-1">Status</label>
+        <select name="status" class="form-select">
+          <option value="">-- Semua Status --</option>
+          @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
+            <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
+          @endforeach
+        </select>
+      </div>
 
-    {{-- Filter Lanjutan yang Tersembunyi --}}
-    <div class="collapse mt-3" id="advancedFilter">
-      <div class="row g-2">
-        <div class="col-md-6">
-          <label class="form-label">Filter Berdasarkan Pegawai</label>
-          <select name="user_id" class="form-select">
-            <option value="">-- Semua Pegawai --</option>
-            @foreach($users as $u)
-              <option value="{{ $u->id }}" @selected(request('user_id')==$u->id)>{{ $u->nama }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Filter Berdasarkan Status</label>
-          <select name="status" class="form-select">
-            <option value="">-- Semua Status --</option>
-            @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
-              <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
-            @endforeach
-          </select>
-        </div>
+      {{-- Filter Tanggal --}}
+      <div class="col-md-2">
+        <label class="form-label small fw-bold text-muted mb-1">Dari Tanggal</label>
+        <input type="date" name="from" id="filter-from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold text-muted mb-1">Sampai Tanggal</label>
+        <input type="date" name="to" id="filter-to" value="{{ request('to') }}" class="form-control" title="Sampai Tanggal">
+      </div>
+
+      {{-- Tombol Aksi --}}
+      <div class="col-md-auto ms-auto d-flex gap-2 pb-1">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
+        <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-dark">Reset</a>
       </div>
     </div>
   </form>
@@ -370,7 +364,7 @@
             <div class="modal-body">
                 <p class="small text-muted mb-3">Pilih bulan dan tahun data yang ingin Anda unduh.</p>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Pilih Bulan</label>
+                    <label class="form-label fw-semibold">Pilih Bulan dan Tahun</label>
                     <input type="month" id="export-month-input" class="form-control" value="{{ now()->format('Y-m') }}">
                 </div>
             </div>

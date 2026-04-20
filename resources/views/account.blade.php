@@ -48,21 +48,42 @@
             <button type="button" id="btnChange" class="btn btn-success btn-profile">Ganti Foto</button>
           </form>
 
-          {{-- Delete picture --}}
-          <form method="POST" action="{{ route('account.photo.delete') }}">
-            @csrf @method('DELETE')
-            <button class="btn btn-danger btn-profile" {{ $u->foto ? '' : 'disabled' }}>Hapus Foto</button>
-          </form>
+          {{-- Tombol Hapus Foto (Memicu Modal) --}}
+          <button type="button" class="btn btn-danger btn-profile" 
+                  data-bs-toggle="modal" data-bs-target="#confirmDeletePhotoModal"
+                  {{ $u->foto ? '' : 'disabled' }}>Hapus Foto</button>
 
           {{-- Tombol Ganti Password (Modal Trigger) --}}
           <button type="button" class="btn btn-warning btn-profile" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
             <i class="bi bi-key-fill me-1"></i> Ganti Kata Sandi
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
+          </div>
+          </div>
+          </div>
+          </div>
+          </div>
 
+          {{-- Modal Konfirmasi Hapus Foto --}}
+          <div class="modal fade" id="confirmDeletePhotoModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+          <div class="modal-header">
+          <h5 class="modal-title">Konfirmasi Hapus</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+          Apakah Anda yakin ingin menghapus foto profil? Tindakan ini tidak dapat dibatalkan.
+          </div>
+          <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+          <form method="POST" action="{{ route('account.photo.delete') }}">
+          @csrf @method('DELETE')
+          <button type="submit" class="btn btn-danger">Ya, Hapus Foto</button>
+          </form>
+          </div>
+          </div>
+          </div>
+          </div>
   {{-- Seksi informasi akun (read-only) --}}
   <div class="app-card p-4 p-md-5">
     <h5 class="fw-bold mb-3">Informasi Akun</h5>
