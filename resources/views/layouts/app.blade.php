@@ -89,6 +89,22 @@
   </style>
 
   @stack('head')
+  <script>
+    // Memaksa teks "Choose File" menjadi "Pilih Berkas" pada semua input file
+    document.addEventListener('DOMContentLoaded', function() {
+      const style = document.createElement('style');
+      style.textContent = `
+        input[type="file"]::file-selector-button {
+          content: "Pilih Berkas";
+        }
+        /* Untuk browser Chrome/Safari lama */
+        input[type="file"]::-webkit-file-upload-button {
+          content: "Pilih Berkas";
+        }
+      `;
+      document.head.appendChild(style);
+    });
+  </script>
 </head>
 <body>
 
@@ -207,16 +223,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <ul class="nav flex-column sidebar-nav">
     @if($isAdmin)
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard')?'active':'' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard')?'active':'' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Beranda</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.account') ? 'active' : '' }}" href="{{ route('admin.account') }}"><i class="bi bi-person-circle"></i> Akun</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
     @else
       {{-- Menu untuk User Biasa --}}
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}" href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> Home</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('statistik')?'active':'' }}" href="{{ route('statistik') }}"><i class="bi bi-graph-up"></i> Statistik</a></li>
-      <li class="nav-item"><a class="nav-link {{ request()->routeIs('account')?'active':'' }}" href="{{ route('account') }}"><i class="bi bi-person"></i> Account</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('dashboard')?'active':'' }}" href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> Beranda</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('statistik')?'active':'' }}" href="{{ route('statistik') }}"><i class="bi bi-bar-chart"></i> Statistik</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('account')?'active':'' }}" href="{{ route('account') }}"><i class="bi bi-person"></i> Akun</a></li>
     @endif
 
     {{-- Menu Notifikasi hanya untuk Atasan --}}

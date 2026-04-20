@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title','Dashboard Admin')
+@section('title','Beranda Admin')
 
 @once
 <style>
@@ -109,17 +109,33 @@
 
 <div class="container" style="max-width:1100px">
 
-  {{-- HEADER + FILTER BAR --}}
-  <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-md-between gap-2 mb-3">
-    <div>
-      <h1 class="h3 fw-bold mb-0">Dashboard</h1>
-      <p class="text-body-secondary mb-0">Ringkasan absensi untuk tanggal: <strong>{{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</strong></p>
+  {{-- HEADER CARD + FILTER BAR (OPSI 4) --}}
+  <div class="app-card p-3 mb-4 bg-light border-0 shadow-sm">
+    <div class="row g-3 align-items-center">
+      <div class="col-12 col-md-auto me-auto">
+        <div class="d-flex align-items-center">
+          <div class="bg-white p-2 rounded-circle shadow-sm me-3 text-primary">
+            <i class="bi bi-calendar3 fs-5"></i>
+          </div>
+          <div>
+            <div class="small text-body-secondary fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">Ringkasan Kehadiran</div>
+            <h1 class="h5 fw-bold mb-0 text-dark">
+              {{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+            </h1>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-auto">
+        <form method="get" class="d-flex align-items-center gap-2 flex-nowrap">
+          <div class="input-group input-group-sm shadow-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-filter"></i></span>
+            <input type="date" name="date" value="{{ $date }}" class="form-control border-start-0" style="width: 140px;">
+          </div>
+          <button class="btn btn-sm btn-primary shadow-sm px-3 text-nowrap">Terapkan</button>
+          <a class="btn btn-sm btn-outline-secondary shadow-sm text-nowrap" href="{{ route('admin.dashboard') }}">Hari Ini</a>
+        </form>
+      </div>
     </div>
-    <form method="get" class="d-flex align-items-center gap-2">
-      <input type="date" name="date" value="{{ $date }}" class="form-control" style="width: 180px;">
-      <button class="btn btn-primary">Terapkan</button>
-      <a class="btn btn-outline-secondary" href="{{ route('admin.dashboard') }}">Hari Ini</a>
-    </form>
   </div>
 
 {{-- STAT CARDS --}}
@@ -279,7 +295,6 @@
       <div class="app-card p-3 h-100 d-flex flex-column">
         <div class="mb-3">
             <h6 class="fw-bold mb-0">Pegawai Belum Absen ({{ $belumAbsenCount }})</h6>
-            <small class="text-body-secondary">Geser ke samping per bidang</small>
         </div>
         
         <div class="belum-absen-container flex-grow-1 pe-2">

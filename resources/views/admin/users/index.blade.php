@@ -88,7 +88,7 @@
     {{-- Filter Utama yang Selalu Terlihat --}}
     <div class="row g-2 align-items-center">
       <div class="col-md-7">
-        <input type="text" name="q" class="form-control" placeholder="Cari nama, username, jabatan..." value="{{ $q }}">
+        <input type="text" name="q" class="form-control" placeholder="Cari nama, nama pengguna, jabatan..." value="{{ $q }}">
       </div>
       
       {{-- Grup Tombol --}}
@@ -126,7 +126,7 @@
           <tr>
             <th style="width:56px"></th>
             <th>Nama</th>
-            <th class="d-none d-lg-table-cell">Username</th>
+            <th class="d-none d-lg-table-cell">Nama Pengguna</th>
             <th>Bidang</th>
             <th class="d-none d-xl-table-cell">Jabatan</th>
             <th style="width:260px" class="text-end">Aksi</th>
@@ -203,11 +203,11 @@
             <input name="nama" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Username</label>
+            <label class="form-label">Nama Pengguna</label>
             <input name="username" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Password</label>
+            <label class="form-label">Kata Sandi</label>
             <input name="password" type="password" class="form-control" required>
           </div>
           <div class="col-md-6">
@@ -245,7 +245,7 @@
               <input name="nama" id="edit-nama" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Username</label>
+              <label class="form-label">Nama Pengguna</label>
               <input name="username" id="edit-username" class="form-control" required>
             </div>
             <div class="col-md-6">

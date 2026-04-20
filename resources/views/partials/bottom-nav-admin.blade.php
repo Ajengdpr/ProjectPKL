@@ -8,7 +8,7 @@
       <li class="nav-item">
         <a class="nav-link {{ $is('admin.dashboard') ? 'active' : '' }}"
            href="{{ route('admin.dashboard') }}">
-          <i class="bi bi-house-door me-1"></i> Home
+          <i class="bi bi-house-door me-1"></i> Beranda
         </a>
       </li>
       <li class="nav-item">

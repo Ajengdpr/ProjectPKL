@@ -76,11 +76,11 @@
     <form method="POST" action="/login" class="login-card">
       @csrf
       <div class="mb-3">
-        <label class="form-label">Username</label>
+        <label class="form-label">Nama Pengguna</label>
         <input class="form-control form-control-lg" name="username" value="{{ old('username') }}" required autofocus>
-      </div>
-      <div class="mb-2">
-        <label class="form-label">Password</label>
+        </div>
+        <div class="mb-3">
+        <label class="form-label">Kata Sandi</label>
         <input class="form-control form-control-lg" type="password" name="password" required>
       </div>
        <div class="d-flex justify-content-between align-items-center mb-3">

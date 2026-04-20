@@ -44,19 +44,19 @@
           {{-- Change picture --}}
           <form id="formChangePhoto" method="POST" action="{{ route('account.photo') }}" enctype="multipart/form-data">
             @csrf
-            <input id="inputPhoto" type="file" name="foto" accept="image/*" class="d-none">
-            <button type="button" id="btnChange" class="btn btn-success btn-profile">Change picture</button>
+            <input type="file" id="inputPhoto" name="foto" class="d-none" accept="image/*">
+            <button type="button" id="btnChange" class="btn btn-success btn-profile">Ganti Foto</button>
           </form>
 
           {{-- Delete picture --}}
           <form method="POST" action="{{ route('account.photo.delete') }}">
             @csrf @method('DELETE')
-            <button class="btn btn-danger btn-profile" {{ $u->foto ? '' : 'disabled' }}>Delete picture</button>
+            <button class="btn btn-danger btn-profile" {{ $u->foto ? '' : 'disabled' }}>Hapus Foto</button>
           </form>
 
           {{-- Tombol Ganti Password (Modal Trigger) --}}
           <button type="button" class="btn btn-warning btn-profile" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-            <i class="bi bi-key-fill me-1"></i> Change Password
+            <i class="bi bi-key-fill me-1"></i> Ganti Kata Sandi
           </button>
         </div>
       </div>
@@ -116,7 +116,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-primary">Update Password</button>
+            <button type="submit" class="btn btn-primary">Ganti Kata Sandi</button>
           </div>
       </form>
     </div>
