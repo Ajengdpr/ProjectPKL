@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Absensi;
+use App\Models\Setting;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -109,11 +111,8 @@ public function index(Request $request)
         }
         usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
 
-        // 6. Ranking Poin Pegawai
-        $rankingPoin = User::where('role', '!=', 'admin')
-            ->orderByDesc('point')
-            ->orderBy('nama')
-            ->get(['id', 'nama', 'foto', 'point']);
+        // 6. Ranking Poin Pegawai (Sinkron Bulanan dengan Dashboard User)
+        $rankingPoin = $this->getMonthlyRankingData();
 
         // Data lengkap dikirim ke view
         return view('admin.dashboard', compact(
@@ -124,10 +123,7 @@ public function index(Request $request)
 
     public function exportPoints()
     {
-        $users = User::where('role', '!=', 'admin')
-            ->orderByDesc('point')
-            ->orderBy('nama')
-            ->get(['nama', 'bidang', 'jabatan', 'point']);
+        $users = $this->getMonthlyRankingData();
 
         $filename = "Ranking_Poin_Pegawai_" . date('Y-m-d') . ".csv";
         $handle = fopen('php://output', 'w');
@@ -136,12 +132,13 @@ public function index(Request $request)
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
         // Header CSV
-        fputcsv($handle, ['Peringkat', 'Nama Pegawai', 'Bidang', 'Jabatan', 'Total Poin']);
+        fputcsv($handle, ['Peringkat', 'Nama Pegawai', 'Username', 'Bidang', 'Jabatan', 'Total Poin (Bulan Ini)']);
 
         foreach ($users as $index => $u) {
             fputcsv($handle, [
                 $index + 1,
                 $u->nama,
+                $u->username ?: '-',
                 $u->bidang ?: '-',
                 $u->jabatan ?: '-',
                 $u->point
@@ -150,5 +147,100 @@ public function index(Request $request)
 
         fclose($handle);
         exit;
+    }
+
+    /**
+     * Helper untuk menghitung poin bulanan seluruh pegawai secara live.
+     * Logika ini disamakan persis dengan dashboard user.
+     */
+    private function getMonthlyRankingData()
+    {
+        $tz = config('absensi.timezone', 'Asia/Makassar');
+        $cutoffStr = config('absensi.cutoff', '16:00:00');
+        $bulan = now($tz)->format('Y-m');
+        
+        $poinConfig = Setting::get('poin', [
+            'hadir'      => 1,
+            'terlambat'  => -3,
+            'izin'       => 0,
+            'sakit'      => 0,
+            'cuti'       => 0,
+            'tugas_luar' => 0,
+            'alpha'      => -5
+        ]);
+
+        $statusConfig = Setting::get('status', [
+            'hari_libur' => '',
+        ]);
+        $hariLiburRaw = $statusConfig['hari_libur'] ?? '';
+        $hariLibur = array_filter(explode("\n", str_replace("\r", "", $hariLiburRaw)));
+
+        $carbonBulan = now($tz)->startOfMonth();
+        $maxHari = $carbonBulan->isSameMonth(now($tz)) ? now($tz)->day : $carbonBulan->daysInMonth;
+
+        $workdaysSoFar = [];
+        for ($i = 1; $i <= $maxHari; $i++) {
+            $tgl = $carbonBulan->copy()->day($i);
+            $tglStr = $tgl->toDateString();
+            if ($tgl->isWeekend() || in_array($tglStr, $hariLibur)) {
+                continue;
+            }
+            // Logika Alpha: Jika hari ini belum lewat cutoff, jangan hitung alpha dulu
+            if ($tgl->isToday()) {
+                if (now($tz)->format('H:i:s') > $cutoffStr) {
+                    $workdaysSoFar[] = $tglStr;
+                }
+            } else {
+                $workdaysSoFar[] = $tglStr;
+            }
+        }
+
+        $allUsers = User::where('role', '!=', 'admin')->get(['id', 'nama', 'foto', 'bidang', 'jabatan', 'username']);
+        $allAbsensi = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->get()
+            ->groupBy('user_id');
+
+        $rankingData = $allUsers->map(function($u) use ($allAbsensi, $workdaysSoFar, $poinConfig) {
+            $userAbsensi = $allAbsensi->get($u->id, collect());
+            $points = 0;
+            $presentDates = [];
+
+            foreach ($userAbsensi as $absen) {
+                $presentDates[] = $absen->tanggal;
+                $status = $absen->status;
+                
+                if ($status === 'Hadir') {
+                    $points += (int)($poinConfig['hadir'] ?? 1);
+                } elseif ($status === 'Terlambat') {
+                    if (empty(trim($absen->alasan ?? ''))) {
+                        $points += (int)($poinConfig['alpha'] ?? -5);
+                    } else {
+                        $points += (int)($poinConfig['terlambat'] ?? -3);
+                    }
+                } elseif ($status === 'Izin') {
+                    $points += (int)($poinConfig['izin'] ?? 0);
+                } elseif ($status === 'Sakit') {
+                    $points += (int)($poinConfig['sakit'] ?? 0);
+                } elseif ($status === 'Cuti') {
+                    $points += (int)($poinConfig['cuti'] ?? 0);
+                } elseif ($status === 'Tugas Luar') {
+                    $points += (int)($poinConfig['tugas_luar'] ?? 0);
+                } elseif ($status === 'alpha') {
+                    $points += (int)($poinConfig['alpha'] ?? -5);
+                }
+            }
+
+            // Kurangi poin (Alpha) untuk setiap hari kerja yang tidak ada catatan absensinya
+            foreach ($workdaysSoFar as $wd) {
+                if (!in_array($wd, $presentDates)) {
+                    $points += (int)($poinConfig['alpha'] ?? -5);
+                }
+            }
+
+            $u->point = $points;
+            return $u;
+        });
+
+        return $rankingData->sortByDesc('point')->values();
     }
 }

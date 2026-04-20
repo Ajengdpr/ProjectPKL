@@ -213,7 +213,7 @@
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'cuti']) }}" class="text-decoration-none text-reset h-100">
             <div class="app-card p-3 d-flex flex-column h-100">
                 <div class="d-flex align-items-center">
-                    <div class="p-2 rounded-3 me-2" style="background-color: #f7e6d5; color: #fd7e14;">
+                    <div class="bg-warning-subtle text-warning p-2 rounded-3 me-2">
                         <i class="bi bi-calendar-x-fill fs-5"></i>
                     </div>
                     <div class="fs-2 fw-bold">{{ $cuti }}</div>
@@ -360,12 +360,12 @@
     {{-- Ranking Poin Pegawai (Desain Leaderboard) --}}
     <div class="col-12 col-lg-5">
       <div class="app-card p-3 h-100 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
           <div>
             <h6 class="fw-bold mb-0">Ranking Poin Pegawai</h6>
-            <small class="text-muted">Top performa berdasarkan total poin</small>
+            <small class="text-muted">Top performa berdasarkan poin bulan ini</small>
           </div>
-          <a href="{{ route('admin.export.points') }}" class="btn btn-sm btn-success shadow-sm">
+          <a href="{{ route('admin.export.points') }}" class="btn btn-sm btn-success shadow-sm text-nowrap">
             <i class="bi bi-download me-1"></i> Export CSV
           </a>
         </div>
