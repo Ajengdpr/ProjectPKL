@@ -66,11 +66,10 @@ public function index(Request $request)
             $alpha = $belumAbsenCount;
         }
 
-        // 4. Log Absensi Terbaru
+        // 4. Log Absensi Terbaru (Menampilkan semua di hari yang dipilih)
         $logTerbaru = Absensi::with('user')
             ->whereDate('tanggal', $date)
             ->orderByDesc('id')
-            ->limit(10)
             ->get();
 
         // 5. Ringkasan per Bidang (tidak perlu diubah, karena sudah pakai DB::raw)

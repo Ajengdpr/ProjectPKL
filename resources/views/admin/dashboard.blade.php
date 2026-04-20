@@ -11,9 +11,13 @@
 
   /* Gaya untuk slider pegawai belum absen per bidang */
   .belum-absen-container {
-    max-height: 450px;
+    max-height: 300px;
     overflow-y: auto;
     padding-right: 5px;
+  }
+  .log-absensi-container {
+    max-height: 300px;
+    overflow-y: auto;
   }
   .bidang-section {
     margin-bottom: 20px;
@@ -254,7 +258,7 @@
           <h6 class="fw-bold mb-0">Log Absensi Terbaru</h6>
           <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date]) }}" class="btn btn-sm btn-outline-secondary">Lihat semua</a>
         </div>
-        <div class="table-responsive flex-grow-1">
+        <div class="table-responsive log-absensi-container flex-grow-1">
           <table class="table align-middle mb-0">
             <thead>
               <tr>
