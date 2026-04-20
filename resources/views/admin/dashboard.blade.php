@@ -216,7 +216,7 @@
                     <div class="p-2 rounded-3 me-2" style="background-color: #f7e6d5; color: #fd7e14;">
                         <i class="bi bi-calendar-x-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold" style="color: #fd7e14;">{{ $cuti }}</div>
+                    <div class="fs-2 fw-bold">{{ $cuti }}</div>
                 </div>
                 <div class="small text-body-secondary mt-auto">Cuti</div>
             </div>
