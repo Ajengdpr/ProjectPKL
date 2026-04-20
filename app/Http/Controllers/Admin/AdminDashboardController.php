@@ -110,10 +110,46 @@ public function index(Request $request)
         }
         usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
 
+        // 6. Ranking Poin Pegawai
+        $rankingPoin = User::where('role', '!=', 'admin')
+            ->orderByDesc('point')
+            ->orderBy('nama')
+            ->get(['id', 'nama', 'foto', 'point']);
+
         // Data lengkap dikirim ke view
         return view('admin.dashboard', compact(
             'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
-            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang'
+            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang', 'rankingPoin'
         ));
+    }
+
+    public function exportPoints()
+    {
+        $users = User::where('role', '!=', 'admin')
+            ->orderByDesc('point')
+            ->orderBy('nama')
+            ->get(['nama', 'bidang', 'jabatan', 'point']);
+
+        $filename = "Ranking_Poin_Pegawai_" . date('Y-m-d') . ".csv";
+        $handle = fopen('php://output', 'w');
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        // Header CSV
+        fputcsv($handle, ['Peringkat', 'Nama Pegawai', 'Bidang', 'Jabatan', 'Total Poin']);
+
+        foreach ($users as $index => $u) {
+            fputcsv($handle, [
+                $index + 1,
+                $u->nama,
+                $u->bidang ?: '-',
+                $u->jabatan ?: '-',
+                $u->point
+            ]);
+        }
+
+        fclose($handle);
+        exit;
     }
 }

@@ -51,6 +51,7 @@ Route::middleware(['auth', IsAdmin::class])
     ->prefix('admin')->name('admin.')
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/export-points', [AdminDashboardController::class, 'exportPoints'])->name('export.points');
 
         // Users (CRUD)
         Route::resource('users', AdminUserController::class)->except(['show']);

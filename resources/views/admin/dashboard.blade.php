@@ -332,12 +332,12 @@
 
   <div class="row g-3 mt-1">
     {{-- Ringkasan per Bidang --}}
-    <div class="col-12">
+    <div class="col-12 col-lg-7">
       <div class="app-card p-3 h-100">
         <h6 class="fw-bold mb-3">Ringkasan Kehadiran per Bidang</h6>
         <div class="row g-3">
-            @forelse($byBidang as $b)
-            <div class="col-12 col-md-6">
+            @foreach($byBidang as $b)
+            <div class="col-12">
                 <div class="d-flex justify-content-between small mb-1">
                 <strong class="text-dark">{{ $b['bidang'] }}</strong>
                 <span class="text-body-secondary">{{ $b['hadir_total'] }} dari {{ $b['total'] }} pegawai hadir</span>
@@ -348,9 +348,61 @@
                 <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $b['alpha_rate'] }}%" title="Tanpa Keterangan: {{ $b['alpha_rate'] }}%"></div>
                 </div>
             </div>
-            @empty
-            <div class="col-12 text-body-secondary">Tidak ada data untuk ditampilkan.</div>
-            @endforelse
+            @endforeach
+        </div>
+      </div>
+    </div>
+
+    {{-- Ranking Poin Pegawai (Desain Leaderboard) --}}
+    <div class="col-12 col-lg-5">
+      <div class="app-card p-3 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h6 class="fw-bold mb-0">Ranking Poin Pegawai</h6>
+            <small class="text-muted">Top performa berdasarkan total poin</small>
+          </div>
+          <a href="{{ route('admin.export.points') }}" class="btn btn-sm btn-success shadow-sm">
+            <i class="bi bi-download me-1"></i> Export CSV
+          </a>
+        </div>
+        
+        <div class="flex-grow-1 overflow-auto pe-2" style="max-height: 280px;">
+          <div class="list-group list-group-flush">
+            @foreach($rankingPoin as $index => $rp)
+              <div class="list-group-item border-0 px-0 py-2 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                  {{-- Indikator Peringkat --}}
+                  <div class="d-flex justify-content-center align-items-center fw-bold" style="width: 32px;">
+                    @if($index == 0)
+                      <span class="fs-4">🥇</span>
+                    @elseif($index == 1)
+                      <span class="fs-4">🥈</span>
+                    @elseif($index == 2)
+                      <span class="fs-4">🥉</span>
+                    @else
+                      <span class="text-body-secondary small">#{{ $index + 1 }}</span>
+                    @endif
+                  </div>
+
+                  {{-- Profil Pegawai --}}
+                  <div class="d-flex align-items-center gap-2">
+                    @php $foto = $rp->foto ? asset('storage/'.$rp->foto) : asset('img/default-avatar.jpg'); @endphp
+                    <img src="{{ $foto }}" class="rounded-circle shadow-sm border border-2 border-white" style="width: 38px; height: 38px; object-fit: cover;">
+                    <div>
+                      <div class="fw-bold text-dark small mb-0">{{ $rp->nama }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Poin --}}
+                <div class="text-end">
+                  <span class="badge rounded-pill bg-primary-subtle text-primary fw-bold" style="font-size: 0.85rem; padding: 0.5em 1em;">
+                    {{ $rp->point }} <small class="fw-normal">poin</small>
+                  </span>
+                </div>
+              </div>
+            @endforeach
+          </div>
         </div>
       </div>
     </div>
