@@ -563,6 +563,10 @@
       // Panggil setStatus HANYA jika modal akan dibuka
       if (status) setStatus(status);
 
+      // Isi koordinat ke form
+      document.getElementById('latField').value = lastLat;
+      document.getElementById('lngField').value = lastLng;
+
       // Hanya lakukan pengecekan lokasi untuk HADIR & TERLAMBAT
       if (status === 'Hadir' || status === 'Terlambat') { // Gunakan status yang baru didapat
         // LOGIKA BARU: Langsung percaya pada status 'insideOffice' yang sudah di-update secara real-time.

@@ -15,25 +15,45 @@
   {{-- CSS kustom --}}
   <style>
     :root{
-      --brand:#2f5cff;
-      --brand-900:#1f3fb6;
-      --bg:#f5f7fb;
-      --card:#ffffffcc;
-      --shadow:0 10px 25px rgba(30,35,90,.1);
-      --radius:16px;
+      --brand:#3b82f6; /* Blue 500 */
+      --brand-900:#1e3a8a; /* Blue 900 */
+      --bg:#f8fafc; /* Slate 50 */
+      --card:#ffffff;
+      --shadow:0 4px 15px rgba(0,0,0,.03), 0 10px 30px rgba(0,0,0,.04);
+      --radius:20px;
     }
-    *{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
-    body{background:var(--bg)}
-    .navbar-brand{letter-spacing:.5px;font-weight:700}
-    .app-card{background:var(--card); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.5); border-radius:var(--radius); box-shadow:var(--shadow)}
-    .btn-brand{background:var(--brand); border-color:var(--brand)}
-    .btn-brand:hover{background:var(--brand-900); border-color:var(--brand-900)}
+    *{font-family:'Inter', system-ui, -apple-system, sans-serif}
+    body{background:var(--bg); color: #1e293b;}
+    .navbar-brand{letter-spacing:-0.5px; font-weight:800; font-size: 1.25rem;}
+    
+    .app-card{
+      background:var(--card); 
+      border:1px solid rgba(0,0,0,.05); 
+      border-radius:var(--radius); 
+      box-shadow:var(--shadow);
+      transition: all 0.3s ease;
+    }
+    .app-card:hover {
+      box-shadow: 0 15px 35px rgba(0,0,0,.06);
+    }
+
+    .btn-brand{
+      background:var(--brand); 
+      border-color:var(--brand); 
+      font-weight: 600; 
+      padding: 0.6rem 1.25rem;
+      border-radius: 12px;
+    }
+    .btn-brand:hover{background:var(--brand-900); border-color:var(--brand-900); transform: translateY(-1px);}
+
     .tile{
-      border-radius:18px; padding:22px; color:#fff; display:flex;
-      gap:14px; align-items:center; justify-content:center; box-shadow:var(--shadow);
-      transition:transform .12s ease, box-shadow .12s ease;
+      border-radius:24px; padding:28px; color:#fff; display:flex;
+      gap:16px; align-items:center; justify-content:center; 
+      box-shadow: 0 8px 20px rgba(0,0,0,.1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    .tile:hover{transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.12)}
+    .tile:hover{transform:scale(1.03); box-shadow:0 12px 30px rgba(0,0,0,.15)}
     .tile .bi{font-size:22px}
     .tile h6{margin:0; font-weight:700; letter-spacing:.4px}
     .tile.cyan{background:#18b6d8}
@@ -139,7 +159,7 @@
       <button class="btn btn-primary" id="sidebarToggle">
         <i class="bi bi-list"></i>
       </button>
-      <a class="navbar-brand m-0" href="{{ $isAdmin ? route('admin.dashboard') : route('dashboard') }}">E-Absensi</a>
+      <a class="navbar-brand m-0" href="{{ $isAdmin ? route('admin.dashboard') : route('dashboard') }}">Absensi DLH</a>
     </div>
 
     <div class="d-flex align-items-center gap-3">
@@ -168,58 +188,58 @@
 {{-- Sidebar --}}
 <div class="app-sidebar" id="appSidebar">
   <div class="sidebar-header d-flex align-items-center justify-content-between">
-  <!-- Logo + Marquee Wrapper -->
-  <div class="d-flex align-items-center overflow-hidden" style="flex:1; gap:0.5rem;">
-  <img src="{{ asset('img/logo_provinsi.png') }}" alt="Logo Provinsi" style="width:40px; height:30px; object-fit:contain; flex-shrink:0;">
-  <div class="marquee-wrapper flex-grow-1">
-    <h4 class="marquee-text text-primary fw-bold mb-0" style="font-size:1.2rem;">
-      Dinas Lingkungan Hidup Provinsi Kalimantan Selatan
-    </h4>
+    <!-- Logo + Marquee Wrapper -->
+    <div class="d-flex align-items-center overflow-hidden" style="flex:1; gap:0.5rem;">
+      <img src="{{ asset('img/logo_provinsi.png') }}" alt="Logo Provinsi" style="width:40px; height:30px; object-fit:contain; flex-shrink:0;">
+      <div class="marquee-wrapper flex-grow-1">
+        <h4 class="marquee-text text-primary fw-bold mb-0" style="font-size:1.2rem;">
+          Dinas Lingkungan Hidup Provinsi Kalimantan Selatan
+        </h4>
+      </div>
+    </div>
+
+    <!-- Tombol tutup sidebar (hanya mobile) -->
+    <button class="btn btn-sm btn-light d-lg-none" id="sidebarClose">
+      <i class="bi bi-arrow-left"></i>
+    </button>
   </div>
-</div>
 
-  <!-- Tombol tutup sidebar (hanya mobile) -->
-  <button class="btn btn-sm btn-light d-lg-none" id="sidebarClose">
-    <i class="bi bi-arrow-left"></i>
-  </button>
-</div>
+  <style>
+  .marquee-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+  }
 
-<style>
-.marquee-wrapper {
-  overflow: hidden;
-  white-space: nowrap;
-}
+  .marquee-text {
+    display: inline-block;
+    padding-left: 100%;
+    will-change: transform;
+  }
+  </style>
 
-.marquee-text {
-  display: inline-block;
-  padding-left: 100%;
-  will-change: transform;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const marquee = document.querySelector('.marquee-text');
-  const wrapper = document.querySelector('.marquee-wrapper');
-  
-  function animateMarquee() {
-    const textWidth = marquee.offsetWidth;
-    const wrapperWidth = wrapper.offsetWidth;
-    let start = wrapperWidth;
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const marquee = document.querySelector('.marquee-text');
+    const wrapper = document.querySelector('.marquee-wrapper');
     
-    function step() {
-      start -= 1
-      if (start < -textWidth) start = wrapperWidth;
-      marquee.style.transform = `translateX(${start}px)`;
-      requestAnimationFrame(step);
+    function animateMarquee() {
+      const textWidth = marquee.offsetWidth;
+      const wrapperWidth = wrapper.offsetWidth;
+      let start = wrapperWidth;
+      
+      function step() {
+        start -= 0.5 // Kecepatan dikurangi (tadinya 1)
+        if (start < -textWidth) start = wrapperWidth;
+        marquee.style.transform = `translateX(${start}px)`;
+        requestAnimationFrame(step);
+      }
+      
+      step();
     }
     
-    step();
-  }
-  
-  animateMarquee();
-});
-</script>
+    animateMarquee();
+  });
+  </script>
 
   <ul class="nav flex-column sidebar-nav">
     @if($isAdmin)
@@ -243,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
     <li class="nav-item">
       <a class="nav-link text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-        <i class="bi bi-box-arrow-right"></i> Logout
+        <i class="bi bi-box-arrow-right"></i> Keluar
       </a>
     </li>
   </ul>

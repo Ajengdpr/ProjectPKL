@@ -63,7 +63,8 @@ class AbsensiController extends Controller
             ->orderBy('u.bidang')
             ->get();
 
-        $rekapPerBidang = collect($this->updateFirebaseRekap($tanggal));
+        // HANYA MENGAMBIL DATA (Tanpa kirim ke Firebase setiap refresh)
+        $rekapPerBidang = collect($this->getRekapData($tanggal));
 
         // ==========================================================
         // PERUBAHAN LOKASI: Mengambil data dari Settings
@@ -261,6 +262,8 @@ class AbsensiController extends Controller
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
+            'lat'    => ['nullable', 'numeric'],
+            'lng'    => ['nullable', 'numeric'],
             'berkas' => [
                 'nullable',
                 'file', // Bisa berupa gambar atau dokumen
@@ -272,6 +275,29 @@ class AbsensiController extends Controller
         $status = trim($data['status']);
         if (!in_array($status, self::ALLOWED_STATUSES, true)) {
             return back()->withErrors('Status tidak valid.');
+        }
+
+        // VALIDASI LOKASI (Hadir & Terlambat)
+        if ($status === 'Hadir' || $status === 'Terlambat') {
+            $lokasiConfig = Setting::get('lokasi', [
+                'lat'    => -3.489179,
+                'lng'    => 114.828158,
+                'radius' => 100,
+            ]);
+
+            if (empty($data['lat']) || empty($data['lng'])) {
+                return redirect()->route('dashboard')->with('err', 'Gagal mendapatkan lokasi. Pastikan GPS aktif.');
+            }
+
+            $dist = $this->calculateDistance(
+                (float) $data['lat'], (float) $data['lng'],
+                (float) $lokasiConfig['lat'], (float) $lokasiConfig['lng']
+            );
+
+            // Kita beri toleransi sedikit lebih besar dari radius di DB untuk akurasi GPS mobile (misal +100m)
+            if ($dist > ($lokasiConfig['radius'] + 100)) {
+                 return redirect()->route('dashboard')->with('err', "Anda berada di luar radius kantor (~" . round($dist) . " meter).");
+            }
         }
 
         // Cegah double absen per hari
@@ -317,10 +343,12 @@ class AbsensiController extends Controller
         $absen->status  = $status;
         $absen->alasan  = $data['alasan'] ?? null;
         $absen->berkas  = $berkasPath;
+        $absen->lat     = $data['lat'] ?? null;
+        $absen->lng     = $data['lng'] ?? null;
         $absen->save();
 
         // ==========================================================
-        // PERUBAHAN POIN: Mengambil data dari Settings
+        // PERUBAHAN inIN: Mengambil data dari Settings
         // ==========================================================
         $poinConfig = Setting::get('poin', [
             'hadir'      => 1,
@@ -411,7 +439,24 @@ class AbsensiController extends Controller
 
         return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
     }
-    private function updateFirebaseRekap(string $tanggal): array
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // dalam meter
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
+    }
+
+    /**
+     * Mengambil data rekap per bidang untuk ditampilkan di view.
+     * Tidak mengirim data ke Firebase (Hanya Read).
+     */
+    private function getRekapData(string $tanggal): array
     {
         // Jangan hitung rekap untuk hari libur
         if (\Carbon\Carbon::parse($tanggal)->isWeekend()) {
@@ -427,11 +472,11 @@ class AbsensiController extends Controller
             $absensiInBidang = $absensiHariIni->whereIn('user_id', $userIdsInBidang);
             $stats = $absensiInBidang->countBy(fn($item) => strtolower(trim($item->status)));
 
-            $h = $stats->get('hadir', 0);
-            $t = $stats->get('terlambat', 0);
-            $i = $stats->get('izin', 0);
-            $s = $stats->get('sakit', 0);
-            $c = $stats->get('cuti', 0);
+            $h  = $stats->get('hadir', 0);
+            $t  = $stats->get('terlambat', 0);
+            $i  = $stats->get('izin', 0);
+            $s  = $stats->get('sakit', 0);
+            $c  = $stats->get('cuti', 0);
             $tl = $stats->get('tugas luar', 0);
 
             $alphaFromDb = $stats->get('alpha', 0);
@@ -440,16 +485,26 @@ class AbsensiController extends Controller
             $a = $alphaFromDb + $alphaFromNoRecord;
 
             $rekapData[$namaBidang] = (object)[
-                'hadir' => $h,
-                'terlambat' => $t,
-                'izin' => $i,
-                'sakit' => $s,
-                'cuti' => $c,
+                'hadir'      => $h,
+                'terlambat'  => $t,
+                'izin'       => $i,
+                'sakit'      => $s,
+                'cuti'       => $c,
                 'tugas_luar' => $tl,
-                'alpha' => $a,
+                'alpha'      => $a,
             ];
         }
 
+        return $rekapData;
+    }
+
+    /**
+     * Menghitung rekap DAN mengirimkannya ke Firebase.
+     * Dipanggil hanya saat ada perubahan data (store, update, dll).
+     */
+    private function updateFirebaseRekap(string $tanggal): void
+    {
+        $rekapData = $this->getRekapData($tanggal);
         $firebasePath = 'rekap/' . $tanggal;
 
         try {
@@ -457,8 +512,6 @@ class AbsensiController extends Controller
         } catch (\Exception $e) {
             \Log::error('Firebase update failed: ' . $e->getMessage());
         }
-
-        return $rekapData;
     }
 
     public function statistik(Request $request)

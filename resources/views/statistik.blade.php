@@ -121,37 +121,53 @@ $adaData = array_sum($rekapData) > 0;
 
             {{-- Ranking --}}
             <div class="col-md-8">
-                <h6 class="fw-bold">5 Poin Tertinggi</h6>
-                <table class="table table-sm table-bordered mb-3">
-                    <thead><tr><th>#</th><th>Nama</th><th>Poin</th></tr></thead>
-                    <tbody>
-                        @forelse($top5Global as $u)
-                        <tr class="@if($loop->iteration <=3) table-success @endif">
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $u->nama }}</td>
-                            <td>{{ $u->poin_total }}</td>
-                        </tr>
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-trophy-fill text-warning me-2"></i> 5 Poin Tertinggi
+                    </h6>
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                        @forelse($top5Global as $index => $u)
+                            <div class="list-group-item d-flex align-items-center py-2 px-3 border-light">
+                                <div class="me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; border-radius: 50%; background: {{ $index == 0 ? 'linear-gradient(45deg, #FFD700, #FFCC00)' : ($index == 1 ? 'linear-gradient(45deg, #C0C0C0, #E8E8E8)' : ($index == 2 ? 'linear-gradient(45deg, #CD7F32, #E9967A)' : '#f1f5f9')) }}; color: {{ $index <= 2 ? '#fff' : '#64748b' }}; font-size: {{ $index <= 2 ? '1.1rem' : '0.75rem' }};">
+                                    @if($index == 0)
+                                        <i class="bi bi-award-fill"></i>
+                                    @elseif($index == 1)
+                                        <i class="bi bi-award-fill"></i>
+                                    @elseif($index == 2)
+                                        <i class="bi bi-award-fill"></i>
+                                    @else
+                                        {{ $index + 1 }}
+                                    @endif
+                                </div>
+                                <div class="flex-grow-1 fw-medium text-dark small">
+                                    {{ $u->nama }}
+                                </div>
+                                <div class="badge bg-success-subtle text-success rounded-pill px-2 py-1" style="font-size: 0.7rem;">{{ $u->poin_total }} pts</div>
+                            </div>
                         @empty
-                        <tr><td colspan="3"><em>Tidak ada data</em></td></tr>
+                            <div class="list-group-item text-center py-3 text-muted small">Belum ada data</div>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                </div>
 
-                <h6 class="fw-bold">5 Poin Terendah</h6>
-                <table class="table table-sm table-bordered">
-                    <thead><tr><th>#</th><th>Nama</th><th>Poin</th></tr></thead>
-                    <tbody>
-                        @forelse($bottom5Global as $u)
-                        <tr class="table-danger">
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $u->nama }}</td>
-                            <td>{{ $u->poin_total }}</td>
-                        </tr>
+                <div>
+                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-graph-down-arrow text-danger me-2"></i> 5 Poin Terendah
+                    </h6>
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                        @forelse($bottom5Global as $index => $u)
+                            <div class="list-group-item d-flex align-items-center py-2 px-3 border-light">
+                                <div class="me-3 d-flex align-items-center justify-content-center fw-bold text-muted" style="width: 28px; height: 28px; border-radius: 50%; background: #fff1f2; font-size: 0.75rem;">
+                                    #{{ $loop->iteration }}
+                                </div>
+                                <div class="flex-grow-1 fw-medium text-dark small">{{ $u->nama }}</div>
+                                <div class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1" style="font-size: 0.7rem;">{{ $u->poin_total }} pts</div>
+                            </div>
                         @empty
-                        <tr><td colspan="3"><em>Tidak ada data</em></td></tr>
+                            <div class="list-group-item text-center py-3 text-muted small">Belum ada data</div>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

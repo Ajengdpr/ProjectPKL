@@ -72,6 +72,5 @@
         <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
       </div>
     </form>
-  <div class="my-3"></div>
 </div>
 @endsection

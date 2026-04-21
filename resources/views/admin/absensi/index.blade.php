@@ -115,12 +115,17 @@
 
       {{-- Tombol Aksi --}}
       <div class="col-md-auto ms-auto d-flex gap-2 pb-1">
-        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
         <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-dark">Reset</a>
       </div>
     </div>
   </form>
 </div>
+
+<script>
+document.querySelectorAll('.toolbar select, .toolbar input').forEach(el => {
+  el.addEventListener('change', () => el.closest('form').submit());
+});
+</script>
 
   {{-- Tabel Absensi --}}
   <div class="app-card p-0">
@@ -175,6 +180,11 @@
               <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">
                 {{ strtoupper($a->status) }}
               </span>
+              @if($a->lat && $a->lng)
+                <a href="https://www.google.com/maps?q={{ $a->lat }},{{ $a->lng }}" target="_blank" class="d-block small mt-1 text-decoration-none">
+                  <i class="bi bi-geo-alt-fill"></i> Lihat Lokasi
+                </a>
+              @endif
             </td>
               <td>
                 {{ $a->alasan ?: '-' }}
