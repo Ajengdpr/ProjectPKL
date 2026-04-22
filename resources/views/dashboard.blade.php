@@ -230,37 +230,6 @@
   </div>
 </div>
 
-    {{-- Keterangan Point (bawah) --}}
-    <div class="col-12 mt-4"> <div class="app-card p-3">
-        <h6 class="fw-bold mb-3">Keterangan Point:</h6>
-        @php
-            $poinLabels = [
-                'hadir'      => 'Hadir Apel',
-                'izin'       => 'Izin',
-                'sakit'      => 'Sakit',
-                'cuti'       => 'Cuti',
-                'tugas_luar' => 'Tugas Luar',
-                'terlambat'  => 'Terlambat',
-                'alpha'      => 'Tanpa Keterangan',
-            ];
-        @endphp
-        <ul class="small mb-0">
-            @foreach($poinLabels as $key => $label)
-                @php
-                    $poin = $poinConfig[$key] ?? 0;
-                    $class = 'text-secondary'; // Warna default untuk poin 0
-                    if ($poin > 0) $class = 'text-success';
-                    if ($poin < 0) {
-                        // Khusus untuk terlambat, gunakan warna kuning jika negatif
-                        $class = ($key === 'terlambat') ? 'text-warning' : 'text-danger';
-                    }
-                @endphp
-                <li>{{ $label }} <span class="{{ $class }}">@if($poin > 0)+@endif{{ $poin }}</span></li>
-            @endforeach
-        </ul>
-      </div>
-    </div>
-
   </div>
 
   <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">

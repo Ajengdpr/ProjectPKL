@@ -109,11 +109,23 @@ $adaData = array_sum($rekapData) > 0;
                         <div class="display-6 fw-bold">{{ $totalPoin }}</div>
                     </div>
                 </div>
-                <div class="mt-3 w-100">
+                <div class="mt-3 w-100 border-top pt-2">
                     @foreach($statusColors as $s=>$color)
-                        <div class="d-flex align-items-center mb-1">
-                            <span class="me-2" style="display:inline-block;width:20px;height:20px;background-color: {{ $color }};"></span>
-                            <span>{{ $s }}</span>
+                        @php
+                            $key = $poinKeyMap[$s] ?? null;
+                            $poin = $key ? ($poinConfig[$key] ?? 0) : 0;
+                            $class = 'text-secondary';
+                            if ($poin > 0) $class = 'text-success';
+                            if ($poin < 0) {
+                                $class = ($s === 'Terlambat') ? 'text-warning' : 'text-danger';
+                            }
+                        @endphp
+                        <div class="d-flex align-items-center justify-content-between mb-1 small">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2" style="display:inline-block;width:15px;height:15px;background-color: {{ $color }}; border-radius: 2px;"></span>
+                                <span>{{ $s }}</span>
+                            </div>
+                            <span class="fw-bold {{ $class }}">(@if($poin > 0)+@endif{{ $poin }})</span>
                         </div>
                     @endforeach
                 </div>
