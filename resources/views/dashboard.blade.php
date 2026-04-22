@@ -261,31 +261,6 @@
       </div>
     </div>
 
-    {{-- Log absensi user --}}
-    <div class="app-card p-3 mt-4">
-      <h6 class="fw-bold mb-3">Log Absensi Terbaru</h6>
-      <div class="table-responsive">
-        <table class="table table-striped table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Tanggal</th><th>Jam</th><th>Status</th><th>Alasan</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($log as $row)
-              <tr>
-                <td>{{ $row->tanggal }}</td>
-                <td>{{ $row->jam }}</td>
-                <td>{{ $row->status }}</td>
-                <td>{{ $row->alasan }}</td>
-              </tr>
-            @empty
-              <tr><td colspan="4" class="text-center text-muted">Belum ada data</td></tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div>
 
   <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
