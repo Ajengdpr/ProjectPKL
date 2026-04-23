@@ -44,9 +44,6 @@
                         <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2 border border-white border-opacity-25">
                             <i class="bi bi-building me-1"></i> {{ $u->bidang }}
                         </span>
-                        <span class="badge bg-success text-white rounded-pill px-3 py-2">
-                            <i class="bi bi-patch-check-fill me-1"></i> Akun Terverifikasi
-                        </span>
                     </div>
                 </div>
                 <div class="col-md-auto text-center text-md-end mt-4 mt-md-0">
@@ -120,7 +117,7 @@
                         <h6 class="fw-bold mb-0 text-uppercase small" style="letter-spacing: 1px;">Tips Keamanan Akun</h6>
                     </div>
                     <p class="text-muted small mb-0 lh-base text-justify" style="text-align: justify;">
-                        Jaga kerahasiaan akun Anda dengan tidak memberitahukan kredensial login kepada siapapun dan pastikan untuk selalu logout setelah selesai menggunakan perangkat publik.
+                        Jaga kerahasiaan akun Anda dengan tidak memberitahukan password login kepada siapapun dan pastikan untuk selalu logout setelah selesai menggunakan perangkat publik.
                     </p>
                 </div>
             </div>
