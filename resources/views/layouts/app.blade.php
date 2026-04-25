@@ -17,6 +17,7 @@
     :root{
       --brand:#2f5cff;
       --brand-900:#1f3fb6;
+      --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
       --bg:#f5f7fb;
       --card:#ffffffcc;
       --shadow:0 10px 25px rgba(30,35,90,.1);
@@ -133,7 +134,7 @@
 @endphp
 
 {{-- Navbar --}}
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background:linear-gradient(90deg,var(--brand),var(--brand-900))">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: var(--primary-gradient); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
   <div class="container d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center gap-2">
       <button class="btn btn-primary" id="sidebarToggle">
