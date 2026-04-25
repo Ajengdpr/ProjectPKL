@@ -191,7 +191,7 @@
                 <div class="settings-card h-100 mb-0">
                     <div class="card-title-group">
                         <i class="bi bi-geo-alt-fill"></i>
-                        <h6>Geofencing Kantor</h6>
+                        <h6>LOKASI</h6>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Latitude</label>
