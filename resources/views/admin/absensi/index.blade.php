@@ -1,459 +1,464 @@
 @extends('layouts.admin')
-@section('title','Manajemen Absensi')
+@section('title', 'Manajemen Absensi')
 
-@once
+@push('head')
 <style>
-  /* ===== Page container ===== */
-  .users-page{
-    max-width:1100px;
-    padding-bottom:8px; 
-  }
+    :root {
+        --primary-blue: #0d6efd;
+        --border-color: #f1f5f9;
+        --bg-light: #f8fafc;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --section-gap: 2rem;
+    }
 
-  /* ===== Card look ===== */
-  .users-page .app-card{
-    border:1px solid #eef2f7; border-radius:16px; background:#fff;
-    box-shadow:0 8px 22px rgba(16,24,40,.06);
-  }
+    body {
+        background-color: #f1f5f9;
+    }
 
-  /* ===== Toolbar ===== */
-  .users-page .toolbar .form-select,
-  .users-page .toolbar .form-control{min-height:44px}
-  .users-page .toolbar .btn{min-height:44px}
+    .absensi-page-container {
+        width: 100%;
+        margin-top: 0;
+        padding-bottom: 5rem;
+    }
 
-  /* ===== Table ===== */
-  .users-page .table{margin-bottom:0}
-  .users-page .table thead th{
-    font-weight:700; color:#6b7280; font-size:.85rem; letter-spacing:.02em;
-    background:#f8fafc; border-top:0; border-bottom:1px solid #eef2f7;
-  }
-  .users-page .table tbody td{vertical-align:middle; border-bottom:1px solid #eef2f7;}
-  .users-page .avatar{
-    width:40px; height:40px; border-radius:50%; object-fit:cover; background:#f3f4f6
-  }
+    /* Modern Header */
+    .header-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
+        padding: 2.5rem 3rem;
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 61, 153, 0.15);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--section-gap);
+        color: white;
+    }
 
-  /* ===== Uniform action buttons (chip) ===== */
-  .btn-chip{
-    display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
-    min-width:110px; min-height:40px; padding:.45rem .8rem;
-    font-weight:600; border-radius:10px;
-    border:1px solid rgba(2,6,23,.08); background:#fff; color:#0f172a;
-  }
-  .btn-chip:hover{background:#f8fafc}
-  .btn-chip .bi{font-size:1rem!important; line-height:1}
+    .header-content h3 {
+        font-weight: 800;
+        margin: 0;
+        color: white;
+        letter-spacing: -0.5px;
+    }
 
-  .btn-chip-primary{border-color:rgba(13,110,253,.28); color:#0d6efd; background:rgba(13,110,253,.06)}
-  .btn-chip-primary:hover{background:rgba(13,110,253,.12)}
+    .header-content p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
 
-  .btn-chip-danger{border-color:rgba(220,53,69,.28); color:#b42318; background:rgba(220,53,69,.08)}
-  .btn-chip-danger:hover{background:rgba(220,53,69,.16)}
+    /* Toolbar Card */
+    .toolbar-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+        margin-bottom: var(--section-gap);
+    }
 
-  .btn-chip-success{border-color:rgba(25,135,84,.28); color:#198754; background:rgba(25,135,84,.08)}
-  .btn-chip-success:hover{background:rgba(25,135,84,.16)}
+    .form-label {
+        font-weight: 700;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
 
-  .action-stack{display:flex; justify-content:flex-end; gap:.6rem; flex-wrap:wrap}
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        border-color: #e2e8f0;
+        background-color: var(--bg-light);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
 
-  /* Spacer agar pagination tidak ketutup bottom-nav */
-  .users-page .table-footer { padding: 12px 16px 76px; }
+    /* Table Styling */
+    .table-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+        margin-bottom: var(--section-gap);
+    }
 
-  /* ===== Style Teks Status Kustom ===== */
-.status-hadir { color: var(--bs-success-dark, #198754) !important; }
-.status-terlambat { color: var(--bs-warning-dark, #ffc107) !important; font-weight: 600; }
-.status-sakit { color: var(--bs-info-dark, #0dcaf0) !important; }
-.status-izin { color: var(--bs-primary-dark, #0d6efd) !important; }
-.status-alpha { color: var(--bs-danger-dark, #dc3545) !important; font-weight: 600; }
-.status-tugas-luar { color: var(--bs-secondary-dark, #6c757d) !important; }
+    .table thead th {
+        background: #f8fafc;
+        border: none;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 1.25rem 1rem;
+        font-weight: 800;
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        object-fit: cover;
+        background: #f1f5f9;
+        border: 2px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .user-name {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .user-meta {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    /* Badge Status */
+    .badge-status {
+        padding: 0.5rem 0.85rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+
+    .status-hadir { background: #f0fdf4; color: #16a34a; }
+    .status-terlambat { background: #fffbeb; color: #d97706; }
+    .status-izin { background: #eff6ff; color: #2563eb; }
+    .status-sakit { background: #fef2f2; color: #ef4444; }
+    .status-cuti { background: #faf5ff; color: #8b5cf6; }
+    .status-tugas_luar { background: #f1f5f9; color: #475569; }
+    .status-alpha { background: #fef2f2; color: #b91c1c; }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: none;
+    }
+    .btn-edit { background: #f0f7ff; color: #0d6efd; }
+    .btn-edit:hover { background: #0d6efd; color: white; transform: translateY(-2px); }
+    .btn-delete { background: #fef2f2; color: #ef4444; }
+    .btn-delete:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+
+    .section-title {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title::before {
+        content: "";
+        width: 4px;
+        height: 20px;
+        background: var(--primary-blue);
+        border-radius: 10px;
+    }
 </style>
-@endonce
+@endpush
 
 @section('content')
-<div class="container-xxl users-page">
-
-  {{-- Header --}}
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <h1 class="h4 fw-bold mb-0">Manajemen Absensi</h1>
-    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalExportCSV">
-      <i class="bi bi-download me-1"></i>Export CSV
-    </button>
-  </div>
-
-
-{{-- Toolbar Filter --}}
-<div class="app-card p-3 mb-3 toolbar">
-  <form method="get">
-    <div class="row g-2 align-items-end">
-      {{-- Filter Pegawai --}}
-      <div class="col-md-3">
-        <label class="form-label small fw-bold text-muted mb-1">Pilih Pegawai</label>
-        <select name="user_id" class="form-select">
-          <option value="">-- Semua Pegawai --</option>
-          @foreach($users as $u)
-            <option value="{{ $u->id }}" @selected(request('user_id')==$u->id)>{{ $u->nama }}</option>
-          @endforeach
-        </select>
-      </div>
-
-      {{-- Filter Status --}}
-      <div class="col-md-2">
-        <label class="form-label small fw-bold text-muted mb-1">Status</label>
-        <select name="status" class="form-select">
-          <option value="">-- Semua Status --</option>
-          @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
-            <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
-          @endforeach
-        </select>
-      </div>
-
-      {{-- Filter Tanggal --}}
-      <div class="col-md-2">
-        <label class="form-label small fw-bold text-muted mb-1">Dari Tanggal</label>
-        <input type="date" name="from" id="filter-from" value="{{ request('from') }}" class="form-control" title="Dari Tanggal">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label small fw-bold text-muted mb-1">Sampai Tanggal</label>
-        <input type="date" name="to" id="filter-to" value="{{ request('to') }}" class="form-control" title="Sampai Tanggal">
-      </div>
-
-      {{-- Tombol Aksi --}}
-      <div class="col-md-auto ms-auto d-flex gap-2 pb-1">
-        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
-        <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-dark">Reset</a>
-      </div>
+<div class="container-fluid px-md-4 absensi-page-container">
+    {{-- Header --}}
+    <div class="header-section">
+        <div class="header-content">
+            <h3>Manajemen Absensi</h3>
+            <p>Monitor dan kelola riwayat presensi seluruh pegawai secara realtime.</p>
+        </div>
+        <button type="button" class="btn btn-white bg-white text-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalExportCSV">
+            <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Export CSV
+        </button>
     </div>
-  </form>
+
+    {{-- Filter Toolbar --}}
+    <div class="toolbar-card">
+        <form method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Pegawai</label>
+                    <select name="user_id" class="form-select">
+                        <option value="">-- Semua Pegawai --</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}" @selected(request('user_id')==$u->id)>{{ $u->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- Semua Status --</option>
+                        @foreach(['hadir'=>'Hadir','terlambat'=>'Terlambat','izin'=>'Izin','sakit'=>'Sakit','cuti'=>'Cuti','tugas_luar'=>'Tugas Luar','alpha'=>'Tanpa Keterangan'] as $key=>$label)
+                            <option value="{{ $key }}" @selected(request('status')==$key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Dari Tanggal</label>
+                    <input type="date" name="from" value="{{ request('from') }}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Sampai Tanggal</label>
+                    <input type="date" name="to" value="{{ request('to') }}" class="form-control">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3">Cari</button>
+                    <a href="{{ route('admin.absensi.index') }}" class="btn btn-outline-secondary w-100 fw-bold rounded-3">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {{-- Main Table --}}
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Hari / Tanggal</th>
+                        <th class="ps-4">Pegawai</th>
+                        <th class="text-center">Status</th>
+                        <th>Keterangan</th>
+                        <th class="text-end pe-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($absensi as $a)
+                        @php $statusKey = str_replace(' ', '_', strtolower($a->status)); @endphp
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ \Carbon\Carbon::parse($a->tanggal)->locale('id')->isoFormat('dddd') }}</div>
+                                <div class="small text-dark">{{ \Carbon\Carbon::parse($a->tanggal)->format('d M Y') }}</div>
+                            </td>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    @php $foto = $a->user && $a->user->foto ? asset('storage/'.$a->user->foto) : asset('img/default-avatar.jpg'); @endphp
+                                    <img src="{{ $foto }}" class="user-avatar" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
+                                    <div>
+                                        <div class="user-name">{{ $a->user->nama ?? '-' }}</div>
+                                        <div class="user-meta text-primary fw-medium">{{ ($a->user->role ?? '') === 'admin' ? 'Administrator' : 'Pegawai' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge-status status-{{ $statusKey }}">
+                                    {{ $a->status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small text-dark">{{ $a->alasan ?: '-' }}</div>
+                                @if($a->berkas)
+                                    <a href="{{ asset('storage/' . $a->berkas) }}" target="_blank" class="badge bg-light text-primary border mt-1 fw-normal text-decoration-none">
+                                        <i class="bi bi-paperclip"></i> Lihat Berkas
+                                    </a>
+                                @endif
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn-action btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"
+                                        data-id="{{ $a->id }}" data-tanggal="{{ \Carbon\Carbon::parse($a->tanggal)->format('Y-m-d') }}"
+                                        data-status="{{ $a->status }}" data-alasan="{{ $a->alasan }}">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                        data-route="{{ route('admin.absensi.destroy',$a) }}" data-method="delete"
+                                        data-title="Hapus Absensi" data-message="Hapus log absensi <strong>{{ $a->user->nama ?? 'Pegawai' }}</strong>?">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="text-center py-5 text-muted fw-bold">Tidak ada riwayat absensi ditemukan.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-4 border-top bg-light-subtle">
+            {{ $absensi->withQueryString()->links() }}
+        </div>
+    </div>
+
+    {{-- Manual Input Section --}}
+    <div class="section-title">Input Presensi Manual</div>
+    <div class="toolbar-card">
+        <form method="post" action="{{ route('admin.absensi.store') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Pilih Pegawai</label>
+                    <select name="user_id" class="form-select" required>
+                        <option value="">-- Pilih Pegawai --</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}">{{ $u->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Jam (WITA)</label>
+                    <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Alasan / Keterangan (Opsional)</label>
+                    <input name="alasan" class="form-control" placeholder="Contoh: Mengikuti rapat dinas, sakit, atau izin keperluan keluarga.">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Unggah Berkas Bukti</label>
+                    <input type="file" name="berkas" class="form-control">
+                </div>
+                <div class="col-12 mt-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-save2-fill me-2"></i> Simpan Presensi
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
-  {{-- Tabel Absensi --}}
-  <div class="app-card p-0">
-    <div class="table-responsive">
-      <table class="table align-middle table-hover mb-0">
-        <thead>
-          <tr>
-            <th style="width:110px;">Tanggal</th>
-            <th>Nama Pegawai</th>
-            <th style="width:140px;">Bidang</th>
-            <th style="width:110px;">Status</th>
-            <th>Alasan</th>
-            <th style="width:200px" class="text-end">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-      @php
-        $badgeStyles = function($status) {
-            // Ubah status menjadi huruf kecil dan hapus spasi di awal/akhir
-            $safeStatus = strtolower(trim($status ?? ''));
-
-            $styles = match($safeStatus) {
-                'hadir'       => ['class' => 'bg-success-subtle', 'style' => 'color: #146c43 !important;'],
-                'terlambat'   => ['class' => 'bg-warning-subtle', 'style' => 'color: #e59400 !important; font-weight: 600;'],
-                'sakit'       => ['class' => 'bg-info-subtle',    'style' => 'color: #087990 !important;'],
-                'izin'        => ['class' => 'bg-primary-subtle', 'style' => 'color: #0a58ca !important;'],
-                'tugas luar'  => ['class' => 'bg-secondary-subtle', 'style' => 'color: #41464b !important;'],
-                'alpha'       => ['class' => 'bg-danger-subtle',  'style' => 'color: #b02a37 !important; font-weight: 600;'],
-                default       => ['class' => 'bg-light',          'style' => 'color: #000 !important;']
-            };
-            return $styles;
-        };
-      @endphp
-          @forelse($absensi as $a)
-            <tr>
-            <td>{{ \Carbon\Carbon::parse($a->tanggal)->format('d/m/Y') }}</td>
-              <td>
-                <div class="d-flex align-items-center gap-3">
-                  @php $foto = $a->user && $a->user->foto ? asset('storage/'.$a->user->foto) : asset('img/default-avatar.jpg'); @endphp
-                  <img src="{{ $foto }}" class="avatar" alt="avatar"
-                       onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
-                  <span class="fw-medium">{{ $a->user->nama ?? '-' }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="badge bg-light text-dark border fw-normal text-wrap">
-                  {{ $a->user->bidang ?? '-' }}
-                </span>
-              </td>
-              <td>
-              @php $badge = $badgeStyles($a->status); @endphp
-              <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">
-                {{ strtoupper($a->status) }}
-              </span>
-            </td>
-              <td>
-                {{ $a->alasan ?: '-' }}
-                @if($a->berkas)
-                  <a href="{{ asset('storage/' . $a->berkas) }}" target="_blank" class="d-block small mt-1">
-                    <i class="bi bi-paperclip"></i> Lihat Berkas
-                  </a>
-                @endif
-              </td>
-              <td class="text-end">
-                <div class="action-stack">
-                  <button
-                    class="btn-chip btn-chip-primary"
-                    data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"
-                    data-id="{{ $a->id }}"
-                    data-tanggal="{{ \Carbon\Carbon::parse($a->tanggal)->format('Y-m-d') }}"
-                    data-status="{{ $a->status }}"
-                    data-alasan="{{ $a->alasan }}"
-                  >
-                    <i class="bi bi-pencil-square"></i> Edit
-                  </button>
-                  <button
-                    class="btn-chip btn-chip-danger"
-                    data-bs-toggle="modal" data-bs-target="#confirmModal"
-                    data-route="{{ route('admin.absensi.destroy',$a) }}"
-                    data-method="delete"
-                    data-title="Hapus Absensi"
-                    data-message="Hapus data absensi ini? Tindakan tidak dapat dibatalkan."
-                  >
-                    <i class="bi bi-trash"></i> Hapus
-                  </button>
-                </div>
-              </td>
-            </tr>
-          @empty
-            <tr><td colspan="5" class="text-center text-body-secondary py-4">Tidak ada data.</td></tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-
-    {{-- Pagination + spacer --}}
-    <div class="table-footer">
-      {{ $absensi->links() }}
-    </div>
-  </div>
-
-  {{-- Input Manual --}}
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-4 mb-3">
-    <h2 class="h5 fw-bold mb-0">Input Absensi Manual</h2>
-  </div>
-  <div class="app-card p-3">
-    <form method="post" action="{{ route('admin.absensi.store') }}" enctype="multipart/form-data" class="row g-2">
-      @csrf
-      <div class="col-12 col-md-3">
-        <label class="form-label small">Pegawai</label>
-        <select name="user_id" class="form-select" required>
-          <option value="">-- Pilih Pegawai --</option>
-          @foreach($users as $u)
-            <option value="{{ $u->id }}">{{ $u->nama }} ({{ $u->username }})</option>
-          @endforeach
-        </select>
-      </div>
-      <div class="col-6 col-md-2">
-        <label class="form-label small">Tanggal</label>
-        <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
-      </div>
-      <div class="col-6 col-md-2">
-        <label class="form-label small">Jam</label>
-        <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
-      </div>
-      <div class="col-6 col-md-2">
-        <label class="form-label small">Status</label>
-        <select name="status" class="form-select" required>
-          @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
-          <option value="{{ $key }}">{{ $label }}</option>
-          @endforeach
-        </select>
-      </div>
-      <div class="col-12 col-md-3">
-        <label class="form-label small">Alasan (opsional)</label>
-        <input name="alasan" class="form-control" placeholder="Isi alasan...">
-      </div>
-      <div class="col-12 col-md-3">
-        <label class="form-label small">Unggah Berkas (opsional)</label>
-        <input type="file" name="berkas" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-      </div>
-      <div class="col-12 col-md-1 d-flex align-items-end">
-        <button class="btn btn-primary w-100">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-{{-- =============== Modal: Edit Absensi =============== --}}
+{{-- Modal Edit --}}
 <div class="modal fade" id="modalEditAbsensi" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <form method="post" id="formEditAbsensi" enctype="multipart/form-data">
-        @csrf
-        @method('put')
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Absensi</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-2">
-            <div class="col-12">
-              <label class="form-label">Tanggal</label>
-              <input type="date" name="tanggal" id="edit-tanggal" class="form-control" required>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Status</label>
-              <select name="status" id="edit-status" class="form-select" required>
-                <option value="hadir">Hadir</option>
-                <option value="terlambat">Terlambat</option>
-                <option value="izin">Izin</option>
-                <option value="sakit">Sakit</option>
-                <option value="cuti">Cuti</option>
-                <option value="tugas_luar">Tugas Luar</option>
-                <option value="alpha">Tanpa Keterangan</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Alasan (opsional)</label>
-              <input name="alasan" id="edit-alasan" class="form-control">
-            </div>
-            <div class="col-12">
-                <label class="form-label">Unggah/Ganti Berkas (opsional)</label>
-                <input type="file" name="berkas" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                <div class="form-text small">Biarkan kosong jika tidak ingin mengubah berkas.</div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan Perubahan</button>
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-{{-- =============== Modal Konfirmasi (universal) =============== --}}
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content" method="post" id="confirmForm">
-      @csrf
-      <input type="hidden" id="spoofMethod" value="">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmTitle">Konfirmasi</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="mb-0" id="confirmText">Apakah Anda yakin?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-danger" id="confirmSubmit">Ya, Lanjutkan</button>
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-{{-- Filter Lanjutan yang Tersembunyi --}}
-<div class="collapse mt-3" id="advancedFilter">
-  <div class="row g-2">
-    <div class="col-md-6">
-      <label class="form-label">Filter Berdasarkan Bulan</label>
-      <input type="month" name="bulan" value="{{ request('bulan', now()->format('Y-m')) }}" class="form-control" />
-    </div>
-    <!-- Filter Berdasarkan Pegawai dan Status tetap di sini -->
-  </div>
-</div>
-
-
-
-
-{{-- =============== Modal: Export CSV =============== --}}
-<div class="modal fade" id="modalExportCSV" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-download me-2"></i>Export Data ke CSV</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted mb-3">Pilih bulan dan tahun data yang ingin Anda unduh.</p>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Pilih Bulan dan Tahun</label>
-                    <input type="month" id="export-month-input" class="form-control" value="{{ now()->format('Y-m') }}">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <form method="post" id="formEditAbsensi" enctype="multipart/form-data">
+                @csrf @method('put')
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold mb-0">Edit Log Presensi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" id="btn-do-export" class="btn btn-success">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Sekarang
-                </button>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label">Tanggal</label><input type="date" name="tanggal" id="edit-tanggal" class="form-control" required></div>
+                        <div class="col-12">
+                            <label class="form-label">Status</label>
+                            <select name="status" id="edit-status" class="form-select" required>
+                                <option value="hadir">Hadir</option><option value="terlambat">Terlambat</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="cuti">Cuti</option><option value="tugas_luar">Tugas Luar</option><option value="alpha">Tanpa Keterangan</option>
+                            </select>
+                        </div>
+                        <div class="col-12"><label class="form-label">Keterangan</label><textarea name="alasan" id="edit-alasan" class="form-control" rows="3"></textarea></div>
+                        <div class="col-12"><label class="form-label">Update Berkas</label><input type="file" name="berkas" class="form-control"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Export CSV --}}
+<div class="modal fade" id="modalExportCSV" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg p-4 text-center rounded-4">
+            <h5 class="fw-bold mb-3 text-primary">Export Laporan</h5>
+            <input type="month" id="export-month-input" class="form-control form-control-lg text-center mb-4" value="{{ now()->format('Y-m') }}">
+            <div class="d-grid gap-2">
+                <button type="button" id="btn-do-export" class="btn btn-primary rounded-pill fw-bold">Download CSV</button>
+                <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Batal</button>
             </div>
         </div>
     </div>
 </div>
 
+{{-- Modal Konfirmasi --}}
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content shadow-lg text-center p-4 rounded-4 border-0" method="post" id="confirmForm">
+            @csrf <input type="hidden" id="spoofMethod" value="">
+            <div class="mb-3"><i class="bi bi-exclamation-circle text-danger display-4"></i></div>
+            <h5 class="fw-bold" id="confirmTitle">Konfirmasi</h5>
+            <p class="text-muted small" id="confirmText">Apakah Anda yakin?</p>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-danger rounded-pill fw-bold" id="confirmSubmit">Ya, Lanjutkan</button>
+                <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Batal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
 <script>
-/* ==== Modal konfirmasi universal (hapus) ==== */
 const confirmModal = document.getElementById('confirmModal');
 confirmModal?.addEventListener('show.bs.modal', function (event) {
-  const btn     = event.relatedTarget;
-  const route   = btn.getAttribute('data-route');
-  const method  = (btn.getAttribute('data-method') || 'post').toLowerCase();
-  const title   = btn.getAttribute('data-title') || 'Konfirmasi';
-  const message = btn.getAttribute('data-message') || 'Apakah Anda yakin?';
-
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmText').textContent  = message;
-
-  const form = document.getElementById('confirmForm');
-  form.action = route;
-
-  const spoof = document.getElementById('spoofMethod');
-  if (method === 'delete') {
-    spoof.setAttribute('name','_method');
-    spoof.value = 'delete';
-  } else {
-    spoof.removeAttribute('name');
-    spoof.value = '';
-  }
+    const btn = event.relatedTarget;
+    document.getElementById('confirmTitle').textContent = btn.getAttribute('data-title') || 'Konfirmasi';
+    document.getElementById('confirmText').innerHTML = btn.getAttribute('data-message') || 'Apakah Anda yakin?';
+    const form = document.getElementById('confirmForm');
+    form.action = btn.getAttribute('data-route');
+    const method = (btn.getAttribute('data-method') || 'post').toLowerCase();
+    const spoof = document.getElementById('spoofMethod');
+    if (method === 'delete') { spoof.setAttribute('name','_method'); spoof.value = 'delete'; }
+    else { spoof.removeAttribute('name'); spoof.value = ''; }
 });
 
 const modalEditAbsensi = document.getElementById('modalEditAbsensi');
 modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
-  const btn = event.relatedTarget;
-  const id = btn.getAttribute('data-id');
-
-  document.getElementById('edit-tanggal').value = btn.getAttribute('data-tanggal') || '';
-  document.getElementById('edit-status').value  = btn.getAttribute('data-status')  || 'hadir';
-  document.getElementById('edit-alasan').value  = btn.getAttribute('data-alasan')  || '';
-
-  const form = document.getElementById('formEditAbsensi');
-  form.action = "{{ url('admin/absensi') }}/" + id;
+    const btn = event.relatedTarget;
+    const id = btn.getAttribute('data-id');
+    document.getElementById('edit-tanggal').value = btn.getAttribute('data-tanggal') || '';
+    document.getElementById('edit-status').value = btn.getAttribute('data-status') || 'hadir';
+    document.getElementById('edit-alasan').value = btn.getAttribute('data-alasan') || '';
+    const form = document.getElementById('formEditAbsensi');
+    form.action = "{{ url('admin/absensi') }}/" + id;
 });
 
-/* ==== Main Export Button Handler (Using Modal) ==== */
 document.addEventListener('DOMContentLoaded', function() {
     const doExportBtn = document.getElementById('btn-do-export');
     const monthInput = document.getElementById('export-month-input');
     const exportModalElement = document.getElementById('modalExportCSV');
-
     if (doExportBtn && monthInput && exportModalElement) {
         doExportBtn.addEventListener('click', function() {
             const bulan = monthInput.value;
-
-            if (!bulan) {
-                alert('Silakan pilih bulan terlebih dahulu.');
-                return;
-            }
-
-            // Hitung tanggal awal dan akhir bulan
-            const firstDay = new Date(bulan + '-02'); // Menggunakan tgl 02 utk menghindari zona waktu meleset
+            if (!bulan) return alert('Pilih bulan.');
+            const firstDay = new Date(bulan + '-02');
             const lastDay = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0);
-
             const formatDate = (date) => {
                 const d = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
                 return d.toISOString().split('T')[0];
             }
-
-            const fromDate = formatDate(firstDay);
-            const toDate = formatDate(lastDay);
-
             const url = new URL("{{ route('admin.absensi.export.csv') }}");
-            url.searchParams.append('from', fromDate);
-            url.searchParams.append('to', toDate);
-
+            url.searchParams.append('from', formatDate(firstDay));
+            url.searchParams.append('to', formatDate(lastDay));
             window.location.href = url.toString();
-
-            // Tutup modal setelah proses export dimulai
             bootstrap.Modal.getInstance(exportModalElement).hide();
         });
     }
 });
 </script>
+@endpush
 @endsection
