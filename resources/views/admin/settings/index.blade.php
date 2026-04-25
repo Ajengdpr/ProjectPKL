@@ -7,6 +7,7 @@
         --primary-blue: #0d6efd;
         --border-color: #f1f5f9;
         --bg-light: #f8fafc;
+        --section-gap: 2rem;
     }
 
     body {
@@ -15,21 +16,31 @@
 
     .settings-container {
         width: 100%;
-        margin-top: 2rem;
-        padding-bottom: 5rem;
+        margin-top: 0;
+        padding-bottom: 3rem;
     }
 
     .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
+        padding: 2.5rem 3rem;
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 61, 153, 0.15);
+        margin-bottom: var(--section-gap);
+        color: white;
     }
 
-    .header-section h3 {
+    .header-content h3 {
         font-weight: 800;
-        color: #1e293b;
+        margin: 0;
+        color: white;
         letter-spacing: -0.5px;
+    }
+
+    .header-content p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
     }
 
     .settings-card {
@@ -38,7 +49,7 @@
         border: 1px solid rgba(226, 232, 240, 0.8);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         padding: 1.75rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: var(--section-gap);
     }
 
     .card-title-group {
@@ -94,20 +105,6 @@
         background-color: #fff;
     }
 
-    .btn-save-fixed {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 1000;
-        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
-        padding: 0.75rem 2rem;
-        border-radius: 50px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
     .status-info {
         background: #fffbeb;
         border-left: 4px solid #f59e0b;
@@ -115,15 +112,46 @@
         border-radius: 8px;
         margin-top: 0.5rem;
     }
+
+    .btn-save-container {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding-top: 1rem; /* Jarak dari garis ke tombol */
+        border-top: 1px solid var(--border-color);
+        margin-top: 1rem; /* Jarak dari kartu ke garis */
+    }
+
+    .btn-save-main {
+        padding: 0.85rem 2.5rem;
+        border-radius: 14px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.9rem;
+    }
+
+    .btn-save-main:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+    }
+
+    .gap-between-sections {
+        margin-bottom: var(--section-gap);
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid px-md-4 settings-container">
     <div class="header-section">
-        <div>
-            <h3>Pengaturan Konfigurasi</h3>
-            <p class="text-muted small mb-0">Kelola parameter sistem absensi, poin, dan waktu kerja.</p>
+        <div class="header-content">
+            <h3>Konfigurasi Sistem</h3>
+            <p>Kelola parameter utama sistem absensi, perhitungan poin, dan kebijakan waktu kerja.</p>
         </div>
     </div>
 
@@ -148,32 +176,30 @@
                     <div class="col-6 col-md-4 col-lg-2">
                         <label class="form-label">{{ $label }}</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-3" style="border-radius: 12px 0 0 12px;"><i class="bi bi-plus-slash-minus small"></i></span>
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-plus-slash-minus small"></i></span>
                             <input type="number" class="form-control border-start-0" name="poin[{{ $key }}]" value="{{ $poin[$key] ?? 0 }}" style="border-radius: 0 12px 12px 0;">
                         </div>
                     </div>
                 @endforeach
             </div>
-            <div class="form-text mt-3 text-muted small">
-                <i class="bi bi-info-circle me-1"></i> Nilai poin ini akan otomatis dihitung ke dalam total poin bulanan setiap pegawai.
-            </div>
         </div>
 
-        <div class="row g-3">
+        {{-- Row untuk Geofencing dan Jam Operasional --}}
+        <div class="row g-4 gap-between-sections">
             {{-- Section 2: Radius Lokasi Kantor --}}
             <div class="col-md-6">
-                <div class="settings-card h-100">
+                <div class="settings-card h-100 mb-0">
                     <div class="card-title-group">
                         <i class="bi bi-geo-alt-fill"></i>
                         <h6>Geofencing Kantor</h6>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Latitude</label>
-                        <input type="number" step="any" class="form-control" name="lokasi[lat]" value="{{ $lokasi['lat'] }}" placeholder="-3.xxxx">
+                        <input type="number" step="any" class="form-control" name="lokasi[lat]" value="{{ $lokasi['lat'] }}">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Longitude</label>
-                        <input type="number" step="any" class="form-control" name="lokasi[lng]" value="{{ $lokasi['lng'] }}" placeholder="114.xxxx">
+                        <input type="number" step="any" class="form-control" name="lokasi[lng]" value="{{ $lokasi['lng'] }}">
                     </div>
                     <div class="mb-0">
                         <label class="form-label">Radius (Meter)</label>
@@ -187,7 +213,7 @@
 
             {{-- Section 3: Pengaturan Waktu --}}
             <div class="col-md-6">
-                <div class="settings-card h-100">
+                <div class="settings-card h-100 mb-0">
                     <div class="card-title-group">
                         <i class="bi bi-clock-fill"></i>
                         <h6>Jam Operasional</h6>
@@ -195,12 +221,10 @@
                     <div class="mb-4">
                         <label class="form-label">Batas Waktu Hadir (Check-in)</label>
                         <input type="time" step="1" class="form-control" name="jam[batas_hadir]" value="{{ $jam['batas_hadir'] }}">
-                        <div class="form-text small">Pegawai dianggap terlambat jika absen setelah jam ini.</div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label">Batas Waktu Absen (Cut-off)</label>
                         <input type="time" step="1" class="form-control" name="jam[batas_akhir]" value="{{ $jam['batas_akhir'] ?? '16:00:00' }}">
-                        <div class="form-text small">Sistem akan terkunci otomatis setelah jam ini berakhir.</div>
                     </div>
                 </div>
             </div>
@@ -210,28 +234,29 @@
         <div class="settings-card">
             <div class="card-title-group">
                 <i class="bi bi-calendar-x-fill"></i>
-                <h6>Manajemen Hari Libur & Maintenance</h6>
+                <h6>Manajemen Hari Libur</h6>
             </div>
             <div class="mb-4">
-                <label class="form-label">Pesan Penonaktifan Sistem</label>
-                <input type="text" class="form-control" name="status[reason]" value="{{ $status['reason'] ?? '' }}" placeholder="Contoh: Sistem sedang dinonaktifkan sementara karena libur hari raya.">
-                <div class="form-text small">Pesan ini akan muncul di dashboard seluruh pegawai.</div>
+                <label class="form-label">Pesan Penonaktifan</label>
+                <input type="text" class="form-control" name="status[reason]" value="{{ $status['reason'] ?? '' }}">
             </div>
             
             <div class="mb-2">
-                <label class="form-label">Daftar Tanggal Libur Spesifik</label>
-                <textarea class="form-control" name="status[hari_libur]" rows="4" placeholder="Format: YYYY-MM-DD (Satu baris satu tanggal)">{{ $status['hari_libur'] ?? '' }}</textarea>
+                <label class="form-label">Daftar Tanggal Libur</label>
+                <textarea class="form-control" name="status[hari_libur]" rows="4">{{ $status['hari_libur'] ?? '' }}</textarea>
             </div>
             <div class="status-info text-dark small">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Perhatian:</strong> Sistem absensi akan otomatis <strong>TERKUNCI</strong> pada daftar tanggal di atas. Pastikan format penulisan benar (Contoh: 2026-04-25).
+                Sistem absensi akan otomatis <strong>TERKUNCI</strong> pada daftar tanggal di atas.
             </div>
         </div>
 
-        {{-- Floating Save Button --}}
-        <button type="submit" class="btn btn-primary btn-save-fixed shadow">
-            <i class="bi bi-save2-fill"></i> Simpan Perubahan
-        </button>
+        {{-- Bottom Save Button --}}
+        <div class="btn-save-container">
+            <button type="submit" class="btn btn-primary btn-save-main shadow-sm">
+                <i class="bi bi-save2-fill"></i> Simpan Pengaturan
+            </button>
+        </div>
     </form>
 </div>
 @endsection
