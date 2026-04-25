@@ -1,353 +1,433 @@
 @extends('layouts.admin')
-@section('title','Users')
+@section('title', 'Manajemen Pegawai')
 
-@once
+@push('head')
 <style>
-  /* ===== Page container ===== */
-  .users-page{
-    max-width:1100px;
-    padding-bottom:8px; /* ruang kecil di bawah konten */
-  }
+    :root {
+        --primary-blue: #0d6efd;
+        --border-color: #f1f5f9;
+        --bg-light: #f8fafc;
+        --section-gap: 2rem;
+    }
 
-  /* ===== Card look ===== */
-  .users-page .app-card{
-    border:1px solid #eef2f7; border-radius:16px; background:#fff;
-    box-shadow:0 8px 22px rgba(16,24,40,.06);
-  }
+    body {
+        background-color: #f1f5f9;
+    }
 
-  /* ===== Toolbar ===== */
-  .users-page .toolbar .form-select,
-  .users-page .toolbar .form-control{min-height:44px}
+    .users-page-container {
+        width: 100%;
+        margin-top: 0;
+        padding-bottom: 5rem;
+    }
 
-  /* ===== Table ===== */
-  .users-page .table{margin-bottom:0}
-  .users-page .table thead th{
-    font-weight:700; color:#6b7280; font-size:.85rem; letter-spacing:.02em;
-    background:#f8fafc; border-top:0; border-bottom:1px solid #eef2f7;
-  }
-  .users-page .table tbody td{vertical-align:middle; border-bottom:1px solid #eef2f7;}
+    /* Modern Header */
+    .header-section {
+        background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
+        padding: 2.5rem 3rem;
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 61, 153, 0.15);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--section-gap);
+        color: white;
+    }
 
-  .users-page .avatar{
-    width:40px; height:40px; border-radius:50%; object-fit:cover; background:#f3f4f6
-  }
+    .header-content h3 {
+        font-weight: 800;
+        margin: 0;
+        color: white;
+        letter-spacing: -0.5px;
+    }
 
-  /* ===== Uniform action buttons (chip) ===== */
-  .btn-chip{
-    display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
-    min-width:110px; min-height:40px; padding:.45rem .8rem;
-    font-weight:600; border-radius:10px;
-    border:1px solid rgba(2,6,23,.08); background:#fff; color:#0f172a;
-  }
-  .btn-chip:hover{background:#f8fafc}
-  .btn-chip .bi{font-size:1rem!important; line-height:1}
+    .header-content p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
 
-  .btn-chip-primary{border-color:rgba(13,110,253,.28); color:#0d6efd; background:rgba(13,110,253,.06)}
-  .btn-chip-primary:hover{background:rgba(13,110,253,.12)}
+    /* Stats & Toolbar Card */
+    .toolbar-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+        margin-bottom: var(--section-gap);
+    }
 
-  .btn-chip-danger{border-color:rgba(220,53,69,.28); color:#b42318; background:rgba(220,53,69,.08)}
-  .btn-chip-danger:hover{background:rgba(220,53,69,.16)}
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        border-color: #e2e8f0;
+        background-color: var(--bg-light);
+        font-weight: 500;
+    }
 
-  .action-stack{display:flex; justify-content:flex-end; gap:.6rem; flex-wrap:wrap}
+    /* Modern Table */
+    .table-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
 
-  /* Hanya ikon di dalam tombol/link yang distandardkan ukurannya */
-  .users-page .btn .bi,
-  .users-page a .bi { font-size: 1rem; line-height: 1; }
-  .users-page .btn svg,
-  .users-page a svg { width: 1em; height: 1em; }
+    .table thead th {
+        background: #f8fafc;
+        border: none;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 1.25rem 1rem;
+    }
 
-  /* Spacer agar pagination tidak ketutup bottom-nav */
-  .users-page .table-footer { padding: 12px 16px 76px; } /* 76px ≈ tinggi bottom-nav */
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        object-fit: cover;
+        background: #f1f5f9;
+        border: 2px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .user-name {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .user-meta {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    /* Custom Badges */
+    .badge-bidang {
+        background: #eff6ff;
+        color: #2563eb;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: none;
+        font-size: 1.1rem;
+    }
+
+    .btn-edit { background: #f0f7ff; color: #0d6efd; }
+    .btn-edit:hover { background: #0d6efd; color: white; transform: translateY(-2px); }
+
+    .btn-delete { background: #fef2f2; color: #ef4444; }
+    .btn-delete:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f1f5f9;
+        padding: 1.5rem 2rem;
+    }
 </style>
-@endonce
+@endpush
 
 @section('content')
-<div class="container-xxl users-page">
-
-
-  {{-- Header --}}
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-    <h1 class="h4 fw-bold mb-0">Manajemen Pegawai</h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreate">
-      <i class="bi bi-plus-lg me-1"></i> Tambah Pegawai
-    </button>
-  </div>
-
-  {{-- Alerts --}}
-  @if(session('ok'))
-    <div class="alert alert-success">{{ session('ok') }}</div>
-  @endif
-  @if($errors->any())
-    <div class="alert alert-danger">
-      <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-    </div>
-  @endif
-
-{{-- Toolbar --}}
-<div class="app-card p-3 mb-3 toolbar">
-  <form method="get">
-    {{-- Filter Utama yang Selalu Terlihat --}}
-    <div class="row g-2 align-items-center">
-      <div class="col-md-7">
-        <input type="text" name="q" class="form-control" placeholder="Cari nama, nama pengguna, jabatan..." value="{{ $q }}">
-      </div>
-      
-      {{-- Grup Tombol --}}
-      <div class="col-md-5 d-flex gap-2 justify-content-end">
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedFilter" aria-expanded="false" aria-controls="advancedFilter">
-          <i class="bi bi-sliders me-1"></i> Filter Lanjutan
+<div class="container-fluid px-md-4 users-page-container">
+    {{-- Header --}}
+    <div class="header-section">
+        <div class="header-content">
+            <h3>Manajemen Pegawai</h3>
+            <p>Kelola data profil, bidang, dan jabatan seluruh pegawai DLH.</p>
+        </div>
+        <button class="btn btn-white bg-white text-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreate">
+            <i class="bi bi-person-plus-fill me-2"></i> Tambah Pegawai
         </button>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Cari</button>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-dark">Reset</a>
-      </div>
     </div>
 
-    {{-- Filter Lanjutan yang Tersembunyi --}}
-    <div class="collapse mt-3" id="advancedFilter">
-      <div class="row g-2">
-        <div class="col-md-12">
-          <label class="form-label">Filter Berdasarkan Bidang</label>
-          <select name="bidang" class="form-select">
-            <option value="">-- Semua Bidang --</option>
-            @foreach($listBidang as $b)
-              <option value="{{ $b }}" @selected($bidang===$b)>{{ strtoupper($b) }}</option>
-            @endforeach
-          </select>
+    {{-- Alerts --}}
+    @if(session('ok'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('ok') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-      </div>
+    @endif
+
+    {{-- Toolbar / Search & Filter --}}
+    <div class="toolbar-card">
+        <form method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold text-muted">Cari Pegawai</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="Nama, username, atau jabatan..." value="{{ $q }}" style="border-radius: 0 12px 12px 0;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Filter Bidang</label>
+                    <select name="bidang" class="form-select">
+                        <option value="">-- Semua Bidang --</option>
+                        @foreach($listBidang as $b)
+                            <option value="{{ $b }}" @selected($bidang===$b)>{{ strtoupper($b) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary rounded-3 w-100 fw-bold">Terapkan</button>
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary rounded-3 w-100 fw-bold">Reset</a>
+                </div>
+            </div>
+        </form>
     </div>
-  </form>
+
+    {{-- Table --}}
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Pegawai</th>
+                        <th>Bidang & Jabatan</th>
+                        <th class="text-center">Username</th>
+                        <th class="text-end pe-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $u)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    @php $foto = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg'); @endphp
+                                    <img src="{{ $foto }}" class="user-avatar" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
+                                    <div>
+                                        <div class="user-name">{{ $u->nama }}</div>
+                                        <div class="user-meta text-primary fw-medium">{{ $u->role === 'admin' ? 'Administrator' : 'Pegawai' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="mb-1"><span class="badge-bidang">{{ $u->bidang ?: 'Umum' }}</span></div>
+                                <div class="small text-muted">{{ $u->jabatan ?: 'Staff' }}</div>
+                            </td>
+                            <td class="text-center">
+                                <code class="bg-light px-2 py-1 rounded text-dark">{{ $u->username }}</code>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn-action btn-edit" title="Edit Data"
+                                        data-bs-toggle="modal" data-bs-target="#modalEdit"
+                                        data-id="{{ $u->id }}"
+                                        data-nama="{{ $u->nama }}"
+                                        data-username="{{ $u->username }}"
+                                        data-bidang="{{ $u->bidang }}"
+                                        data-jabatan="{{ $u->jabatan }}">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class="btn-action btn-delete" title="Hapus Pegawai"
+                                        data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                        data-route="{{ route('admin.users.destroy',$u) }}"
+                                        data-method="delete"
+                                        data-title="Hapus Pegawai"
+                                        data-message="Apakah Anda yakin ingin menghapus <strong>{{ $u->nama }}</strong>? Tindakan ini tidak dapat dibatalkan.">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted opacity-50 mb-2"><i class="bi bi-people fs-1"></i></div>
+                                <div class="fw-bold text-muted">Tidak ada data pegawai ditemukan</div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-4 border-top bg-light-subtle">
+            {{ $users->withQueryString()->links() }}
+        </div>
+    </div>
 </div>
 
-  {{-- Table --}}
-  <div class="app-card p-0">
-    <div class="table-responsive">
-      <table class="table align-middle table-hover">
-        <thead>
-          <tr>
-            <th style="width:56px"></th>
-            <th>Nama</th>
-            <th class="d-none d-lg-table-cell">Nama Pengguna</th>
-            <th>Bidang</th>
-            <th class="d-none d-xl-table-cell">Jabatan</th>
-            <th style="width:260px" class="text-end">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-        @forelse($users as $u)
-          <tr>
-            <td>
-              @php $foto = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg'); @endphp
-              <img src="{{ $foto }}" class="avatar" alt="avatar"
-                   onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
-            </td>
-            <td class="fw-semibold">{{ $u->nama }}</td>
-            <td class="d-none d-lg-table-cell text-body-secondary">{{ $u->username }}</td>
-            <td>{{ $u->bidang ?: '-' }}</td>
-            <td class="d-none d-xl-table-cell">{{ $u->jabatan ?: '-' }}</td>
-            <td class="text-end">
-              <div class="action-stack">
-                {{-- Edit (modal) --}}
-                <button
-                  class="btn-chip btn-chip-primary"
-                  data-bs-toggle="modal" data-bs-target="#modalEdit"
-                  data-id="{{ $u->id }}"
-                  data-nama="{{ $u->nama }}"
-                  data-username="{{ $u->username }}"
-                  data-bidang="{{ $u->bidang }}"
-                  data-jabatan="{{ $u->jabatan }}"
-                >
-                  <i class="bi bi-pencil-square"></i> Edit
-                </button>
-
-                {{-- Hapus (modal konfirmasi) --}}
-                <button
-                  class="btn-chip btn-chip-danger"
-                  data-bs-toggle="modal" data-bs-target="#confirmModal"
-                  data-route="{{ route('admin.users.destroy',$u) }}"
-                  data-method="delete"
-                  data-title="Hapus Pegawai"
-                  data-message="Hapus pengguna ini? Tindakan tidak dapat dibatalkan."
-                >
-                  <i class="bi bi-trash"></i> Hapus
-                </button>
-              </div>
-            </td>
-          </tr>
-        @empty
-          <tr><td colspan="6" class="text-center text-body-secondary py-4">Tidak ada data.</td></tr>
-        @endforelse
-        </tbody>
-      </table>
-    </div>
-
-    {{-- Pagination + spacer --}}
-    <div class="table-footer">
-      {{ $users->withQueryString()->links() }}
-    </div>
-  </div>
-</div>
-
-{{-- =============== Modal: Create =============== --}}
+{{-- Modal Create --}}
 <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content" method="post" action="{{ route('admin.users.store') }}">
-      @csrf
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Pegawai</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row g-2">
-          <div class="col-12">
-            <label class="form-label">Nama</label>
-            <input name="nama" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Nama Pengguna</label>
-            <input name="username" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Kata Sandi</label>
-            <input name="password" type="password" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Bidang</label>
-            <input name="bidang" class="form-control">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Jabatan</label>
-            <input name="jabatan" class="form-control">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-{{-- =============== Modal: Edit (reset di sini) =============== --}}
-<div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <form method="post" id="formEdit">
-        @csrf @method('put')
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Pegawai</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-2">
-            <div class="col-12">
-              <label class="form-label">Nama</label>
-              <input name="nama" id="edit-nama" class="form-control" required>
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content shadow-lg border-0" method="post" action="{{ route('admin.users.store') }}">
+            @csrf
+            <div class="modal-header">
+                <h5 class="fw-bold mb-0">Tambah Pegawai Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Nama Pengguna</label>
-              <input name="username" id="edit-username" class="form-control" required>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input name="nama" class="form-control" required placeholder="Nama sesuai SK">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Username</label>
+                        <input name="username" class="form-control" required placeholder="Untuk login">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Kata Sandi</label>
+                        <input name="password" type="password" class="form-control" required placeholder="Min. 6 Karakter">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Bidang</label>
+                        <select name="bidang" class="form-select" required>
+                            <option value="">-- Pilih Bidang --</option>
+                            @foreach($listBidang as $b)
+                                <option value="{{ $b }}">{{ strtoupper($b) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Jabatan</label>
+                        <input name="jabatan" class="form-control" placeholder="Contoh: Ahli Muda">
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Bidang</label>
-              <select name="bidang" id="edit-bidang" class="form-select">
-                <option value="">-- Pilih Bidang --</option>
-                @foreach($listBidang as $b)
-                  <option value="{{ $b }}">{{ $b }}</option>
-                @endforeach
-              </select>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Simpan Data</button>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Jabatan</label>
-              <input name="jabatan" id="edit-jabatan" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer d-flex justify-content-between gap-2">
-          {{-- Reset password (konfirmasi) --}}
-          <button type="button" class="btn btn-outline-warning" id="btnResetPwd"
-                  data-bs-toggle="modal" data-bs-target="#confirmModal"
-                  data-title="Reset Password"
-                  data-message="Reset password pengguna ini ke 123456?"
-                  data-method="post"
-                  data-route="">
-            <i class="bi bi-key me-1"></i> Reset Password
-          </button>
-
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary"><i class="bi bi-save me-1"></i> Simpan</button>
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-          </div>
-        </div>
-      </form>
+        </form>
     </div>
-  </div>
 </div>
 
-{{-- =============== Modal Konfirmasi (universal) =============== --}}
+{{-- Modal Edit --}}
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <form method="post" id="formEdit">
+                @csrf @method('put')
+                <div class="modal-header">
+                    <h5 class="fw-bold mb-0">Perbarui Data Pegawai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input name="nama" id="edit-nama" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input name="username" id="edit-username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Bidang</label>
+                            <select name="bidang" id="edit-bidang" class="form-select">
+                                <option value="">-- Pilih Bidang --</option>
+                                @foreach($listBidang as $b)
+                                    <option value="{{ $b }}">{{ $b }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Jabatan</label>
+                            <input name="jabatan" id="edit-jabatan" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-3 fw-bold" id="btnResetPwd"
+                        data-bs-toggle="modal" data-bs-target="#confirmModal"
+                        data-title="Reset Password"
+                        data-message="Apakah Anda yakin ingin mereset password pengguna ini menjadi <strong>123456</strong>?"
+                        data-method="post"
+                        data-route="">
+                        <i class="bi bi-key-fill me-1"></i> Reset Password
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Konfirmasi --}}
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <form class="modal-content" method="post" id="confirmForm">
-      @csrf
-      <input type="hidden" id="spoofMethod" value="">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmTitle">Konfirmasi</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="mb-0" id="confirmText">Apakah Anda yakin?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-danger" id="confirmSubmit">Ya, Lanjutkan</button>
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-      </div>
-    </form>
-  </div>
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form class="modal-content shadow-lg border-0 text-center p-4" method="post" id="confirmForm">
+            @csrf
+            <input type="hidden" id="spoofMethod" value="">
+            <div class="mb-3"><i class="bi bi-exclamation-circle text-danger display-4"></i></div>
+            <h5 class="fw-bold" id="confirmTitle">Konfirmasi</h5>
+            <p class="text-muted small" id="confirmText">Apakah Anda yakin?</p>
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-danger rounded-pill fw-bold" id="confirmSubmit">Ya, Lanjutkan</button>
+                <button type="button" class="btn btn-light rounded-pill fw-bold" data-bs-dismiss="modal">Batal</button>
+            </div>
+        </form>
+    </div>
 </div>
 
+@push('scripts')
 <script>
-/* ==== Isi modal edit dinamis ==== */
 document.getElementById('modalEdit')?.addEventListener('show.bs.modal', function (event) {
-  const btn = event.relatedTarget;
-  const id = btn.getAttribute('data-id');
-
-  // Isi field
-  document.getElementById('edit-nama').value      = btn.getAttribute('data-nama')     || '';
-  document.getElementById('edit-username').value  = btn.getAttribute('data-username') || '';
-  document.getElementById('edit-bidang').value    = btn.getAttribute('data-bidang')   || '';
-  document.getElementById('edit-jabatan').value   = btn.getAttribute('data-jabatan')  || '';
-
-  // Action form edit
-  document.getElementById('formEdit').action = "{{ url('admin/users') }}/" + id;
-
-  // Route reset password di tombol modal
-  const resetBtn = document.getElementById('btnResetPwd');
-  resetBtn.setAttribute('data-route', "{{ url('admin/users') }}/" + id + "/reset-password");
+    const btn = event.relatedTarget;
+    const id = btn.getAttribute('data-id');
+    document.getElementById('edit-nama').value = btn.getAttribute('data-nama') || '';
+    document.getElementById('edit-username').value = btn.getAttribute('data-username') || '';
+    document.getElementById('edit-bidang').value = btn.getAttribute('data-bidang') || '';
+    document.getElementById('edit-jabatan').value = btn.getAttribute('data-jabatan') || '';
+    document.getElementById('formEdit').action = "{{ url('admin/users') }}/" + id;
+    const resetBtn = document.getElementById('btnResetPwd');
+    resetBtn.setAttribute('data-route', "{{ url('admin/users') }}/" + id + "/reset-password");
 });
 
-/* ==== Modal konfirmasi universal (hapus / reset) ==== */
 const confirmModal = document.getElementById('confirmModal');
 confirmModal?.addEventListener('show.bs.modal', function (event) {
-  const btn     = event.relatedTarget;
-  const route   = btn.getAttribute('data-route');
-  const method  = (btn.getAttribute('data-method') || 'post').toLowerCase();
-  const title   = btn.getAttribute('data-title') || 'Konfirmasi';
-  const message = btn.getAttribute('data-message') || 'Apakah Anda yakin?';
-
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmText').textContent  = message;
-
-  const form = document.getElementById('confirmForm');
-  form.action = route;
-
-  const spoof = document.getElementById('spoofMethod');
-  if (method === 'delete') {
-    spoof.setAttribute('name','_method');
-    spoof.value = 'delete';
-  } else {
-    spoof.removeAttribute('name');
-    spoof.value = '';
-  }
+    const btn = event.relatedTarget;
+    document.getElementById('confirmTitle').textContent = btn.getAttribute('data-title') || 'Konfirmasi';
+    document.getElementById('confirmText').innerHTML = btn.getAttribute('data-message') || 'Apakah Anda yakin?';
+    const form = document.getElementById('confirmForm');
+    form.action = btn.getAttribute('data-route');
+    const method = (btn.getAttribute('data-method') || 'post').toLowerCase();
+    const spoof = document.getElementById('spoofMethod');
+    if (method === 'delete') {
+        spoof.setAttribute('name','_method');
+        spoof.value = 'delete';
+    } else {
+        spoof.removeAttribute('name');
+        spoof.value = '';
+    }
 });
 </script>
+@endpush
 @endsection
