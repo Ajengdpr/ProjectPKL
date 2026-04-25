@@ -307,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // desktop selalu sidebar terbuka
   if(window.innerWidth >= 992){
     body.classList.add('sidebar-toggled');
+    sidebar.classList.add('show');
   }
 });
 </script>

@@ -1,603 +1,666 @@
 @extends('layouts.app')
 @section('title', 'Dashboard')
 
-{{-- LETAK PERBAIKANNYA ADA DI SINI --}}
-@push('styles')
+@push('head')
 <style>
-  .tile {
-    display: flex;             
-    flex-direction: column;    
-    justify-content: center;  
-    align-items: center;       
-    padding: 20px;            
-    min-height: 120px;         
-  }
-  .tile i {
-    font-size: 2.5rem;         
-    margin-bottom: 10px;      
-  }
+    :root {
+        --primary-blue: #2563eb;
+        --primary-soft: #eff6ff;
+        --success-soft: #ecfdf5;
+        --warning-soft: #fffbeb;
+        --danger-soft: #fef2f2;
+        --info-soft: #f0f9ff;
+        --border-color: #f1f5f9;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --section-gap: 2rem;
+    }
+
+    body {
+        background-color: #f8fafc;
+        color: var(--text-main);
+    }
+
+    .dashboard-container {
+        padding-top: 1rem;
+        padding-bottom: 5rem;
+    }
+
+    /* Modern Card Base */
+    .premium-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    /* Hero Section */
+    .hero-wrapper {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: var(--section-gap);
+    }
+
+    .welcome-card {
+        border-left: 6px solid var(--primary-blue);
+        background: linear-gradient(to right, #ffffff, #f9fbff);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .user-avatar-modern {
+        width: 85px;
+        height: 85px;
+        border-radius: 24px;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+    }
+
+    .greeting-text h2 {
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--text-main);
+    }
+
+    .ux-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        background: var(--primary-blue);
+        color: white;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .ux-message {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--primary-blue);
+        background: rgba(37, 99, 235, 0.08);
+        padding: 0.25rem 0.75rem;
+        border-radius: 8px;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+
+    /* Clock Widget */
+    .clock-widget {
+        text-align: right;
+    }
+
+    #realtime-clock {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--primary-blue);
+        letter-spacing: -2px;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .hero-date {
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Mini Widgets */
+    .widget-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .mini-widget {
+        padding: 1rem;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .w-blue { background: #eff6ff; color: #1e40af; }
+    .w-emerald { background: #ecfdf5; color: #065f46; }
+
+    .widget-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+    }
+
+    /* Location Panel */
+    .location-panel {
+        background: #f0f7ff;
+        border: 1px solid #e0e7ff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .loc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .loc-data-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        text-align: center;
+    }
+
+    /* Menu Absensi Section */
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: var(--section-gap);
+    }
+
+    .menu-item {
+        background: #f0f7ff;
+        border: 1px solid #e0e7ff;
+        border-radius: 22px;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-decoration: none !important;
+        color: var(--text-dark);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .menu-item:hover:not(.disabled) {
+        transform: translateY(-8px);
+        background: white;
+        border-color: var(--primary-blue);
+        box-shadow: 0 15px 30px rgba(13, 110, 253, 0.1);
+    }
+
+    .menu-item.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f8fafc;
+        filter: grayscale(1);
+    }
+
+    .m-icon-box {
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        background: white;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+
+    .mi-hadir { color: #2563eb; }
+    .mi-izin { color: #f59e0b; }
+    .mi-sakit { color: #ef4444; }
+    .mi-tugas { color: #10b981; }
+    .mi-cuti { color: #8b5cf6; }
+    .mi-telat { color: #64748b; }
+
+    .menu-item:hover:not(.disabled) .m-icon-box {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .menu-item span {
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Section Headers */
+    .section-title {
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin-bottom: 1.25rem;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title::before {
+        content: "";
+        width: 5px;
+        height: 24px;
+        background: var(--primary-blue);
+        border-radius: 10px;
+    }
+
+    /* Recap Table Section */
+    .rekap-card {
+        background: white;
+        border-radius: 24px;
+        padding: 0;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        overflow: hidden;
+    }
+
+    .table-modern thead th {
+        background: #f8fafc;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase; /* Kembali Caps Lock */
+        letter-spacing: 1px;
+        padding: 1rem;
+        font-weight: 700; /* Judul Kolom Bold */
+        border: none;
+    }
+
+    .table-modern tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 400;
+        color: var(--text-dark);
+        font-size: 0.85rem;
+    }
+
+    .table-modern tfoot td {
+        padding: 1rem;
+        font-weight: 700; /* Dipaksa Bold untuk Total */
+        color: var(--text-dark);
+        font-size: 0.85rem;
+    }
+
+    .table-modern tbody td.bidang-name {
+        font-weight: 700; /* Nama Bidang Bold */
+    }
+
+    .table-modern tfoot tr {
+        font-weight: 700; /* Total Keseluruhan Bold */
+        background: #f8fafc;
+    }
+
+
+    /* Modal */
+    .modal-content { border-radius: 28px; border: none; overflow: hidden; }
+    .modal-header { background: var(--primary-blue); color: white; padding: 1.5rem; border: none; }
+    .btn-close-white { filter: brightness(0) invert(1); }
+
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+        .hero-wrapper { grid-template-columns: 1fr; gap: 1rem; }
+        .clock-widget { text-align: left; margin-top: 1rem; }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container { padding-top: 0.5rem; }
+        .premium-card, .rekap-card { padding: 1.25rem; border-radius: 20px; }
+        .rekap-card { padding: 0; }
+        .greeting-text h2 { font-size: 1.5rem; }
+        #realtime-clock { font-size: 2.75rem; }
+        .widget-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+        .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    }
+
+    @media (max-width: 480px) {
+        #realtime-clock { font-size: 2.25rem; }
+    }
 </style>
 @endpush
-{{-- BATAS AKHIR PERBAIKAN --}}
 
 @section('content')
-  <div class="container">
+<div class="container-fluid px-md-4 dashboard-container">
+    <div id="custom-alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 2000; max-width: 350px;"></div>
 
-    {{-- Wadah untuk notifikasi kustom dari JavaScript --}}
-    <div id="custom-alert-container" style="position: fixed; top: 80px; right: 20px; z-index: 1050; max-width: 350px;">
+    {{-- 1. Hero Section --}}
+    <div class="hero-wrapper">
+        <div class="premium-card welcome-card">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div class="d-flex align-items-center gap-4">
+                    @php $avatar = $user->foto ? asset('storage/'.$user->foto) : asset('img/default-avatar.jpg'); @endphp
+                    <img src="{{ $avatar }}" class="user-avatar-modern" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
+                    <div class="greeting-text">
+                        <h5 class="text-muted mb-1">Selamat {{ \Carbon\Carbon::now()->hour < 12 ? 'Pagi' : (\Carbon\Carbon::now()->hour < 15 ? 'Siang' : (\Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }},</h5>
+                        <h2>{{ \Illuminate\Support\Str::title($user->nama) }}</h2>
+                        <div class="ux-status-pill">
+                            <i class="bi {{ $sudahAbsenToday ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
+                            <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="clock-widget">
+                    <div id="realtime-clock">00:00:00</div>
+                    <div class="hero-date">
+                        <i class="bi bi-calendar3 me-2"></i> {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+                    </div>
+                </div>
+            </div>
+            <div class="widget-grid">
+                <div class="mini-widget w-blue">
+                    <div class="widget-icon text-primary"><i class="bi bi-stars"></i></div>
+                    <div>
+                        <div class="small fw-bold opacity-75" style="font-size: 0.6rem;">POIN SAYA</div>
+                        <div class="fw-bold">{{ $user->point ?? 0 }}</div>
+                    </div>
+                </div>
+                <div class="mini-widget w-emerald">
+                    <div class="widget-icon text-success"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="small fw-bold opacity-75" style="font-size: 0.6rem;">BIDANG</div>
+                        <div class="fw-bold small">{{ strtoupper($user->bidang ?? 'Umum') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="premium-card location-panel">
+            <div class="loc-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="widget-icon text-primary"><i class="bi bi-geo-alt-fill"></i></div>
+                    <span class="fw-bold text-dark">Status Lokasi</span>
+                </div>
+            </div>
+            <div class="text-center mb-4">
+                <div class="small text-muted fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">RADIUS PRESENSI</div>
+                <div id="geo-status" class="fw-bold fs-4 text-dark">Mendeteksi...</div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="loc-data-card">
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">JARAK</div>
+                        <div id="geo-distance" class="fw-bold text-primary">-</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="loc-data-card">
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">AKURASI</div>
+                        <div id="geo-accuracy" class="fw-bold text-primary">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Alerts --}}
-    @if(!($isAbsensiActive ?? true))
-      <div class="alert alert-danger shadow-sm border-start border-4 border-danger py-3 mb-4">
-        <div class="d-flex align-items-center">
-          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
-          <div>
-            <div class="fw-bold fs-5">Sistem Absensi Nonaktif</div>
-            <div class="">{{ $disableReason ?? 'Sistem absensi sedang dinonaktifkan sementara.' }}</div>
-          </div>
-        </div>
-      </div>
-    @endif
-
-    @if(session('ok'))
-      <div class="alert alert-success">{{ session('ok') }}</div>
-    @endif
-    @if(session('err'))
-      <div class="alert alert-danger">{{ session('err') }}</div>
-    @endif
-    @if($errors->any())
-      <div class="alert alert-danger">{{ $errors->first() }}</div>
-    @endif
-
-    {{-- Panel Info Pengguna & Lokasi --}}
-    <div class="app-card p-3 mb-4">
-      <div class="row g-3 text-center">
-        <div class="col-6 col-md-3">
-          <div class="small text-body-secondary">Poin Anda</div>
-          <div class="fw-bold fs-5">{{ $user->point ?? 0 }}</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="small text-body-secondary">Status Lokasi</div>
-          <div id="geo-status" class="fw-bold fs-5">-</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="small text-body-secondary">Jarak dari Kantor</div>
-          <div id="geo-distance" class="fw-bold fs-5">-</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="small text-body-secondary">Akurasi GPS</div>
-          <div id="geo-accuracy" class="fw-bold fs-5">-</div>
-        </div>
-      </div>
+    {{-- 2. Attendance Menu Section --}}
+    <h5 class="section-title">Menu Utama Presensi</h5>
+    <div class="menu-grid">
+        @php
+            $actions = [
+                ['id' => 'btnHadir', 'title' => 'HADIR', 'icon' => 'bi-person-check-fill', 'class' => 'mi-hadir', 'status' => 'Hadir', 'expired' => $hadirExpired ?? false],
+                ['id' => 'btnIzin', 'title' => 'IZIN', 'icon' => 'bi-file-earmark-text-fill', 'class' => 'mi-izin', 'status' => 'Izin', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnSakit', 'title' => 'SAKIT', 'icon' => 'bi-heart-pulse-fill', 'class' => 'mi-sakit', 'status' => 'Sakit', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnTugasLuar', 'title' => 'TUGAS LUAR', 'icon' => 'bi-briefcase-fill', 'class' => 'mi-tugas', 'status' => 'Tugas Luar', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnCuti', 'title' => 'CUTI', 'icon' => 'bi-calendar-x-fill', 'class' => 'mi-cuti', 'status' => 'Cuti', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnTerlambat', 'title' => 'TELAT', 'icon' => 'bi-alarm-fill', 'class' => 'mi-telat', 'status' => 'Terlambat', 'expired' => $akhirExpired ?? false],
+            ];
+        @endphp
+        @foreach($actions as $act)
+            @php
+                $absenLocked = ($sudahAbsenToday ?? false) || !($isAbsensiActive ?? true);
+            @endphp
+            <div id="{{ $act['id'] }}" class="menu-item {{ $absenLocked ? 'disabled' : '' }}"
+               @if(!$absenLocked)
+                 @if($act['expired']) onclick="showCustomAlert('Waktu presensi sudah berakhir', 'warning')"
+                 @else data-bs-toggle="modal" data-bs-target="#absenModal" data-status="{{ $act['status'] }}" @endif
+               @endif>
+                <div class="m-icon-box {{ $act['class'] }}">
+                    <i class="bi {{ $act['icon'] }}"></i>
+                </div>
+                <span>{{ $act['title'] }}</span>
+            </div>
+        @endforeach
     </div>
 
-    @php
-      // Logika baru: Pisahkan kondisi terkunci karena sudah absen dan karena waktu habis
-      $isSystemDisabled = !($isAbsensiActive ?? true);
-      $absenLocked = ($sudahAbsenToday ?? false) || $isSystemDisabled;
-      $hadirExpired = ($hadirDisabled ?? false) || $isSystemDisabled;
-      // Gunakan variabel dari controller jika ada, jika tidak, gunakan default 16:00
-      $akhirExpired = ($akhirExpired ?? (now('Asia/Makassar')->format('H:i:s') > '16:00:00')) || $isSystemDisabled;
-    @endphp
-    
-
-    {{-- Tiles --}}
-    <div class="row g-3">
-      <div class="col-12 col-md-4">
-        {{-- Tombol Hadir dengan logika baru --}}
-        <a id="btnHadir" class="tile cyan w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($hadirExpired)
-             {{-- Jika waktu habis, tampilkan alert --}}
-             onclick="showCustomAlert('Anda melewati batas waktu hadir', 'warning')"
-           @else
-             {{-- Jika normal, buka modal (setStatus dipindah ke listener modal) --}}
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Hadir"
-           @endif >
-          <i class="bi bi-person"></i><h6>Hadir</h6>
-        </a>
-      </div>
-      <div class="col-12 col-md-4">
-        <a id="btnIzin" class="tile dark w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($akhirExpired)
-             onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
-           @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Izin"
-           @endif >
-          <i class="bi bi-phone"></i><h6>Izin</h6>
-        </a>
-      </div>
-      <div class="col-12 col-md-4">
-        <a id="btnSakit" class="tile gray w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($akhirExpired)
-             onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
-           @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Sakit"
-           @endif >
-          <i class="bi bi-emoji-frown"></i><h6>Sakit</h6>
-        </a>
-      </div>
-      <div class="col-12 col-md-4">
-        <a id="btnTugasLuar" class="tile green w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($akhirExpired)
-             onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
-           @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Tugas Luar"
-           @endif >
-          <i class="bi bi-airplane"></i><h6>Tugas Luar</h6>
-        </a>
-      </div>
-      <div class="col-12 col-md-4">
-        <a id="btnCuti" class="tile yellow w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($akhirExpired)
-             onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
-           @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Cuti"
-           @endif >
-          <i class="bi bi-x-circle"></i><h6>Cuti</h6>
-        </a>
-      </div>
-      <div class="col-12 col-md-4">
-        <a id="btnTerlambat" class="tile red w-100 text-decoration-none {{ $absenLocked ? 'disabled' : '' }}"
-           style="{{ $absenLocked ? 'pointer-events:none;opacity:.5' : '' }}"
-           @if($absenLocked)
-             {{-- Jika sudah absen, tidak ada aksi --}}
-           @elseif($akhirExpired)
-             onclick="showCustomAlert('Anda melewati batas waktu absensi', 'warning')"
-           @else
-             data-bs-toggle="modal" data-bs-target="#absenModal" data-status="Terlambat"
-           @endif >
-          <i class="bi bi-alarm"></i><h6>Terlambat</h6>
-        </a>
-      </div>
+    {{-- 3. Recap Table Section --}}
+    <h5 class="section-title">Rekap Absensi Per Bidang</h5>
+    <div class="rekap-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 table-modern" id="table-rekap">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Bidang</th>
+                        <th class="text-center">Staf</th>
+                        <th class="text-center">Hadir</th>
+                        <th class="text-center">Cuti</th>
+                        <th class="text-center">Sakit</th>
+                        <th class="text-center">Tugas Luar</th>
+                        <th class="text-center">Telat</th>
+                        <th class="text-center pe-4">Izin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($daftarBidang as $b)
+                        @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
+                        <tr>
+                            <td class="ps-4 bidang-name">{{ $b->bidang }}</td>
+                            <td class="text-center"><span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.85rem; font-weight: 500;">{{ $b->jumlah_pegawai }}</span></td>
+                            <td class="text-center">{{ $r->hadir ?? 0 }}</td>
+                            <td class="text-center">{{ $r->cuti ?? 0 }}</td>
+                            <td class="text-center">{{ $r->sakit ?? 0 }}</td>
+                            <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
+                            <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
+                            <td class="text-center pe-4">{{ $r->izin ?? 0 }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot class="bg-light-subtle">
+                    <tr class="fw-bold">
+                        <td class="ps-4 text-dark text-uppercase">TOTAL KESELURUHAN</td>
+                        <td class="text-center text-dark">{{ $daftarBidang->sum('jumlah_pegawai') }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
+                        <td class="text-center pe-4">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
-
-{{-- Keterangan & Rekap (stacked, urutan dibalik) --}}
-<div class="row mt-4 g-3">
-  {{-- Rekap per Bidang (atas) --}}
-  <div class="col-12">
-    <div class="app-card p-3">
-      
-      {{-- Judul Rekap --}}
-      <h6 class="fw-bold mb-1">Rekap per Bidang</h6>
-
-      {{-- Tanggal Hari Ini --}}
-      <div class="text-start mb-3">
-        <strong>{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</strong>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Bidang</th>
-              <th class="text-center">Jumlah Pegawai</th>
-              <th class="text-center">Hadir</th>
-              <th class="text-center">Cuti</th>
-              <th class="text-center">Sakit</th>
-              <th class="text-center">Tugas Luar</th>
-              <th class="text-center">Terlambat</th>
-              <th class="text-center">Izin</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach($daftarBidang as $b)
-              @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
-              <tr>
-                <td>{{ $b->bidang }}</td>
-                <td class="text-center">{{ $b->jumlah_pegawai }}</td>
-                <td class="text-center">{{ $r->hadir ?? 0 }}</td>
-                <td class="text-center">{{ $r->cuti ?? 0 }}</td>
-                <td class="text-center">{{ $r->sakit ?? 0 }}</td>
-                <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
-                <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
-                <td class="text-center">{{ $r->izin ?? 0 }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-          <tfoot class="table-light">
-            <tr>
-              <th>Total</th>
-              <td class="text-center">
-                {{ $daftarBidang->sum('jumlah_pegawai') }}
-              </td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
-              <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
 
-  </div>
-
-  <div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
+{{-- Absen Modal --}}
+<div class="modal fade" id="absenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form method="POST" action="{{ route('absen.store') }}" onsubmit="return lockSubmit(this)" enctype="multipart/form-data">
-          @csrf
-          <div class="modal-header">
-            <h5 class="modal-title">Input Absensi</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="statusField" name="status" value="Hadir">
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <input class="form-control" id="statusPreview" value="Hadir" disabled>
-            </div>
-            <div class="mb-2">
-              <label class="form-label" id="alasanLabel">Alasan (opsional)</label>
-              <input class="form-control" id="alasanInput" name="alasan" placeholder="Tulis alasan bila diperlukan" style="display: none;">
-            </div>
-            {{-- Container untuk upload file --}}
-            <div class="mb-2" id="fileUploadContainer" style="display: none;">
-                <label class="form-label" id="fileLabel">Upload Surat Tugas / Bukti</label>
-                <input class="form-control" type="file" id="fileInput" name="berkas" accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Batal</button>
-            <button class="btn btn-brand" id="submitBtn" type="submit">
-              <span class="btn-text">Simpan</span>
-              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="modal-content shadow-lg border-0">
+            <form method="POST" action="{{ route('absen.store') }}" onsubmit="return lockSubmit(this)" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h5 class="fw-bold mb-0">Input Presensi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="statusField" name="status" value="Hadir">
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold text-uppercase">Status Terpilih</label>
+                        <input class="form-control form-control-lg bg-light border-0 fw-bold text-primary" id="statusPreview" value="Hadir" disabled>
+                    </div>
+                    <div class="mb-4" id="alasanWrapper">
+                        <label class="form-label small text-muted fw-bold text-uppercase" id="alasanLabel">Keterangan / Alasan</label>
+                        <textarea class="form-control border-0 bg-light" id="alasanInput" name="alasan" rows="3" placeholder="Masukkan keterangan tambahan..."></textarea>
+                    </div>
+                    <div id="fileUploadContainer" style="display: none;">
+                        <label class="form-label small text-muted fw-bold text-uppercase" id="fileLabel">Upload Lampiran (PDF/Gambar)</label>
+                        <input class="form-control border-0 bg-light" type="file" id="fileInput" name="berkas">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal" type="button">Batal</button>
+                    <button class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" id="submitBtn" type="submit">
+                        <span class="btn-text">Kirim Sekarang</span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
 
 @push('scripts')
 <script>
-  /**
-   * Menampilkan notifikasi kustom di pojok kanan atas.
-   * @param {string} message Pesan yang akan ditampilkan.
-   * @param {string} type Jenis notifikasi (e.g., 'danger', 'success', 'warning').
-   * @param {number} duration Durasi dalam milidetik sebelum notifikasi hilang.
-   * @returns {string} ID dari elemen alert yang dibuat.
-   */
-  function showCustomAlert(message, type = 'danger', duration = 4000) {
-    const container = document.getElementById('custom-alert-container');
-    if (!container) return null;
-
-    const alertId = 'alert-' + Date.now();
-    const alertDiv = document.createElement('div');
-    // Tambahkan kelas 'alert-loading' jika durasi null/0 untuk penanda
-    const loadingClass = !duration ? ' alert-loading' : '';
-    alertDiv.id = alertId;
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show shadow-sm`;
-    alertDiv.setAttribute('role', 'alert');
-    
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-
-    container.appendChild(alertDiv);
-
-    if (duration) setTimeout(() => bootstrap.Alert.getOrCreateInstance(alertDiv)?.close(), duration);
-
-    return alertId;
-  }
-
-  /**
-   * Menghapus notifikasi kustom berdasarkan ID-nya.
-   * @param {string} alertId ID dari alert yang akan dihapus.
-   */
-  function removeCustomAlert(alertId) {
-    if (!alertId) return;
-    const alertEl = document.getElementById(alertId);
-    if (alertEl) {
-      bootstrap.Alert.getOrCreateInstance(alertEl)?.close();
+    function updateClock() {
+        const clockEl = document.getElementById('realtime-clock');
+        if (!clockEl) return;
+        const now = new Date();
+        const opts = { timeZone: 'Asia/Makassar', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        clockEl.textContent = new Intl.DateTimeFormat('id-ID', opts).format(now);
     }
-  }
-  // ---------- Tetap pertahankan fungsi2 yang sudah ada ----------
-  function setStatus(s){
-    const field   = document.getElementById('statusField');
-    const preview = document.getElementById('statusPreview');
-    const alasan  = document.getElementById('alasanInput');
-    const label   = document.getElementById('alasanLabel');
-    const fileContainer = document.getElementById('fileUploadContainer');
-    const fileInput = document.getElementById('fileInput');
-    const fileLabel = document.getElementById('fileLabel');
-    const terlambatInfo = document.getElementById('terlambatInfo');
+    setInterval(updateClock, 1000);
+    updateClock();
 
-    field.value = s;
-    preview.value = s;
-
-    // Sembunyikan dan reset input file secara default
-    fileContainer.style.display = 'none';
-    fileInput.removeAttribute('required');
-
-    // Sesuaikan tampilan kolom alasan berdasarkan status
-    if (s === 'Hadir') {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'none';
-      label.textContent = '';
-      if (terlambatInfo) terlambatInfo.classList.add('d-none');
-    } else if (s === 'Terlambat') {
-      alasan.setAttribute('required', 'required');
-      alasan.style.display = 'block';
-      label.textContent = 'Alasan (wajib untuk terlambat)';
-      alasan.placeholder = 'Contoh: macet, ban bocor, antar anak, dsb.';
-      if (terlambatInfo) terlambatInfo.classList.remove('d-none');
-    } else if (s === 'Izin') {
-      alasan.setAttribute('required', 'required');
-      alasan.style.display = 'block';
-      label.textContent = 'Alasan';
-      alasan.placeholder = 'Isi alasan untuk izin';
-      if (terlambatInfo) terlambatInfo.classList.add('d-none');
-    } else if (s === 'Sakit') {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'block';
-      label.textContent = 'Keterangan (opsional)';
-      alasan.placeholder = 'Contoh: Demam, pusing, dsb.';
-      
-      // Tampilkan input file tapi TIDAK wajib
-      fileContainer.style.display = 'block';
-      fileInput.removeAttribute('required');
-      fileLabel.textContent = 'Upload Surat Dokter (opsional)';
-    } else if (s === 'Tugas Luar' || s === 'Cuti') {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'block';
-      label.textContent = 'Keterangan (opsional)';
-      alasan.placeholder = 'Contoh: Mengikuti rapat di...';
-      
-      // Tampilkan input file dan jadikan wajib
-      fileContainer.style.display = 'block';
-      fileInput.setAttribute('required', 'required');
-      fileLabel.textContent = (s === 'Tugas Luar') 
-        ? 'Upload Surat Tugas (wajib)' 
-        : 'Upload Surat Cuti (wajib)';
-    } else {
-      alasan.removeAttribute('required');
-      alasan.style.display = 'block';
-      label.textContent = 'Keterangan (opsional)';
-      alasan.placeholder = 'Masukkan keterangan';
-      if (terlambatInfo) terlambatInfo.classList.add('d-none');
+    function showCustomAlert(message, type = 'danger') {
+        const container = document.getElementById('custom-alert-container');
+        if (!container) return;
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-dark alert-dismissible fade show border-0 shadow-lg rounded-4 p-3 mb-2`;
+        alertDiv.innerHTML = `<strong><i class="bi bi-info-circle me-2"></i></strong> ${message}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>`;
+        container.appendChild(alertDiv);
+        setTimeout(() => bootstrap.Alert.getOrCreateInstance(alertDiv)?.close(), 4000);
     }
-  }
 
-  function lockSubmit(form){
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.querySelector('.btn-text').classList.add('d-none');
-    btn.querySelector('.spinner-border').classList.remove('d-none');
-    return true;
-  }
+    const officeLat = {{ $office['lat'] }};
+    const officeLng = {{ $office['lng'] }};
+    const officeRadius = {{ $office['radius'] }};
+    let insideOffice = false;
 
-  // Fungsi baru untuk menonaktifkan semua tombol setelah absen
-  function disableAllTiles() {
-    const tiles = document.querySelectorAll('.tile');
-    tiles.forEach(tile => {
-      tile.classList.add('disabled');
-      tile.style.pointerEvents = 'none';
-      tile.style.opacity = '.5';
-      tile.removeAttribute('data-bs-toggle'); // Hapus kemampuan membuka modal
-    });
-  }
+    function updateLocationUI(statusText, distance, accuracy) {
+        const s = document.getElementById('geo-status');
+        const d = document.getElementById('geo-distance');
+        const a = document.getElementById('geo-accuracy');
 
-  // ---------- Variabel lokasi & util ----------
-  const officeLat    = {{ $office['lat'] }};
-  const officeLng    = {{ $office['lng'] }};
-  const officeRadius = {{ $office['radius'] }}; // meter
-
-  // global state: apakah user saat ini dianggap di dalam radius kantor
-  let insideOffice = false;
-  let lastDist = null; // simpan jarak terakhir yang dihitung
-
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2)**2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLon/2)**2;
-    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
-
-  // (Tetap sediakan fungsi enable/disable — dipakai jika backend menginginkan)
-  function enableHadir() {
-    const btn = document.getElementById('btnHadir');
-    if (!btn) return;
-    btn.classList.remove('disabled');
-    btn.style.pointerEvents = 'auto';
-    btn.style.opacity = 1;
-  }
-  function disableHadir() {
-    const btn = document.getElementById('btnHadir');
-    if (!btn) return;
-    btn.classList.add('disabled');
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = .5;
-  }
-
-  // Update panel info lokasi yang user-friendly
-  function updateLocationInfo(statusText, distance, accuracy) {
-    const statusEl = document.getElementById('geo-status');
-    const distanceEl = document.getElementById('geo-distance');
-    const accuracyEl = document.getElementById('geo-accuracy');
-
-    if (statusEl) {
-      statusEl.textContent = statusText;
-      statusEl.className = `fw-bold fs-5 ${statusText === 'Di Dalam Kantor' ? 'text-success' : 'text-danger'}`;
-    }
-    if (distanceEl) distanceEl.textContent = distance !== null ? `~ ${Math.round(distance)} m` : '-';
-    if (accuracyEl) accuracyEl.textContent = accuracy !== null ? `± ${Math.round(accuracy)} m` : '-';
-  }
-
-  // ---------- Perubahan penting: decide() hanya update state, tidak disable permanently ----------
-  function decide(lat, lng, acc) {
-    const dist = getDistance(lat, lng, officeLat, officeLng);
-    lastDist = dist;
-
-    // update state: apakah user dalam radius (dengan toleransi akurasi)
-    insideOffice = (dist <= officeRadius + acc);
-    
-    // Update UI
-    const statusText = insideOffice ? 'Di Dalam Kantor' : 'Di Luar Kantor';
-    updateLocationInfo(statusText, dist, acc);
-  }
-
-  function handlePos(pos) {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    const acc = pos.coords.accuracy;
-    decide(lat, lng, acc);
-  }
-
-  function handleErr(err) {
-    console.warn('Geolocation error:', err);
-    // jangan disableHadir() permanen — cukup set state false
-    insideOffice = false;
-    updateLocationInfo('Gagal', null, null);
-    // optionally inform user
-    showCustomAlert('Tidak bisa mengambil lokasi: ' + err.message);
-  }
-
-  // start sekali untuk update status lokasi (jika browser mendukung)
-  if (navigator.geolocation) {
-    const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
-    navigator.geolocation.getCurrentPosition(handlePos, handleErr, opts);
-    const watchId = navigator.geolocation.watchPosition(handlePos, handleErr, opts);
-    // hentikan watch setelah 30s agar tidak boros baterai
-    setTimeout(() => navigator.geolocation.clearWatch(watchId), 30000);
-  } else {
-    // browser tidak mendukung: biarkan insideOffice=false (tombol tetap bisa diklik,
-    // namun nanti saat modal show akan dicek dan ditolak jika butuh lokasi)
-    insideOffice = false;
-    updateLocationInfo('Tidak Didukung', null, null);
-    // showCustomAlert('Browser tidak mendukung geolocation.');
-  }
-
-  // ---------- Intersep show modal (Bootstrap) dan batalkan bila perlu ----------
-  document.addEventListener('DOMContentLoaded', function() {
-    const modalEl = document.getElementById('absenModal');
-    if (!modalEl) return;
-
-    // saat modal akan ditampilkan, event 'show.bs.modal' memberikan relatedTarget
-    modalEl.addEventListener('show.bs.modal', function (e) {
-      // Ambil status dari atribut data-status pada tombol yang diklik
-      const triggerButton = e.relatedTarget;
-      const status = triggerButton.getAttribute('data-status');
-
-      // Panggil setStatus HANYA jika modal akan dibuka
-      if (status) setStatus(status);
-
-      // Hanya lakukan pengecekan lokasi untuk HADIR & TERLAMBAT
-      if (status === 'Hadir' || status === 'Terlambat') { // Gunakan status yang baru didapat
-        // LOGIKA BARU: Langsung percaya pada status 'insideOffice' yang sudah di-update secara real-time.
-        // Tidak perlu getCurrentPosition() lagi, untuk membuat proses lebih cepat.
-        if (!insideOffice) {
-          // Batalkan pembukaan modal
-          e.preventDefault();
-          
-          // Tampilkan notifikasi berdasarkan informasi yang sudah ada.
-          if (lastDist !== null) {
-            showCustomAlert('Anda berada di luar area kantor (jarak ~' + Math.round(lastDist) + ' m).');
-          } else {
-            showCustomAlert('Lokasi Anda belum terdeteksi atau berada di luar jangkauan.');
-          }
+        if (s) {
+            s.textContent = statusText;
+            s.className = `fw-bold fs-4 ${statusText === 'Di Dalam Kantor' ? 'text-success' : 'text-danger'}`;
         }
-        // else -> insideOffice=true sehingga modal akan ditampilkan normal
-      }
-      // Untuk status selain Hadir/Terlambat, modal tetap akan muncul (tidak dicegah)
+        if (d) d.textContent = distance !== null ? `${Math.round(distance)}m` : '-';
+        if (a) a.textContent = accuracy !== null ? `±${Math.round(accuracy)}m` : '-';
+    }
+
+    function handlePos(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = pos.coords.accuracy;
+        const dist = (function(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+            return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        })(lat, lng, officeLat, officeLng);
+        insideOffice = (dist <= officeRadius + acc);
+        updateLocationUI(insideOffice ? 'Di Dalam Kantor' : 'Di Luar Kantor', dist, acc);
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(handlePos, (err) => {
+            updateLocationUI('Gagal Lokasi', null, null);
+        }, { enableHighAccuracy: true });
+    }
+
+    function setStatus(s){
+        const field = document.getElementById('statusField');
+        const preview = document.getElementById('statusPreview');
+        const alasan = document.getElementById('alasanInput');
+        const wrapper = document.getElementById('alasanWrapper');
+        const fileContainer = document.getElementById('fileUploadContainer');
+        const fileInput = document.getElementById('fileInput');
+
+        field.value = s;
+        preview.value = s;
+        fileContainer.style.display = 'none';
+        fileInput.removeAttribute('required');
+
+        if (s === 'Hadir') {
+            alasan.removeAttribute('required');
+            wrapper.style.display = 'none';
+        } else {
+            wrapper.style.display = 'block';
+            if (['Terlambat', 'Izin'].includes(s)) alasan.setAttribute('required', 'required');
+            else alasan.removeAttribute('required');
+
+            if (['Sakit', 'Tugas Luar', 'Cuti'].includes(s)) {
+                fileContainer.style.display = 'block';
+                if (s !== 'Sakit') fileInput.setAttribute('required', 'required');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('absenModal');
+        if (!modalEl) return;
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const status = event.relatedTarget.getAttribute('data-status');
+            if (status) setStatus(status);
+            if (['Hadir', 'Terlambat'].includes(status) && !insideOffice) {
+                event.preventDefault();
+                showCustomAlert('Anda harus berada di dalam jangkauan area kantor.');
+            }
+        });
     });
 
-    // Setelah modal ditutup, panggil fungsi untuk menonaktifkan semua tombol
-    // Ini akan berjalan setelah pengguna menekan tombol "Simpan" dan form disubmit
-    const form = modalEl.querySelector('form');
-    form.addEventListener('submit', function() {
-        setTimeout(disableAllTiles, 100); // Beri jeda sedikit agar form sempat terkirim
+    function lockSubmit(form){
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.querySelector('.btn-text').classList.add('d-none');
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        return true;
+    }
+
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    database.ref('rekap/' + todayStr).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        const tbody = document.querySelector('#table-rekap tbody');
+        if (!tbody) return;
+        let totals = { h:0, c:0, s:0, tl:0, t:0, i:0 };
+        tbody.querySelectorAll('tr').forEach(row => {
+            const bidang = row.cells[0].textContent.trim();
+            const r = data[bidang] || {};
+            row.cells[2].textContent = r.hadir ?? 0;
+            row.cells[3].textContent = r.cuti ?? 0;
+            row.cells[4].textContent = r.sakit ?? 0;
+            row.cells[5].textContent = r.tugas_luar ?? 0;
+            row.cells[6].textContent = r.terlambat ?? 0;
+            row.cells[7].textContent = r.izin ?? 0;
+            totals.h += parseInt(r.hadir ?? 0);
+            totals.c += parseInt(r.cuti ?? 0);
+            totals.s += parseInt(r.sakit ?? 0);
+            totals.tl += parseInt(r.tugas_luar ?? 0);
+            totals.t += parseInt(r.terlambat ?? 0);
+            totals.i += parseInt(r.izin ?? 0);
+        });
+        const tfoot = document.querySelector('#table-rekap tfoot tr');
+        if (tfoot) {
+            tfoot.cells[2].textContent = totals.h;
+            tfoot.cells[3].textContent = totals.c;
+            tfoot.cells[4].textContent = totals.s;
+            tfoot.cells[5].textContent = totals.tl;
+            tfoot.cells[6].textContent = totals.t;
+            tfoot.cells[7].textContent = totals.i;
+        }
     });
-  });
 </script>
 @endpush
 @endsection
 
-@push('scripts')
-<script>
-  // Dapatkan tanggal hari ini (sesuai zona waktu browser pengguna) dengan format YYYY-MM-DD
-  const today = new Date().toLocaleDateString('en-CA'); // Format 'en-CA' menghasilkan 'YYYY-MM-DD'
-  const rekapRef = database.ref('rekap/' + today);
-
-  // Listener utama: akan berjalan sekali saat halaman dimuat,
-  // dan akan berjalan lagi setiap kali data di path 'rekap/YYYY-MM-DD' berubah.
-  rekapRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    console.log("Menerima data rekap terbaru dari Firebase:", data); // Untuk debugging
-    updateRekapTable(data);
-  });
-
-  function updateRekapTable(rekapData) {
-    if (!rekapData) { // Jika belum ada data rekap di Firebase untuk hari ini, jangan lakukan apa-apa
-      console.log("Belum ada data rekap di Firebase untuk hari ini.");
-      return;
-    }
-
-    // Cari elemen tabel di dalam DOM
-    const tableBody = document.querySelector('.table-responsive tbody');
-    const tableFoot = document.querySelector('.table-responsive tfoot');
-
-    // Reset variabel total
-    let totalHadir = 0, totalCuti = 0, totalSakit = 0;
-    let totalTugasLuar = 0, totalTerlambat = 0, totalIzin = 0;
-
-    // Iterasi setiap baris <tr> di dalam <tbody>
-    tableBody.querySelectorAll('tr').forEach(row => {
-      const bidangName = row.cells[0].textContent.trim();
-      const rekapBidang = rekapData[bidangName] || {}; // Ambil data untuk bidang ini, atau object kosong jika tidak ada
-
-      // Update setiap cell <td>. Gunakan '?? 0' untuk default ke 0 jika datanya null.
-      row.cells[2].textContent = rekapBidang.hadir ?? 0;
-      row.cells[3].textContent = rekapBidang.cuti ?? 0;
-      row.cells[4].textContent = rekapBidang.sakit ?? 0;
-      row.cells[5].textContent = rekapBidang.tugas_luar ?? 0;
-      row.cells[6].textContent = rekapBidang.terlambat ?? 0;
-      row.cells[7].textContent = rekapBidang.izin ?? 0;
-
-      // Kalkulasi total untuk footer
-      totalHadir     += parseInt(rekapBidang.hadir ?? 0);
-      totalCuti      += parseInt(rekapBidang.cuti ?? 0);
-      totalSakit     += parseInt(rekapBidang.sakit ?? 0);
-      totalTugasLuar += parseInt(rekapBidang.tugas_luar ?? 0);
-      totalTerlambat += parseInt(rekapBidang.terlambat ?? 0);
-      totalIzin      += parseInt(rekapBidang.izin ?? 0);
-    });
-
-    // Update baris total di <tfoot>
-    const footerRow = tableFoot.querySelector('tr');
-    if(footerRow) {
-        footerRow.cells[2].textContent = totalHadir;
-        footerRow.cells[3].textContent = totalCuti;
-        footerRow.cells[4].textContent = totalSakit;
-        footerRow.cells[5].textContent = totalTugasLuar;
-        footerRow.cells[6].textContent = totalTerlambat;
-        footerRow.cells[7].textContent = totalIzin;
-    }
-  }
-</script>
-@endpush
