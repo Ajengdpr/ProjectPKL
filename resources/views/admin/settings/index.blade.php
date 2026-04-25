@@ -165,19 +165,20 @@
     <form method="post" action="{{ route('admin.settings.save') }}">
         @csrf
 
-        {{-- Section 1: Konfigurasi Poin --}}
         <div class="settings-card">
             <div class="card-title-group">
                 <i class="bi bi-star-fill"></i>
                 <h6>Konfigurasi Poin Kehadiran</h6>
             </div>
-            <div class="row g-3">
+            <div class="row g-4">
                 @foreach(\App\Models\Absensi::getStatuses() as $key=>$label)
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <label class="form-label">{{ $label }}</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-plus-slash-minus small"></i></span>
-                            <input type="number" class="form-control border-start-0" name="poin[{{ $key }}]" value="{{ $poin[$key] ?? 0 }}" style="border-radius: 0 12px 12px 0;">
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="d-flex flex-column h-100">
+                            <label class="form-label mb-2 text-truncate">{{ $label }}</label>
+                            <div class="input-group mt-auto">
+                                <span class="input-group-text bg-white border-end-0 text-warning" style="border-radius: 12px 0 0 12px;"><i class="bi bi-star-fill small"></i></span>
+                                <input type="number" class="form-control border-start-0 shadow-none" name="poin[{{ $key }}]" value="{{ $poin[$key] ?? 0 }}" style="border-radius: 0 12px 12px 0;">
+                            </div>
                         </div>
                     </div>
                 @endforeach
