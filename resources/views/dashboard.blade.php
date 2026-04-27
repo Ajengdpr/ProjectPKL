@@ -97,7 +97,7 @@
     }
 
     #realtime-clock {
-        font-size: 3.5rem;
+        font-size: 3rem; /* Dikecilkan dari 3.5rem */
         font-weight: 800;
         color: var(--primary-blue);
         letter-spacing: -2px;
@@ -108,7 +108,7 @@
     .hero-date {
         color: var(--text-muted);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem; /* Dikecilkan */
     }
 
     /* Mini Widgets */
