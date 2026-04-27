@@ -4,13 +4,12 @@
 @push('head')
 <style>
     :root {
-        --primary-blue: #0d6efd;
-        --primary-gradient: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
+        --primary-blue: #2563eb;
+        --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
     }
 
     body {
         background-color: #f1f5f9;
-        overflow-x: hidden;
     }
 
     .login-wrapper {
@@ -19,7 +18,7 @@
         background: white;
     }
 
-    /* Left Side: Visual & Identity */
+    /* Left Side: Visual */
     .login-left {
         flex: 1.2;
         background: url('{{ asset('img/bg.jpg') }}') center/cover no-repeat;
@@ -35,19 +34,19 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(13, 110, 253, 0.85) 0%, rgba(0, 61, 153, 0.9) 100%);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(30, 64, 175, 0.9) 100%);
         z-index: 1;
     }
 
     .login-left-content {
         position: relative;
         z-index: 2;
-        max-width: 600px;
+        max-width: 550px;
     }
 
     .login-left-content h1 {
         font-weight: 800;
-        font-size: 3.5rem;
+        font-size: 3.25rem;
         line-height: 1.1;
         margin-bottom: 1.5rem;
         letter-spacing: -1px;
@@ -61,13 +60,13 @@
         margin-bottom: 2rem;
     }
 
-    /* Right Side: Form */
+    /* Right Side: Form - Balanced */
     .login-right {
         flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
+        padding: 2.5rem;
         background-color: #f8fafc;
     }
 
@@ -75,7 +74,7 @@
         width: 100%;
         max-width: 420px;
         background: white;
-        padding: 2.25rem 2.75rem; /* Dikecilkan */
+        padding: 2.5rem 3rem;
         border-radius: 32px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.05);
         border: 1px solid #f1f5f9;
@@ -83,11 +82,11 @@
 
     .logo-container {
         text-align: center;
-        margin-bottom: 1.75rem; /* Dikecilkan */
+        margin-bottom: 2rem;
     }
 
     .logo-container img {
-        width: 65px; /* Dikecilkan */
+        width: 75px;
         margin-bottom: 1rem;
         filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
     }
@@ -105,14 +104,14 @@
         font-weight: 500;
     }
 
-    /* Modern Inputs */
+    /* Modern Balanced Inputs */
     .form-label {
         font-weight: 700;
         color: #475569;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.5rem;
     }
 
     .input-group-modern {
@@ -127,13 +126,12 @@
         transform: translateY(-50%);
         color: #94a3b8;
         font-size: 1.1rem;
-        transition: all 0.2s;
         z-index: 10;
     }
 
     .form-control-modern {
         width: 100%;
-        padding: 0.85rem 1.25rem 0.85rem 3.25rem;
+        padding: 0.8rem 1.25rem 0.8rem 3.25rem;
         border-radius: 16px;
         border: 2px solid #f1f5f9;
         background: #f8fafc;
@@ -145,12 +143,8 @@
     .form-control-modern:focus {
         background: white;
         border-color: var(--primary-blue);
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         outline: none;
-    }
-
-    .form-control-modern:focus + i {
-        color: var(--primary-blue);
     }
 
     .btn-login-modern {
@@ -165,12 +159,12 @@
         letter-spacing: 1px;
         margin-top: 1rem;
         transition: all 0.3s;
-        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
     }
 
     .btn-login-modern:hover {
         transform: translateY(-3px);
-        box-shadow: 0 15px 35px rgba(13, 110, 253, 0.4);
+        box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
         color: white;
     }
 
@@ -194,23 +188,14 @@
     /* Mobile Responsive */
     @media (max-width: 991px) {
         .login-left { display: none; }
-        .login-right { background: var(--primary-gradient); }
+        .login-right { background: var(--primary-gradient); min-height: 100vh; }
         .login-card-modern { padding: 2rem; }
-    }
-
-    .transition-hover {
-        transition: all 0.3s ease;
-    }
-    .transition-hover:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
     }
 </style>
 @endpush
 
 @section('content')
 <div class="login-wrapper">
-    <!-- Left Visual Section -->
     <div class="login-left">
         <div class="login-left-content">
             <h1>E-Absensi<br>Pegawai</h1>
@@ -219,13 +204,12 @@
         </div>
     </div>
 
-    <!-- Right Form Section -->
     <div class="login-right">
         <div class="login-card-modern">
             <div class="logo-container">
                 <img src="{{ asset('img/Logo_Provinsi.png') }}" alt="Logo">
                 <h4>Selamat Datang</h4>
-                <p>Silakan masuk menggunakan akun Anda</p>
+                <p>Silakan masuk ke akun Anda</p>
             </div>
 
             @if($errors->any())
@@ -267,10 +251,9 @@
     </div>
 </div>
 
-<!-- Section Tentang - Boxy Feature Grid -->
+{{-- Section Tentang --}}
 <section id="tentang" class="py-5" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
     <div class="container py-4">
-        <!-- Header Content -->
         <div class="text-center mb-5" style="max-width: 900px; margin: 0 auto;">
             <h2 class="fw-bold text-dark mb-3">E-Absensi DLH Kalsel</h2>
             <p class="text-secondary fs-6 leading-relaxed">
@@ -279,58 +262,26 @@
             <div class="mx-auto bg-primary rounded-pill mt-4" style="width: 50px; height: 4px; opacity: 0.3;"></div>
         </div>
 
-        <div class="row g-4">
-            <!-- Card 1: Transparan -->
+        <div class="row g-4 justify-content-center">
+            @php
+                $features = [
+                    ['icon' => 'bi-eye', 'title' => 'Transparan', 'color' => 'warning', 'desc' => 'Riwayat presensi dapat dipantau langsung kapan saja.'],
+                    ['icon' => 'bi-shield-check', 'title' => 'Akuntabel', 'color' => 'primary', 'desc' => 'Data kehadiran tercatat secara otomatis dan transparan.'],
+                    ['icon' => 'bi-lightning-charge', 'title' => 'Efisien', 'color' => 'success', 'desc' => 'Rekapitulasi data kehadiran bulanan jadi lebih cepat.'],
+                    ['icon' => 'bi-diagram-3', 'title' => 'Terpadu', 'color' => 'info', 'desc' => 'Sistem terhubung antara data pegawai dan lokasi.'],
+                ];
+            @endphp
+            @foreach($features as $f)
             <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm rounded-4 p-4 transition-hover h-100" style="background: white;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-3" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">
-                            <i class="bi bi-eye"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0">Transparan</h6>
+                <div class="card border-0 shadow-sm rounded-4 p-4 transition-hover h-100 text-center" style="background: white;">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-{{$f['color']}} bg-opacity-10 text-{{$f['color']}} rounded-4 mb-3" style="width: 56px; height: 56px; font-size: 1.5rem; margin: 0 auto;">
+                        <i class="bi {{$f['icon']}}"></i>
                     </div>
-                    <p class="text-muted small mb-0">Riwayat presensi dapat dipantau langsung kapan saja.</p>
+                    <h6 class="fw-bold mb-2">{{$f['title']}}</h6>
+                    <p class="text-muted small mb-0">{{$f['desc']}}</p>
                 </div>
             </div>
-
-            <!-- Card 2: Akuntabel -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm rounded-4 p-4 transition-hover h-100" style="background: white;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0">Akuntabel</h6>
-                    </div>
-                    <p class="text-muted small mb-0">Data kehadiran tercatat secara otomatis dan transparan.</p>
-                </div>
-            </div>
-
-            <!-- Card 3: Efisien -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm rounded-4 p-4 transition-hover h-100" style="background: white;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-3" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">
-                            <i class="bi bi-lightning-charge"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0">Efisien</h6>
-                    </div>
-                    <p class="text-muted small mb-0">Rekapitulasi data kehadiran bulanan jadi lebih cepat.</p>
-                </div>
-            </div>
-
-            <!-- Card 4: Terpadu -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card border-0 shadow-sm rounded-4 p-4 transition-hover h-100" style="background: white;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info rounded-3" style="width: 48px; height: 48px; font-size: 1.25rem; flex-shrink: 0;">
-                            <i class="bi bi-diagram-3"></i>
-                        </div>
-                        <h6 class="fw-bold mb-0">Terpadu</h6>
-                    </div>
-                    <p class="text-muted small mb-0">Sistem terhubung antara data pegawai dan lokasi.</p>
-                </div>
-            </div>
+            @endforeach
         </div>
 
         <div class="mt-5 p-4 rounded-4 text-white text-center shadow-lg" style="background: var(--primary-gradient) !important;">
@@ -339,4 +290,9 @@
         </div>
     </div>
 </section>
+
+<style>
+    .transition-hover { transition: all 0.3s ease; }
+    .transition-hover:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
+</style>
 @endsection
