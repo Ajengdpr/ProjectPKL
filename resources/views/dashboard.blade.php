@@ -13,7 +13,7 @@
         --border-color: #f1f5f9;
         --text-main: #0f172a;
         --text-muted: #64748b;
-        --section-gap: 2rem;
+        --section-gap: 1.25rem;
     }
 
     body {
@@ -26,102 +26,105 @@
         padding-bottom: 5rem;
     }
 
-    /* Modern Card Base */
+    /* Modern Card Base - Extra Compact */
     .premium-card {
         background: white;
-        border-radius: 24px;
+        border-radius: 18px;
         border: 1px solid var(--border-color);
         box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04);
-        padding: 1.5rem;
+        padding: 0.75rem 1.25rem;
         transition: all 0.3s ease;
     }
 
     /* Hero Section */
     .hero-wrapper {
         display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 1.25rem;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 1rem;
         margin-bottom: var(--section-gap);
     }
 
     .welcome-card {
-        border-left: 6px solid var(--primary-blue);
+        border-left: 5px solid var(--primary-blue);
         background: linear-gradient(to right, #ffffff, #f9fbff);
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
     }
 
     .user-avatar-modern {
-        width: 85px;
-        height: 85px;
-        border-radius: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         object-fit: cover;
-        border: 4px solid white;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+        border: 3px solid white;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
     }
 
     .greeting-text h2 {
         font-weight: 800;
         letter-spacing: -1px;
         color: var(--text-main);
+        font-size: 1.4rem;
+        margin-bottom: 0;
     }
 
     .ux-status-pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 1rem;
+        gap: 0.4rem;
+        padding: 0.15rem 0.6rem;
         background: var(--primary-blue);
         color: white;
         border-radius: 50px;
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         font-weight: 700;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        text-transform: uppercase;
+        margin-top: 0.25rem;
     }
 
     .ux-message {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: var(--primary-blue);
         background: rgba(37, 99, 235, 0.08);
-        padding: 0.25rem 0.75rem;
-        border-radius: 8px;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
         display: inline-block;
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
     }
 
-    /* Clock Widget */
+    /* Clock Widget - Locked Position */
     .clock-widget {
         text-align: right;
+        min-width: 140px;
     }
 
     #realtime-clock {
-        font-size: 3rem; /* Dikecilkan dari 3.5rem */
+        font-size: 2.25rem;
         font-weight: 800;
         color: var(--primary-blue);
-        letter-spacing: -2px;
+        letter-spacing: -1px;
         line-height: 1;
-        margin-bottom: 0.25rem;
     }
 
     .hero-date {
         color: var(--text-muted);
         font-weight: 600;
-        font-size: 0.85rem; /* Dikecilkan */
+        font-size: 0.75rem;
     }
 
     /* Mini Widgets */
     .widget-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-top: 1.5rem;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
     }
 
     .mini-widget {
-        padding: 1rem;
-        border-radius: 20px;
+        padding: 0.5rem 0.75rem;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -132,13 +135,13 @@
     .w-emerald { background: #ecfdf5; color: #065f46; }
 
     .widget-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1rem;
         background: white;
         box-shadow: 0 4px 8px rgba(0,0,0,0.04);
     }
@@ -149,20 +152,20 @@
         border: 1px solid #e0e7ff;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
     }
 
     .loc-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .loc-data-card {
         background: white;
-        padding: 1rem;
-        border-radius: 20px;
+        padding: 0.65rem;
+        border-radius: 16px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.02);
         text-align: center;
     }
@@ -170,20 +173,20 @@
     /* Menu Absensi Section */
     .menu-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1.25rem;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 1rem;
         margin-bottom: var(--section-gap);
     }
 
     .menu-item {
         background: #f0f7ff;
         border: 1px solid #e0e7ff;
-        border-radius: 22px;
-        padding: 1.5rem 1rem;
+        border-radius: 20px;
+        padding: 1.25rem 0.75rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         text-decoration: none !important;
         color: var(--text-dark);
@@ -205,15 +208,15 @@
     }
 
     .m-icon-box {
-        width: 64px;
-        height: 64px;
-        border-radius: 22px;
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         background: white;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.05);
         transition: all 0.3s;
     }
 
@@ -230,7 +233,7 @@
 
     .menu-item span {
         font-weight: 800;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -238,67 +241,49 @@
     /* Section Headers */
     .section-title {
         font-weight: 800;
-        font-size: 1.25rem;
-        margin-bottom: 1.25rem;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
         color: var(--text-main);
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.6rem;
     }
 
     .section-title::before {
         content: "";
-        width: 5px;
-        height: 24px;
+        width: 4px;
+        height: 20px;
         background: var(--primary-blue);
         border-radius: 10px;
     }
 
-    /* Recap Table Section */
-    .rekap-card {
-        background: white;
-        border-radius: 24px;
-        padding: 0;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-        overflow: hidden;
-    }
-
     .table-modern thead th {
         background: #f8fafc;
-        color: var(--text-muted);
+        color: var(--text-dark);
         font-size: 0.75rem;
-        text-transform: uppercase; /* Kembali Caps Lock */
+        text-transform: uppercase;
         letter-spacing: 1px;
-        padding: 1rem;
-        font-weight: 700; /* Judul Kolom Bold */
+        padding: 0.85rem;
+        font-weight: 700;
         border: none;
     }
 
-    .table-modern tbody td {
-        padding: 1rem;
+    .table-modern tbody td, .table-modern tfoot td {
+        padding: 0.85rem;
         border-bottom: 1px solid #f1f5f9;
         font-weight: 400;
         color: var(--text-dark);
-        font-size: 0.85rem;
-    }
-
-    .table-modern tfoot td {
-        padding: 1rem;
-        font-weight: 700; /* Dipaksa Bold untuk Total */
-        color: var(--text-dark);
-        font-size: 0.85rem;
-    }
-
-    .table-modern tbody td.bidang-name {
-        font-weight: 700; /* Nama Bidang Bold */
+        font-size: 0.8rem;
     }
 
     .table-modern tfoot tr {
-        font-weight: 700; /* Total Keseluruhan Bold */
+        font-weight: 700;
         background: #f8fafc;
     }
 
+    .table-modern tbody td.bidang-name {
+        font-weight: 700;
+    }
 
     /* Modal */
     .modal-content { border-radius: 28px; border: none; overflow: hidden; }
@@ -313,16 +298,11 @@
 
     @media (max-width: 768px) {
         .dashboard-container { padding-top: 0.5rem; }
-        .premium-card, .rekap-card { padding: 1.25rem; border-radius: 20px; }
-        .rekap-card { padding: 0; }
-        .greeting-text h2 { font-size: 1.5rem; }
-        #realtime-clock { font-size: 2.75rem; }
-        .widget-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+        .premium-card { padding: 0.75rem 1rem; }
+        .greeting-text h2 { font-size: 1.3rem; }
+        #realtime-clock { font-size: 2rem; }
+        .widget-grid { grid-template-columns: 1fr; gap: 0.5rem; }
         .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-    }
-
-    @media (max-width: 480px) {
-        #realtime-clock { font-size: 2.25rem; }
     }
 </style>
 @endpush
@@ -334,70 +314,86 @@
     {{-- 1. Hero Section --}}
     <div class="hero-wrapper">
         <div class="premium-card welcome-card">
-            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                <div class="d-flex align-items-center gap-4">
+            <div class="d-flex justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
                     @php $avatar = $user->foto ? asset('storage/'.$user->foto) : asset('img/default-avatar.jpg'); @endphp
                     <img src="{{ $avatar }}" class="user-avatar-modern" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                     <div class="greeting-text">
-                        <h5 class="text-muted mb-1">Selamat {{ \Carbon\Carbon::now()->hour < 12 ? 'Pagi' : (\Carbon\Carbon::now()->hour < 15 ? 'Siang' : (\Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }},</h5>
+                        <h5 class="text-muted mb-0 small">Selamat {{ \Carbon\Carbon::now()->hour < 12 ? 'Pagi' : (\Carbon\Carbon::now()->hour < 15 ? 'Siang' : (\Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }}</h5>
                         <h2>{{ \Illuminate\Support\Str::title($user->nama) }}</h2>
-                        <div class="ux-status-pill">
-                            <i class="bi {{ $sudahAbsenToday ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
-                            <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
+                        
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="ux-status-pill">
+                                @if(!($isAbsensiActive ?? true))
+                                    <i class="bi bi-calendar-x-fill"></i> <span>Libur Hari Ini</span>
+                                @else
+                                    <i class="bi {{ $sudahAbsenToday ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
+                                    <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
+                                @endif
+                            </div>
+                            @if(!($isAbsensiActive ?? true))
+                            <div class="ux-message">
+                                <i class="bi bi-info-circle-fill me-1"></i> {{ $disableReason ?? 'Sistem presensi dinonaktifkan.' }}
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
-                <div class="clock-widget">
+                <div class="clock-widget d-none d-sm-block">
                     <div id="realtime-clock">00:00:00</div>
-                    <div class="hero-date">
-                        <i class="bi bi-calendar3 me-2"></i> {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
-                    </div>
+                    <div class="hero-date">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</div>
                 </div>
             </div>
+            
             <div class="widget-grid">
                 <div class="mini-widget w-blue">
                     <div class="widget-icon text-primary"><i class="bi bi-stars"></i></div>
                     <div>
-                        <div class="small fw-bold opacity-75" style="font-size: 0.6rem;">POIN SAYA</div>
+                        <div class="small fw-bold opacity-75" style="font-size: 0.55rem;">POIN SAYA</div>
                         <div class="fw-bold">{{ $user->point ?? 0 }}</div>
                     </div>
                 </div>
                 <div class="mini-widget w-emerald">
                     <div class="widget-icon text-success"><i class="bi bi-building"></i></div>
                     <div>
-                        <div class="small fw-bold opacity-75" style="font-size: 0.6rem;">BIDANG</div>
+                        <div class="small fw-bold opacity-75" style="font-size: 0.55rem;">BIDANG</div>
                         <div class="fw-bold small">{{ strtoupper($user->bidang ?? 'Umum') }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="premium-card location-panel">
-            <div class="loc-header">
+        <div class="premium-card location-panel text-center">
+            <div class="loc-header justify-content-center">
                 <div class="d-flex align-items-center gap-2">
                     <div class="widget-icon text-primary"><i class="bi bi-geo-alt-fill"></i></div>
-                    <span class="fw-bold text-dark">Status Lokasi</span>
+                    <span class="fw-bold text-dark small">Verifikasi Lokasi</span>
                 </div>
             </div>
-            <div class="text-center mb-4">
-                <div class="small text-muted fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">RADIUS PRESENSI</div>
-                <div id="geo-status" class="fw-bold fs-4 text-dark">Mendeteksi...</div>
+            <div class="mb-3">
+                <div id="geo-status" class="fw-bold fs-5 text-dark">Mendeteksi...</div>
             </div>
             <div class="row g-2">
                 <div class="col-6">
                     <div class="loc-data-card">
-                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">JARAK</div>
-                        <div id="geo-distance" class="fw-bold text-primary">-</div>
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.5rem;">JARAK</div>
+                        <div id="geo-distance" class="fw-bold text-primary small">-</div>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="loc-data-card">
-                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.55rem;">AKURASI</div>
-                        <div id="geo-accuracy" class="fw-bold text-primary">-</div>
+                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.5rem;">AKURASI</div>
+                        <div id="geo-accuracy" class="fw-bold text-primary small">-</div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    {{-- Mobile Clock (Only visible on very small screens) --}}
+    <div class="d-sm-none text-center mb-4">
+        <div id="realtime-clock-mobile" class="fw-bold text-primary" style="font-size: 2.5rem; line-height:1;">00:00:00</div>
+        <div class="small text-muted fw-bold">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</div>
     </div>
 
     {{-- 2. Attendance Menu Section --}}
@@ -414,17 +410,13 @@
             ];
         @endphp
         @foreach($actions as $act)
-            @php
-                $absenLocked = ($sudahAbsenToday ?? false) || !($isAbsensiActive ?? true);
-            @endphp
+            @php $absenLocked = ($sudahAbsenToday ?? false) || !($isAbsensiActive ?? true); @endphp
             <div id="{{ $act['id'] }}" class="menu-item {{ $absenLocked ? 'disabled' : '' }}"
                @if(!$absenLocked)
                  @if($act['expired']) onclick="showCustomAlert('Waktu presensi sudah berakhir', 'warning')"
                  @else data-bs-toggle="modal" data-bs-target="#absenModal" data-status="{{ $act['status'] }}" @endif
                @endif>
-                <div class="m-icon-box {{ $act['class'] }}">
-                    <i class="bi {{ $act['icon'] }}"></i>
-                </div>
+                <div class="m-icon-box {{ $act['class'] }}"><i class="bi {{ $act['icon'] }}"></i></div>
                 <span>{{ $act['title'] }}</span>
             </div>
         @endforeach
@@ -442,7 +434,7 @@
                         <th class="text-center">Hadir</th>
                         <th class="text-center">Cuti</th>
                         <th class="text-center">Sakit</th>
-                        <th class="text-center">Tugas Luar</th>
+                        <th class="text-center">TL</th>
                         <th class="text-center">Telat</th>
                         <th class="text-center pe-4">Izin</th>
                     </tr>
@@ -452,7 +444,7 @@
                         @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
                         <tr>
                             <td class="ps-4 bidang-name">{{ $b->bidang }}</td>
-                            <td class="text-center"><span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.85rem; font-weight: 500;">{{ $b->jumlah_pegawai }}</span></td>
+                            <td class="text-center"><span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.8rem; font-weight: 600;">{{ $b->jumlah_pegawai }}</span></td>
                             <td class="text-center">{{ $r->hadir ?? 0 }}</td>
                             <td class="text-center">{{ $r->cuti ?? 0 }}</td>
                             <td class="text-center">{{ $r->sakit ?? 0 }}</td>
@@ -519,11 +511,13 @@
 @push('scripts')
 <script>
     function updateClock() {
-        const clockEl = document.getElementById('realtime-clock');
-        if (!clockEl) return;
         const now = new Date();
         const opts = { timeZone: 'Asia/Makassar', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        clockEl.textContent = new Intl.DateTimeFormat('id-ID', opts).format(now);
+        const timeStr = new Intl.DateTimeFormat('id-ID', opts).format(now);
+        const clockEl = document.getElementById('realtime-clock');
+        const clockMobileEl = document.getElementById('realtime-clock-mobile');
+        if (clockEl) clockEl.textContent = timeStr;
+        if (clockMobileEl) clockMobileEl.textContent = timeStr;
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -585,12 +579,10 @@
         const wrapper = document.getElementById('alasanWrapper');
         const fileContainer = document.getElementById('fileUploadContainer');
         const fileInput = document.getElementById('fileInput');
-
         field.value = s;
         preview.value = s;
         fileContainer.style.display = 'none';
         fileInput.removeAttribute('required');
-
         if (s === 'Hadir') {
             alasan.removeAttribute('required');
             wrapper.style.display = 'none';
@@ -598,7 +590,6 @@
             wrapper.style.display = 'block';
             if (['Terlambat', 'Izin'].includes(s)) alasan.setAttribute('required', 'required');
             else alasan.removeAttribute('required');
-
             if (['Sakit', 'Tugas Luar', 'Cuti'].includes(s)) {
                 fileContainer.style.display = 'block';
                 if (s !== 'Sakit') fileInput.setAttribute('required', 'required');
@@ -663,4 +654,3 @@
 </script>
 @endpush
 @endsection
-
