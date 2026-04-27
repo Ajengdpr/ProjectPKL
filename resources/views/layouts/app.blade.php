@@ -134,37 +134,44 @@
 @endphp
 
 {{-- Navbar --}}
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: var(--primary-gradient); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-  <div class="container d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-2">
-      <button class="btn btn-primary" id="sidebarToggle">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: rgba(37, 99, 235, 0.98); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+  <div class="container-fluid px-md-4 d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-link text-white p-0 fs-4" id="sidebarToggle" style="text-decoration: none;">
         <i class="bi bi-list"></i>
       </button>
-      <a class="navbar-brand m-0" href="{{ $isAdmin ? route('admin.dashboard') : route('dashboard') }}">E-Absensi</a>
+      <a class="navbar-brand m-0 fw-800" href="{{ $isAdmin ? route('admin.dashboard') : route('dashboard') }}" style="letter-spacing: -0.5px;">E-ABSENSI</a>
     </div>
 
     <div class="d-flex align-items-center gap-3">
-      {{-- Notifikasi hanya untuk Atasan (Admin sudah punya dashboard sendiri) --}}
+      {{-- Notifikasi --}}
       @if($isAtasan)
-      <a href="{{ route('notifications.index') }}" class="position-relative text-white fs-5" title="Notifikasi">
-        <i class="bi bi-bell"></i>
+      <a href="{{ route('notifications.index') }}" class="btn btn-link text-white position-relative p-2" title="Notifikasi">
+        <i class="bi bi-bell fs-5"></i>
         @if($unread > 0)
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $unread }}</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger" style="padding: 0.35em 0.5em; font-size: 0.6rem;">{{ $unread }}</span>
         @endif
       </a>
       @endif
-      <div class="d-flex align-items-center gap-2 text-white">
+
+      {{-- Profile Pill --}}
+      <a href="{{ route($profileRouteName, $profileRouteParams) }}" class="d-flex align-items-center gap-2 text-decoration-none bg-white bg-opacity-10 py-1 ps-3 pe-1 rounded-pill border border-white border-opacity-10 transition-all hover-bg-opacity-20">
         <div class="text-end d-none d-md-block">
-          <div class="fw-semibold">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
-          <div class="small text-white-50">{{ \Illuminate\Support\Str::title($u->jabatan ?? $u->bidang) }}</div>
+          <div class="fw-bold text-white small" style="line-height: 1.2;">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
+          <div class="text-white-50" style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ ($u->role ?? 'user') === 'admin' ? 'Admin' : 'Pegawai' }}</div>
         </div>
-        <a href="{{ route($profileRouteName, $profileRouteParams) }}">
-          <img src="{{ $avatar }}" alt="avatar" class="rounded-circle border border-light-subtle" style="width:36px;height:36px;object-fit:cover;">
-        </a>
-      </div>
+        <img src="{{ $avatar }}" alt="avatar" class="rounded-circle border border-white border-opacity-20" style="width:32px; height:32px; object-fit:cover;">
+      </a>
     </div>
   </div>
 </nav>
+
+<style>
+  .hover-bg-opacity-20:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  .fw-800 { font-weight: 800; }
+</style>
 
 {{-- Sidebar --}}
 <div class="app-sidebar" id="appSidebar">
