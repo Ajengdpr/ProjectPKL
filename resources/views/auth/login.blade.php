@@ -75,7 +75,7 @@
         width: 100%;
         max-width: 420px;
         background: white;
-        padding: 3rem;
+        padding: 2.25rem 2.75rem; /* Dikecilkan */
         border-radius: 32px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.05);
         border: 1px solid #f1f5f9;
@@ -83,12 +83,12 @@
 
     .logo-container {
         text-align: center;
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.75rem; /* Dikecilkan */
     }
 
     .logo-container img {
-        width: 80px;
-        margin-bottom: 1.25rem;
+        width: 65px; /* Dikecilkan */
+        margin-bottom: 1rem;
         filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
     }
 
@@ -117,7 +117,7 @@
 
     .input-group-modern {
         position: relative;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
 
     .input-group-modern i {
