@@ -25,8 +25,8 @@
         position: relative;
         display: flex;
         align-items: center;
-        justify-content: center;
-        padding: 4rem;
+        justify-content: flex-start; /* Geser ke kiri */
+        padding: 5rem; /* Tambah padding agar tidak terlalu mepet tembok */
         color: white;
     }
 
@@ -72,9 +72,9 @@
 
     .login-card-modern {
         width: 100%;
-        max-width: 420px;
+        max-width: 450px; /* Diperbesar sedikit */
         background: white;
-        padding: 2.5rem 3rem;
+        padding: 3rem 3.5rem; /* Padding disesuaikan agar lebih lega */
         border-radius: 32px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.05);
         border: 1px solid #f1f5f9;
@@ -190,6 +190,43 @@
         .login-left { display: none; }
         .login-right { background: var(--primary-gradient); min-height: 100vh; }
         .login-card-modern { padding: 2rem; }
+    }
+
+    /* Shorter Laptop Screen Optimization (Fix for hidden login button) */
+    @media (max-height: 850px) {
+        .login-card-modern {
+            padding: 1.75rem 2.5rem;
+        }
+        .logo-container {
+            margin-bottom: 1.25rem;
+        }
+        .logo-container img {
+            width: 60px;
+        }
+        .logo-container h4 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        .login-left-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .login-left-content p {
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        .input-group-modern {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            margin-bottom: 0.35rem;
+        }
+        .form-control-modern {
+            padding: 0.65rem 1.25rem 0.65rem 3rem;
+        }
+        .mb-4 {
+            margin-bottom: 1rem !important;
+        }
     }
 </style>
 @endpush
