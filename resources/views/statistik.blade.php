@@ -198,9 +198,18 @@ $adaData = array_sum($rekapData) > 0;
 
                                     @if (!$currentDate->isWeekend())
                                         @php
-                                            $absen = $absensiBulan->firstWhere('tanggal', $currentDate->toDateString());
+                                            $tanggalString = $currentDate->toDateString();
+                                            $absen = $absensiBulan->firstWhere('tanggal', $tanggalString);
+                                            
+                                            // Ambil daftar hari libur dari Setting
+                                            $statusConfig = \App\Models\Setting::get('status', ['hari_libur' => '']);
+                                            $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+                                            $isHariLibur = in_array($tanggalString, $hariLibur);
+
                                             $status = '';
-                                            if ($day <= $maxHari) {
+                                            if ($isHariLibur) {
+                                                $status = 'LIBUR';
+                                            } elseif ($day <= $maxHari) {
                                                 if ($absen) { $status = $absen->status; } 
                                                 else {
                                                     $isTodayBeforeCutoff = $currentDate->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
@@ -209,19 +218,27 @@ $adaData = array_sum($rekapData) > 0;
                                             }
                                             
                                             $bgColor = '#ffffff';
-                                            if($status) {
+                                            $borderColor = 'transparent';
+                                            $textColor = 'text-dark';
+
+                                            if($status === 'LIBUR') {
+                                                $bgColor = '#fff1f2'; // Merah muda lembut
+                                                $borderColor = '#f43f5e'; // Merah
+                                                $textColor = 'text-danger';
+                                            } elseif($status) {
                                                 $rawColor = $statusColors[$status] ?? '#f8f9fa';
                                                 $bgColor = $rawColor . '22'; 
+                                                $borderColor = $statusColors[$status] ?? 'transparent';
                                             }
                                         @endphp
                                         <td class="p-0 position-relative" style="height: 75px;">
-                                            <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $bgColor }}; border-left: 3px solid {{ $statusColors[$status] ?? 'transparent' }};">
-                                                <div class="fw-bold @if($currentDate->isToday()) text-primary @else text-dark @endif" style="font-size: 0.85rem;">
+                                            <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $bgColor }}; border-left: 3px solid {{ $borderColor }};">
+                                                <div class="fw-bold {{ $currentDate->isToday() ? 'text-primary' : $textColor }}" style="font-size: 0.85rem;">
                                                     {{ $day }}
                                                 </div>
                                                 @if($status)
                                                     <div class="mt-auto">
-                                                        <span class="badge p-0 text-dark fw-medium" style="font-size: 0.6rem; text-wrap: balance;">{{ $status }}</span>
+                                                        <span class="badge p-0 {{ $status === 'LIBUR' ? 'text-danger fw-bold' : 'text-dark fw-medium' }}" style="font-size: 0.6rem; text-wrap: balance;">{{ $status }}</span>
                                                     </div>
                                                 @endif
                                             </div>
