@@ -406,7 +406,7 @@
                 ['id' => 'btnSakit', 'title' => 'SAKIT', 'icon' => 'bi-heart-pulse-fill', 'class' => 'mi-sakit', 'status' => 'Sakit', 'expired' => $akhirExpired ?? false],
                 ['id' => 'btnTugasLuar', 'title' => 'TUGAS LUAR', 'icon' => 'bi-briefcase-fill', 'class' => 'mi-tugas', 'status' => 'Tugas Luar', 'expired' => $akhirExpired ?? false],
                 ['id' => 'btnCuti', 'title' => 'CUTI', 'icon' => 'bi-calendar-x-fill', 'class' => 'mi-cuti', 'status' => 'Cuti', 'expired' => $akhirExpired ?? false],
-                ['id' => 'btnTerlambat', 'title' => 'TELAT', 'icon' => 'bi-alarm-fill', 'class' => 'mi-telat', 'status' => 'Terlambat', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnTerlambat', 'title' => 'TERLAMBAT', 'icon' => 'bi-alarm-fill', 'class' => 'mi-telat', 'status' => 'Terlambat', 'expired' => $akhirExpired ?? false],
             ];
         @endphp
         @foreach($actions as $act)
@@ -435,7 +435,7 @@
                         <th class="text-center">Cuti</th>
                         <th class="text-center">Sakit</th>
                         <th class="text-center">TL</th>
-                        <th class="text-center">Telat</th>
+                        <th class="text-center">Terlambat</th>
                         <th class="text-center pe-4">Izin</th>
                     </tr>
                 </thead>

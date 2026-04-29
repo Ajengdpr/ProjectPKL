@@ -50,7 +50,7 @@
                     <div class="d-flex flex-md-column gap-2 justify-content-center">
                         <button type="button" class="btn btn-light btn-sm rounded-pill px-4 fw-bold" 
                                 data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                            <i class="bi bi-shield-lock-fill me-2 text-primary"></i> Keamanan
+                            <i class="bi bi-shield-lock-fill me-2 text-primary"></i> Ubah Kata Sandi
                         </button>
                         <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-4" 
                                 data-bs-toggle="modal" data-bs-target="#confirmDeletePhotoModal"
@@ -152,21 +152,21 @@
             <form method="POST" action="{{ route('account.password.update') }}">
                 @csrf
                 <div class="modal-header bg-primary text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold small">Ubah Password</h5>
+                    <h5 class="modal-title fw-bold small">Ubah Kata Sandi Akun</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Password Lama</label>
+                        <label class="form-label small fw-bold">Kata Sandi Lama</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_lama" required>
                     </div>
                     <hr class="my-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Password Baru</label>
+                        <label class="form-label small fw-bold">Kata Sandi Baru</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_baru" placeholder="Min. 8 Karakter" required minlength="8">
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Konfirmasi Password</label>
+                        <label class="form-label small fw-bold">Konfirmasi Kata Sandi</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_baru_confirmation" required>
                     </div>
                 </div>
