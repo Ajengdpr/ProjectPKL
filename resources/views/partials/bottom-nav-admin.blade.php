@@ -24,6 +24,12 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link {{ $is('admin.statistik.*') ? 'active' : '' }}"
+           href="{{ route('admin.statistik.index') }}">
+          <i class="bi bi-bar-chart me-1"></i> Statistik
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link {{ $is('admin.settings.*') ? 'active' : '' }}"
            href="{{ route('admin.settings.index') }}">
           <i class="bi bi-gear me-1"></i> Settings
