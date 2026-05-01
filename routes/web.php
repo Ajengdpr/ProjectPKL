@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminAbsensiController;
 use App\Http\Controllers\Admin\AdminSettingController;
+use App\Http\Controllers\Admin\AdminStatistikController;
 use App\Http\Middleware\IsAdmin;
 
 /* -------------------- PUBLIC (GUEST) -------------------- */
@@ -72,6 +73,9 @@ Route::middleware(['auth', IsAdmin::class])
 
         // Account (profil admin)
         Route::get('account', [UserController::class, 'account'])->name('account');
+
+        // Statistik Admin
+        Route::get('statistik', [AdminStatistikController::class, 'index'])->name('statistik.index');
     });
 
 /* -------------------- ROOT REDIRECT -------------------- */

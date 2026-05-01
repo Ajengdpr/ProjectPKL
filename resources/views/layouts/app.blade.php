@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard')?'active':'' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Beranda</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people-fill"></i> Pegawai</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.absensi.*') ? 'active' : '' }}" href="{{ route('admin.absensi.index') }}"><i class="bi bi-calendar-check-fill"></i> Absensi</a></li>
+      <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.statistik.*') ? 'active' : '' }}" href="{{ route('admin.statistik.index') }}"><i class="bi bi-bar-chart-line-fill"></i> Statistik</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.account') ? 'active' : '' }}" href="{{ route('admin.account') }}"><i class="bi bi-person-circle"></i> Akun</a></li>
       <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear-fill"></i> Pengaturan</a></li>
     @else

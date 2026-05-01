@@ -81,7 +81,7 @@ for($i=1; $i<=$maxHari; $i++){
 $adaData = array_sum($rekapData) > 0;
 @endphp
 
-<div class="container-fluid py-4" style="max-width: 1200px;">
+<div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-2">
         <h3 class="fw-bold mb-0">Statistik Kehadiran <span class="text-primary">{{ $user->nama }}</span></h3>
         <div style="width: 160px;">
