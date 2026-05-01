@@ -142,6 +142,22 @@
     .status-tugas_luar { background: #f1f5f9; color: #475569; }
     .status-alpha { background: #fef2f2; color: #b91c1c; }
 
+    /* Badge Approval */
+    .badge-approval {
+        padding: 0.35rem 0.6rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    .approval-approved { background: #dcfce7; color: #15803d; }
+    .approval-pending { background: #fef9c3; color: #a16207; }
+    .approval-rejected { background: #fee2e2; color: #b91c1c; }
+
     /* Action Buttons */
     .btn-action {
         width: 36px;
@@ -157,6 +173,10 @@
     .btn-edit:hover { background: #0d6efd; color: white; transform: translateY(-2px); }
     .btn-delete { background: #fef2f2; color: #ef4444; }
     .btn-delete:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+    .btn-approve { background: #f0fdf4; color: #16a34a; }
+    .btn-approve:hover { background: #16a34a; color: white; transform: translateY(-2px); }
+    .btn-reject { background: #fff1f2; color: #e11d48; }
+    .btn-reject:hover { background: #e11d48; color: white; transform: translateY(-2px); }
 
     .section-title {
         font-weight: 800;
@@ -262,9 +282,37 @@
                             </td>
 
                             <td class="text-center">
-                                <span class="badge-status status-{{ $statusKey }}">
-                                    {{ $a->status }}
-                                </span>
+                                @php 
+                                    $origStatus = $a->status;
+                                    $showStatus = $origStatus;
+                                    $approvalClass = 'approval-pending';
+                                    $approvalLabel = 'Menunggu';
+                                    $approvalIcon = 'bi-clock-history';
+
+                                    if ($a->is_approved) {
+                                        $approvalClass = 'approval-approved';
+                                        $approvalLabel = 'Disetujui';
+                                        $approvalIcon = 'bi-check-circle-fill';
+                                    } elseif ($a->is_rejected) {
+                                        $approvalClass = 'approval-rejected';
+                                        $approvalLabel = 'Ditolak';
+                                        $approvalIcon = 'bi-x-circle-fill';
+                                        $showStatus = 'Tanpa Keterangan';
+                                    }
+                                    $statusKey = str_replace(' ', '_', strtolower($showStatus));
+                                @endphp
+
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge-status status-{{ $statusKey }}">
+                                        {{ $showStatus }}
+                                    </span>
+                                    <span class="badge-approval {{ $approvalClass }}">
+                                        <i class="bi {{ $approvalIcon }}"></i> {{ $approvalLabel }}
+                                    </span>
+                                    @if($a->is_rejected)
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">({{ strtoupper($origStatus) }})</small>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <div class="small text-dark">{{ $a->alasan ?: '-' }}</div>
@@ -276,6 +324,18 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
+                                    @if(!$a->is_approved && !$a->is_rejected)
+                                        <button class="btn-action btn-approve" data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                            data-route="{{ route('absen.approve', $a) }}" data-method="post"
+                                            data-title="Setujui Absensi" data-message="Setujui permohonan <strong>{{ $a->status }}</strong> oleh <strong>{{ $a->user->nama ?? 'Pegawai' }}</strong>?">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn-action btn-reject" data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                            data-route="{{ route('absen.reject', $a) }}" data-method="post"
+                                            data-title="Tolak Absensi" data-message="Tolak permohonan <strong>{{ $a->status }}</strong> oleh <strong>{{ $a->user->nama ?? 'Pegawai' }}</strong>?">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    @endif
                                     <button class="btn-action btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"
                                         data-id="{{ $a->id }}" data-tanggal="{{ \Carbon\Carbon::parse($a->tanggal)->format('Y-m-d') }}"
                                         data-status="{{ $a->status }}" data-alasan="{{ $a->alasan }}">
