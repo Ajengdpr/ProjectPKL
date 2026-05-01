@@ -63,7 +63,7 @@ class AdminStatistikController extends Controller
 
                 $statusConfig = Setting::get('status', ['hari_libur' => '']);
                 $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
-                $cutoffTime = config('absensi.cutoff', '16:00:00');
+                $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
 
                 for ($i = 1; $i <= $maxHari; $i++) {
                     $tanggalLoop = $carbonBulan->copy()->day($i);
@@ -76,20 +76,30 @@ class AdminStatistikController extends Controller
                     $absen = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
                     if ($absen) {
-                        $status = $absen->status;
-                        if (isset($rekapData[$status])) $rekapData[$status]++;
-                        
-                        $key = $poinKeyMap[$status] ?? null;
-                        if ($key && isset($poinConfig[$key])) {
-                            if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                                $totalPoin += (int)($poinConfig['alpha'] ?? 0);
-                            } else {
-                                $totalPoin += (int)($poinConfig[$key] ?? 0);
+                        // Jika ditolak, maka dianggap Tanpa Keterangan
+                        if ($absen->is_rejected) {
+                            $rekapData['Tanpa Keterangan']++;
+                            $totalPoin += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            // Approved atau Pending tetap tampil status aslinya
+                            $status = $absen->status;
+                            if (isset($rekapData[$status])) $rekapData[$status]++;
+                            
+                            // Hitung poin HANYA jika sudah Approved
+                            if ($absen->is_approved) {
+                                $key = $poinKeyMap[$status] ?? null;
+                                if ($key && isset($poinConfig[$key])) {
+                                    if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                                        $totalPoin += (int)($poinConfig['alpha'] ?? 0);
+                                    } else {
+                                        $totalPoin += (int)($poinConfig[$key] ?? 0);
+                                    }
+                                }
                             }
                         }
                     } else {
-                        $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
-                        if (!$isTodayBeforeCutoff) {
+                        $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                        if (!$isTodayBeforeAlpha) {
                             $rekapData['Tanpa Keterangan']++;
                             $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                         }
@@ -127,12 +137,12 @@ class AdminStatistikController extends Controller
             ->get()
             ->keyBy('tanggal');
 
-        $cutoffTime = config('absensi.cutoff', '16:00:00');
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
         $statuses = Absensi::getStatuses();
 
-        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime, $statuses) {
+        return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $jamConfig, $statuses) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan']);
+            fputcsv($out, ['Tanggal', 'Status', 'Jam', 'Alasan', 'Keterangan']);
 
             for ($i = 1; $i <= $maxHari; $i++) {
                 $tanggalLoop = $carbonBulan->copy()->day($i);
@@ -141,19 +151,30 @@ class AdminStatistikController extends Controller
 
                 if ($absen) {
                     $statusText = $statuses[$absen->status] ?? $absen->status;
+                    $info = '';
+                    if ($absen->is_rejected) {
+                        $statusText = 'Tanpa Keterangan';
+                        $info = '(Ditolak)';
+                    } elseif (!$absen->is_approved) {
+                        $info = '(Menunggu Persetujuan)';
+                    }
+
                     fputcsv($out, [
                         $absen->tanggal,
                         $statusText,
                         $absen->jam,
                         $absen->alasan,
+                        $info
                     ]);
                 } else {
-                    if ($tanggalLoop->isPast() || ($tanggalLoop->isToday() && now($tz)->format('H:i:s') > $cutoffTime)) {
+                    $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                    if (!$isTodayBeforeAlpha && !$tanggalLoop->isWeekend()) {
                         fputcsv($out, [
                             $tanggalString,
                             $statuses['alpha'] ?? 'Tanpa Keterangan',
                             '',
                             '',
+                            ''
                         ]);
                     }
                 }

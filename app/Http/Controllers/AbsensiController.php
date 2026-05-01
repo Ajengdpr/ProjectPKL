@@ -466,7 +466,12 @@ class AbsensiController extends Controller
 
         $key = $poinKeyMap[$absensi->status] ?? null;
         if ($key && isset($poinConfig[$key])) {
-            $delta = (int) $poinConfig[$key];
+            if ($absensi->status === 'Terlambat' && empty(trim($absensi->alasan ?? ''))) {
+                $delta = (int) ($poinConfig['alpha'] ?? 0);
+            } else {
+                $delta = (int) $poinConfig[$key];
+            }
+            
             if ($delta !== 0) {
                 DB::table('users')->where('id', $absensi->user_id)->update(['point' => DB::raw("point + ($delta)")]);
             }

@@ -279,8 +279,27 @@
                     </div>
                   </td>
                   <td>
-                    @php $badge = $badgeStyles($l->status); @endphp
-                    <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">{{ strtoupper($l->status) }}</span>
+                    @php 
+                      $statusText = $l->status;
+                      $isPending = !$l->is_approved && !$l->is_rejected;
+                      $isRejected = $l->is_rejected;
+                      
+                      if ($isRejected) {
+                        $statusText = 'Tanpa Keterangan';
+                      }
+                      
+                      $badge = $badgeStyles($statusText); 
+                    @endphp
+                    <span class="badge rounded-pill {{ $badge['class'] }}" style="{{ $badge['style'] }}">
+                      {{ strtoupper($statusText) }}
+                      @if($isPending)
+                        <i class="bi bi-clock-history ms-1" title="Menunggu Persetujuan"></i>
+                      @elseif($isRejected)
+                        <small class="d-block text-danger" style="font-size: 0.6rem; text-transform: uppercase;">
+                          ({{ $l->status }} DITOLAK)
+                        </small>
+                      @endif
+                    </span>
                   </td>
                   <td class="text-center">{{ $l->jam ? \Carbon\Carbon::parse($l->jam)->format('H:i') : '-' }}</td>
                   <td class="text-body-secondary">{{ $l->alasan ?: '-' }}</td>

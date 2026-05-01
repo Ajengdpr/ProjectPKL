@@ -270,14 +270,25 @@ $poinKeyMap = [
                                             $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
                                             $isHariLibur = in_array($tanggalString, $hariLibur);
 
+                                            $jamConfig = array_merge(['batas_hadir' => '08:00:00'], \App\Models\Setting::get('jam', []));
+
                                             $status = '';
+                                            $isPending = false;
                                             if ($isHariLibur) {
                                                 $status = 'LIBUR';
                                             } elseif ($day <= $maxHari) {
-                                                if ($absen) { $status = $absen->status; } 
-                                                else {
-                                                    $isTodayBeforeCutoff = $currentDate->isToday() && (Carbon::now($tz)->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
-                                                    if (!$isTodayBeforeCutoff) { $status = 'Tanpa Keterangan'; }
+                                                if ($absen) { 
+                                                    if ($absen->is_rejected) {
+                                                        $status = 'Tanpa Keterangan';
+                                                    } else {
+                                                        $status = $absen->status;
+                                                        $isPending = !$absen->is_approved;
+                                                    }
+                                                } else {
+                                                    $isTodayBeforeAlpha = $currentDate->isToday() && (Carbon::now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                                                    if (!$isTodayBeforeAlpha) { 
+                                                        $status = 'Tanpa Keterangan'; 
+                                                    }
                                                 }
                                             }
                                             
@@ -289,8 +300,8 @@ $poinKeyMap = [
                                                 $bgColor = '#fff1f2'; $borderColor = '#f43f5e'; $textColor = 'text-danger';
                                             } elseif($status) {
                                                 $rawColor = $statusColors[$status] ?? '#f8f9fa';
-                                                $bgColor = $rawColor . '22'; 
-                                                $borderColor = $statusColors[$status] ?? 'transparent';
+                                                $bgColor = $isPending ? '#f1f5f9' : ($rawColor . '22'); 
+                                                $borderColor = $isPending ? '#94a3b8' : ($statusColors[$status] ?? 'transparent');
                                             }
                                         @endphp
                                         <td class="p-0 position-relative" style="height: 75px;">
@@ -300,7 +311,9 @@ $poinKeyMap = [
                                                 </div>
                                                 @if($status)
                                                     <div class="mt-auto">
-                                                        <span class="badge p-0 {{ $status === 'LIBUR' ? 'text-danger fw-bold' : 'text-dark fw-medium' }}" style="font-size: 0.6rem; text-wrap: balance;">{{ $status }}</span>
+                                                        <span class="badge p-0 {{ $status === 'LIBUR' ? 'text-danger fw-bold' : ($isPending ? 'text-muted fw-normal' : 'text-dark fw-medium') }}" style="font-size: 0.6rem; text-wrap: balance;">
+                                                            {{ $status }} @if($isPending) <i class="bi bi-clock-history" title="Menunggu Persetujuan"></i> @endif
+                                                        </span>
                                                     </div>
                                                 @endif
                                             </div>
