@@ -203,11 +203,43 @@
                             {{ \Carbon\Carbon::parse($n->created_at)->locale('id')->diffForHumans() }}
                         </div>
                         
-                        @if(isset($n->data['berkas']) && $n->data['berkas'])
-                            <a href="{{ asset('storage/' . $n->data['berkas']) }}" target="_blank" class="btn btn-outline-primary btn-sm btn-attachment-modern shadow-sm">
-                                <i class="bi bi-file-earmark-arrow-down-fill"></i> Lihat Lampiran
-                            </a>
-                        @endif
+                        <div class="d-flex gap-2">
+                            @if(isset($n->data['att_id']))
+                                @php $absen = \App\Models\Absensi::find($n->data['att_id']); @endphp
+                                @if($absen)
+                                    @if($absen->is_approved)
+                                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1" style="font-weight: 800; font-size: 0.75rem;">
+                                            <i class="bi bi-check-circle-fill"></i> TERVERIFIKASI
+                                        </span>
+                                    @elseif($absen->is_rejected)
+                                        <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1" style="font-weight: 800; font-size: 0.75rem;">
+                                            <i class="bi bi-x-circle-fill"></i> DITOLAK (ALPHA)
+                                        </span>
+                                    @else
+                                        <div class="d-flex gap-2">
+                                            <form action="{{ route('absen.approve', $absen->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-check-lg me-1"></i> Setujui
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('absen.reject', $absen->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold shadow-sm" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-x-lg me-1"></i> Tolak
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                @endif
+                            @endif
+
+                            @if(isset($n->data['berkas']) && $n->data['berkas'])
+                                <a href="{{ asset('storage/' . $n->data['berkas']) }}" target="_blank" class="btn btn-outline-primary btn-sm btn-attachment-modern shadow-sm mt-0">
+                                    <i class="bi bi-file-earmark-arrow-down-fill"></i> Lampiran
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

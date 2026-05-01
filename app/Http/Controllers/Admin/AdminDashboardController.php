@@ -23,6 +23,7 @@ public function index(Request $request)
         // [FIX FINAL] Menggunakan LOWER(status) untuk mengatasi masalah case-sensitivity
         $stats = DB::table('absensi')
             ->whereDate('tanggal', $date)
+            ->where('is_approved', true) // Hanya yang disetujui
             ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
             ->groupBy('status')
             ->pluck('jumlah', 'status');
@@ -37,7 +38,10 @@ public function index(Request $request)
         // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar dan kondisional
         $tz = 'Asia/Makassar';
         $carbonDate = \Carbon\Carbon::parse($date, $tz);
-        $cutoffTime = config('absensi.cutoff', '16:00:00');
+        
+        // Gunakan jamConfig batas_hadir untuk Alpha
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
+        $cutoffTime = $jamConfig['batas_hadir'];
 
         // Default alpha ke 0
         $alpha = 0;
@@ -47,8 +51,11 @@ public function index(Request $request)
         $isFuture = $carbonDate->isFuture();
         $isTodayBeforeCutoff = $carbonDate->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
 
-        // Ambil ID user yang sudah absen pada tanggal yang dipilih
-        $sudahAbsenUserIds = DB::table('absensi')->whereDate('tanggal', $date)->pluck('user_id');
+        // Ambil ID user yang sudah absen (dan disetujui) pada tanggal yang dipilih
+        $sudahAbsenUserIds = DB::table('absensi')
+            ->whereDate('tanggal', $date)
+            ->where('is_approved', true)
+            ->pluck('user_id');
 
         // Ambil semua user yang belum absen, kecuali admin
         $belumAbsenQuery = User::whereNotIn('id', $sudahAbsenUserIds)->where('role', '!=', 'admin');
@@ -82,6 +89,7 @@ public function index(Request $request)
         $statsPerBidang = DB::table('absensi')
             ->join('users', 'users.id', '=', 'absensi.user_id')
             ->whereDate('absensi.tanggal', $date)
+            ->where('absensi.is_approved', true) // Hanya yang disetujui
             ->select(
                 'users.bidang',
                 DB::raw("COUNT(CASE WHEN absensi.status = 'hadir' THEN 1 END) as hadir"),
@@ -156,7 +164,8 @@ public function index(Request $request)
     private function getMonthlyRankingData()
     {
         $tz = config('absensi.timezone', 'Asia/Makassar');
-        $cutoffStr = config('absensi.cutoff', '16:00:00');
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
+        $cutoffStr = $jamConfig['batas_hadir'];
         $bulan = now($tz)->format('Y-m');
         
         $poinConfig = Setting::get('poin', [
@@ -197,6 +206,7 @@ public function index(Request $request)
 
         $allUsers = User::where('role', '!=', 'admin')->get(['id', 'nama', 'foto', 'bidang', 'jabatan', 'username']);
         $allAbsensi = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->where('is_approved', true) // Hanya yang disetujui
             ->get()
             ->groupBy('user_id');
 

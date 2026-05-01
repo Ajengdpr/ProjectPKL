@@ -219,13 +219,55 @@
                         <i class="bi bi-clock-fill"></i>
                         <h6>Jam Operasional</h6>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label">Batas Waktu Hadir (Check-in)</label>
-                        <input type="time" step="1" class="form-control" name="jam[batas_hadir]" value="{{ $jam['batas_hadir'] }}">
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label">Batas Waktu Absen (Cut-off)</label>
-                        <input type="time" step="1" class="form-control" name="jam[batas_akhir]" value="{{ $jam['batas_akhir'] ?? '16:00:00' }}">
+                    
+                    <div class="d-flex flex-column gap-3">
+                        {{-- Hadir Window --}}
+                        <div class="p-3 rounded-4 border-start border-4 border-primary shadow-sm" style="background: rgba(13, 110, 253, 0.02);">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                    <i class="bi bi-check-lg small"></i>
+                                </div>
+                                <h6 class="mb-0 fw-bold text-primary" style="font-size: 0.85rem;">JAM ABSENSI DIBUKA</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label mb-1" style="font-size: 0.7rem; color: #94a3b8;">
+                                        <i class="bi bi-door-open me-1"></i>MULAI
+                                    </label>
+                                    <input type="time" step="1" class="form-control form-control-sm border-0 shadow-sm" name="jam[buka]" value="{{ $jam['buka'] ?? '07:00:00' }}" style="background: white;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label mb-1" style="font-size: 0.7rem; color: #94a3b8;">
+                                        <i class="bi bi-door-closed me-1"></i>SAMPAI DENGAN
+                                    </label>
+                                    <input type="time" step="1" class="form-control form-control-sm border-0 shadow-sm" name="jam[batas_hadir]" value="{{ $jam['batas_hadir'] ?? '08:00:00' }}" style="background: white;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Late Window --}}
+                        <div class="p-3 rounded-4 border-start border-4 border-warning shadow-sm" style="background: rgba(255, 193, 7, 0.02);">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                    <i class="bi bi-clock-history small"></i>
+                                </div>
+                                <h6 class="mb-0 fw-bold text-warning" style="font-size: 0.85rem;">JAM SISTEM DITUTUP</h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label mb-1" style="font-size: 0.7rem; color: #94a3b8;">
+                                        <i class="bi bi-hourglass-split me-1"></i>MULAI TERLAMBAT
+                                    </label>
+                                    <input type="time" class="form-control form-control-sm border-0 bg-white" value="{{ $jam['batas_hadir'] ?? '08:00:00' }}" readonly disabled style="opacity: 0.6; cursor: not-allowed;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label mb-1" style="font-size: 0.7rem; color: #94a3b8;">
+                                        <i class="bi bi-slash-circle me-1"></i>SISTEM DITUTUP
+                                    </label>
+                                    <input type="time" step="1" class="form-control form-control-sm border-0 shadow-sm" name="jam[batas_akhir]" value="{{ $jam['batas_akhir'] ?? '16:00:00' }}" style="background: white;">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

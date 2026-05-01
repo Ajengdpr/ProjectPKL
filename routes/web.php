@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
         ->whereIn('status', ['hadir','izin','cuti','sakit','terlambat','tugas-luar'])
         ->name('absen.create');
     Route::post('/absen', [AbsensiController::class, 'store'])->name('absen.store');
+    Route::post('/absen/{absensi}/approve', [AbsensiController::class, 'approve'])->name('absen.approve');
+    Route::post('/absen/{absensi}/reject', [AbsensiController::class, 'reject'])->name('absen.reject');
 
     // Statistik absensi
     Route::get('/statistik', [AbsensiController::class, 'statistik'])->name('statistik');

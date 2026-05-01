@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Absensi extends Model
 {
     protected $table = 'absensi';
-    protected $fillable = ['user_id','tanggal','jam','status','alasan','berkas'];
+    protected $fillable = ['user_id','tanggal','jam','status','is_approved','is_rejected','alasan','berkas'];
 
     public $timestamps = false;
+
+    protected $casts = [
+        'is_approved' => 'boolean',
+        'is_rejected' => 'boolean',
+    ];
 
     /**
      * Daftar semua kemungkinan status absensi dan labelnya.

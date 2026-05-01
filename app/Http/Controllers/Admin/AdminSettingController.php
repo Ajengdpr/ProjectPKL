@@ -29,11 +29,12 @@ class AdminSettingController extends Controller
             'radius'=>100
         ]);
 
-        // ✅ Tambahkan default batas_akhir di sini
-        $jam = Setting::get('jam', [
+        // ✅ Gunakan array_merge untuk memastikan semua key ada meskipun DB memiliki struktur lama
+        $jam = array_merge([
+            'buka' => '07:00:00',
             'batas_hadir' => '08:00:00',
             'batas_akhir' => '16:00:00',
-        ]);
+        ], Setting::get('jam', []));
 
         $status = Setting::get('status', [
             'reason' => 'Hari Libur Nasional / Kantor Tutup',
@@ -50,13 +51,15 @@ class AdminSettingController extends Controller
             'lokasi.lat' => 'nullable|numeric',
             'lokasi.lng' => 'nullable|numeric',
             'lokasi.radius' => 'nullable|numeric',
+            'jam.buka' => 'required',
             'jam.batas_hadir' => 'required',
-            'jam.batas_akhir' => 'nullable',
+            'jam.batas_akhir' => 'required',
             'status.reason' => 'nullable|string|max:255',
             'status.hari_libur' => 'nullable|string',
         ]);
 
         $jam = [
+            'buka' => $data['jam']['buka'] ?? '07:00:00',
             'batas_hadir' => $data['jam']['batas_hadir'] ?? '08:00:00',
             'batas_akhir' => $data['jam']['batas_akhir'] ?? '16:00:00',
         ];

@@ -326,6 +326,8 @@
                             <div class="ux-status-pill">
                                 @if(!($isAbsensiActive ?? true))
                                     <i class="bi bi-calendar-x-fill"></i> <span>Libur Hari Ini</span>
+                                @elseif($isPending ?? false)
+                                    <i class="bi bi-hourglass-split"></i> <span>Menunggu Persetujuan</span>
                                 @else
                                     <i class="bi {{ $sudahAbsenToday ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
                                     <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
@@ -401,19 +403,34 @@
     <div class="menu-grid">
         @php
             $actions = [
-                ['id' => 'btnHadir', 'title' => 'HADIR', 'icon' => 'bi-person-check-fill', 'class' => 'mi-hadir', 'status' => 'Hadir', 'expired' => $hadirExpired ?? false],
-                ['id' => 'btnIzin', 'title' => 'IZIN', 'icon' => 'bi-file-earmark-text-fill', 'class' => 'mi-izin', 'status' => 'Izin', 'expired' => $akhirExpired ?? false],
-                ['id' => 'btnSakit', 'title' => 'SAKIT', 'icon' => 'bi-heart-pulse-fill', 'class' => 'mi-sakit', 'status' => 'Sakit', 'expired' => $akhirExpired ?? false],
-                ['id' => 'btnTugasLuar', 'title' => 'TUGAS LUAR', 'icon' => 'bi-briefcase-fill', 'class' => 'mi-tugas', 'status' => 'Tugas Luar', 'expired' => $akhirExpired ?? false],
-                ['id' => 'btnCuti', 'title' => 'CUTI', 'icon' => 'bi-calendar-x-fill', 'class' => 'mi-cuti', 'status' => 'Cuti', 'expired' => $akhirExpired ?? false],
-                ['id' => 'btnTerlambat', 'title' => 'TERLAMBAT', 'icon' => 'bi-alarm-fill', 'class' => 'mi-telat', 'status' => 'Terlambat', 'expired' => $akhirExpired ?? false],
+                ['id' => 'btnHadir', 'title' => 'HADIR', 'icon' => 'bi-person-check-fill', 'class' => 'mi-hadir', 'status' => 'Hadir', 'expired' => ($isBeforeBuka ?? false) || ($isPastBatasHadir ?? false)],
+                ['id' => 'btnIzin', 'title' => 'IZIN', 'icon' => 'bi-file-earmark-text-fill', 'class' => 'mi-izin', 'status' => 'Izin', 'expired' => ($isBeforeBuka ?? false) || ($isPastBatasHadir ?? false)],
+                ['id' => 'btnSakit', 'title' => 'SAKIT', 'icon' => 'bi-heart-pulse-fill', 'class' => 'mi-sakit', 'status' => 'Sakit', 'expired' => ($isBeforeBuka ?? false) || ($isPastBatasHadir ?? false)],
+                ['id' => 'btnTugasLuar', 'title' => 'TUGAS LUAR', 'icon' => 'bi-briefcase-fill', 'class' => 'mi-tugas', 'status' => 'Tugas Luar', 'expired' => ($isBeforeBuka ?? false) || ($isPastBatasHadir ?? false)],
+                ['id' => 'btnCuti', 'title' => 'CUTI', 'icon' => 'bi-calendar-x-fill', 'class' => 'mi-cuti', 'status' => 'Cuti', 'expired' => ($isBeforeBuka ?? false) || ($isPastBatasHadir ?? false)],
+                ['id' => 'btnTerlambat', 'title' => 'TERLAMBAT', 'icon' => 'bi-alarm-fill', 'class' => 'mi-telat', 'status' => 'Terlambat', 'expired' => ($isBeforeBuka ?? false) || ($isBeforeBatasHadir ?? false) || ($isPastBatasAkhir ?? false)],
             ];
         @endphp
         @foreach($actions as $act)
             @php $absenLocked = ($sudahAbsenToday ?? false) || !($isAbsensiActive ?? true); @endphp
             <div id="{{ $act['id'] }}" class="menu-item {{ $absenLocked ? 'disabled' : '' }}"
                @if(!$absenLocked)
-                 @if($act['expired']) onclick="showCustomAlert('Waktu presensi sudah berakhir', 'warning')"
+                 @if($act['expired']) 
+                    @if($act['status'] === 'Terlambat')
+                        @if($isBeforeBuka ?? false)
+                            onclick="showCustomAlert('Sistem absensi belum dibuka', 'warning')"
+                        @elseif($isBeforeBatasHadir ?? false)
+                            onclick="showCustomAlert('Belum memasuki waktu terlambat', 'warning')"
+                        @else
+                            onclick="showCustomAlert('Waktu presensi sudah berakhir', 'warning')"
+                        @endif
+                    @else
+                        @if($isBeforeBuka ?? false)
+                            onclick="showCustomAlert('Sistem absensi belum dibuka', 'warning')"
+                        @else
+                            onclick="showCustomAlert('Di luar batas waktu pengajuan', 'warning')"
+                        @endif
+                    @endif
                  @else data-bs-toggle="modal" data-bs-target="#absenModal" data-status="{{ $act['status'] }}" @endif
                @endif>
                 <div class="m-icon-box {{ $act['class'] }}"><i class="bi {{ $act['icon'] }}"></i></div>
@@ -436,7 +453,8 @@
                         <th class="text-center">Sakit</th>
                         <th class="text-center">TL</th>
                         <th class="text-center">Terlambat</th>
-                        <th class="text-center pe-4">Izin</th>
+                        <th class="text-center">Izin</th>
+                        <th class="text-center pe-4">Alpha</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -450,7 +468,8 @@
                             <td class="text-center">{{ $r->sakit ?? 0 }}</td>
                             <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
                             <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
-                            <td class="text-center pe-4">{{ $r->izin ?? 0 }}</td>
+                            <td class="text-center">{{ $r->izin ?? 0 }}</td>
+                            <td class="text-center pe-4 text-danger fw-bold">{{ $r->alpha ?? 0 }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -463,7 +482,8 @@
                         <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
                         <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
                         <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
-                        <td class="text-center pe-4">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+                        <td class="text-center pe-4 text-danger">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->alpha) }}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -624,7 +644,7 @@
         if (!data) return;
         const tbody = document.querySelector('#table-rekap tbody');
         if (!tbody) return;
-        let totals = { h:0, c:0, s:0, tl:0, t:0, i:0 };
+        let totals = { h:0, c:0, s:0, tl:0, t:0, i:0, a:0 };
         tbody.querySelectorAll('tr').forEach(row => {
             const bidang = row.cells[0].textContent.trim();
             const r = data[bidang] || {};
@@ -634,12 +654,14 @@
             row.cells[5].textContent = r.tugas_luar ?? 0;
             row.cells[6].textContent = r.terlambat ?? 0;
             row.cells[7].textContent = r.izin ?? 0;
+            row.cells[8].textContent = r.alpha ?? 0;
             totals.h += parseInt(r.hadir ?? 0);
             totals.c += parseInt(r.cuti ?? 0);
             totals.s += parseInt(r.sakit ?? 0);
             totals.tl += parseInt(r.tugas_luar ?? 0);
             totals.t += parseInt(r.terlambat ?? 0);
             totals.i += parseInt(r.izin ?? 0);
+            totals.a += parseInt(r.alpha ?? 0);
         });
         const tfoot = document.querySelector('#table-rekap tfoot tr');
         if (tfoot) {
@@ -649,6 +671,7 @@
             tfoot.cells[5].textContent = totals.tl;
             tfoot.cells[6].textContent = totals.t;
             tfoot.cells[7].textContent = totals.i;
+            tfoot.cells[8].textContent = totals.a;
         }
     });
 </script>

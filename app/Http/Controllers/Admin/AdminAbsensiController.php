@@ -56,6 +56,8 @@ class AdminAbsensiController extends Controller
             $data['berkas'] = $r->file('berkas')->store('absensi_berkas', 'public');
         }
 
+        $data['is_approved'] = true; // Admin input otomatis approved
+
         Absensi::create($data);
         return back()->with('ok', 'Absensi ditambahkan.');
     }
@@ -76,6 +78,8 @@ class AdminAbsensiController extends Controller
             }
             $data['berkas'] = $r->file('berkas')->store('absensi_berkas', 'public');
         }
+
+        $data['is_approved'] = true; // Admin update otomatis approved
 
         $absensi->update($data);
         return back()->with('ok', 'Absensi diperbarui.');
@@ -141,11 +145,13 @@ class AdminAbsensiController extends Controller
 
     $absensiBulan = Absensi::where('user_id', $user->id)
         ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+        ->where('is_approved', true) // Hanya yang disetujui
         ->get()
         ->keyBy(fn($item) => Carbon::parse($item->tanggal)->toDateString());
 
-    // Batas waktu (cutoff) absen
-    $cutoffTime = config('absensi.cutoff', '16:00:00');
+    // Batas waktu (cutoff) absen untuk Alpha
+    $jamConfig = array_merge(['batas_hadir' => '08:00:00'], \App\Models\Setting::get('jam', []));
+    $cutoffTime = $jamConfig['batas_hadir'];
 
     // Stream CSV download
     return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime) {

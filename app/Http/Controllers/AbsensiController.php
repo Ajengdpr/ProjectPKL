@@ -80,18 +80,21 @@ class AbsensiController extends Controller
             'radius' => (int)   $lokasiConfig['radius'],
         ];
 
-        $sudahAbsenToday = DB::table('absensi')
-            ->where('user_id', $user->id)
+        $existingRecord = Absensi::where('user_id', $user->id)
             ->whereDate('tanggal', $today)
-            ->exists();
-
-        $lastToday = DB::table('absensi')
-            ->where('user_id', $user->id)
-            ->whereDate('tanggal', $today)
-            ->orderByDesc('jam')
             ->first();
+
+        // Absen dianggap "selesai/terkunci" jika sudah approved, ditolak, ATAU jika sudah mengajukan (bukan auto-alpha)
+        $sudahAbsenToday = $existingRecord && ($existingRecord->is_approved || $existingRecord->is_rejected || $existingRecord->status !== 'alpha');
+        
+        // Flag untuk pesan khusus
+        $isPending  = $existingRecord && !$existingRecord->is_approved && !$existingRecord->is_rejected && $existingRecord->status !== 'alpha';
+        $isRejected = $existingRecord && $existingRecord->is_rejected;
+
+        $lastToday = $existingRecord; 
             
         $jamConfig = array_merge([
+            'buka' => '07:00:00',
             'batas_hadir' => '08:00:00',
             'batas_akhir' => '16:00:00',
         ], Setting::get('jam', []));
@@ -110,14 +113,17 @@ class AbsensiController extends Controller
             $isAbsensiActive = false;
         }
 
-        $hadirDisabled = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_hadir'];
-        $akhirExpired = now('Asia/Makassar')->format('H:i:s') > $jamConfig['batas_akhir'];
+        $currentTime = now('Asia/Makassar')->format('H:i:s');
+        $isBeforeBuka = $currentTime < $jamConfig['buka'];
+        $isPastBatasHadir = $currentTime > $jamConfig['batas_hadir'];
+        $isPastBatasAkhir = $currentTime > $jamConfig['batas_akhir'];
 
-        // Jika sistem dinonaktifkan admin, anggap sudah expired agar tombol tidak bisa diklik
-        if (!$isAbsensiActive) {
-            $hadirDisabled = true;
-            $akhirExpired = true;
-        }
+        // Flag untuk UI
+        $hadirDisabled = $isBeforeBuka || $isPastBatasHadir || !$isAbsensiActive;
+        $akhirExpired = $isPastBatasAkhir || !$isAbsensiActive;
+        
+        // Flag pembantu untuk pesan pop-up yang spesifik
+        $isBeforeBatasHadir = $currentTime <= $jamConfig['batas_hadir'];
 
         // =================================================================
         // KALKULASI POIN BULANAN LIVE UNTUK DASHBOARD (LOGIKA BARU)
@@ -131,6 +137,7 @@ class AbsensiController extends Controller
         $bulan = now($tz)->format('Y-m');
         $absensiBulan = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->where('is_approved', true) // Hanya yang disetujui
             ->get();
 
         $carbonBulan = now($tz)->startOfMonth();
@@ -168,10 +175,13 @@ class AbsensiController extends Controller
             } else {
                // Logika baru untuk menghitung alpha
                 $isWeekend = $tanggalLoop->isWeekend();
-                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+                
+                // Bila belum absen setelah jam absensi dibuka selesai (batas_hadir) maka tanpa keterangan
+                // Kita gunakan jamConfig['batas_hadir'] sebagai pemicu Alpha live
+                $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
 
-                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
-                if (!$isWeekend && !$isTodayBeforeCutoff) {
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
+                if (!$isWeekend && !$isTodayBeforeAlpha) {
                     $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
                 }
             }
@@ -190,12 +200,19 @@ class AbsensiController extends Controller
             'rekap'            => $rekapUser,
             'office'           => $office,
             'sudahAbsenToday'  => $sudahAbsenToday,
+            'isPending'        => $isPending,
+            'isRejected'       => $isRejected,
             'lastToday'        => $lastToday,
             'hadirDisabled'    => $hadirDisabled,
             'akhirExpired'     => $akhirExpired,
+            'isBeforeBuka'     => $isBeforeBuka,
+            'isPastBatasHadir' => $isPastBatasHadir,
+            'isBeforeBatasHadir' => $isBeforeBatasHadir,
+            'isPastBatasAkhir' => $isPastBatasAkhir,
             'poinConfig'       => $poinConfig,
             'isAbsensiActive'  => $isAbsensiActive,
             'disableReason'    => $disableReason,
+            'jamConfig'        => $jamConfig,
         ]);
     }
 
@@ -223,9 +240,28 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', 'Status absensi tidak valid.');
         }
 
-        // Cek apakah hari ini sudah absen
-        if (Absensi::where('user_id', auth()->id())->whereDate('tanggal', now('Asia/Makassar')->toDateString())->exists()) {
-            return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini.');
+        // Batas waktu
+        $jamConfig = array_merge([
+            'buka' => '07:00:00',
+            'batas_hadir' => '08:00:00',
+            'batas_akhir' => '16:00:00'
+        ], Setting::get('jam', []));
+        $currentTime = now('Asia/Makassar')->format('H:i:s');
+
+        if ($currentTime < $jamConfig['buka']) {
+            return redirect()->route('dashboard')->with('err', 'Sistem absensi belum dibuka.');
+        }
+
+        if ($currentTime > $jamConfig['batas_akhir']) {
+            return redirect()->route('dashboard')->with('err', 'Waktu presensi sudah berakhir.');
+        }
+
+        if (in_array($preset, ['Hadir', 'Izin', 'Sakit', 'Tugas Luar', 'Cuti']) && $currentTime > $jamConfig['batas_hadir']) {
+            return redirect()->route('dashboard')->with('err', 'Di luar batas waktu pengajuan.');
+        }
+
+        if ($preset === 'Terlambat' && $currentTime <= $jamConfig['batas_hadir']) {
+            return redirect()->route('dashboard')->with('err', 'Belum memasuki waktu terlambat.');
         }
 
         return view('absensi.form', compact('preset'));
@@ -274,89 +310,94 @@ class AbsensiController extends Controller
             return back()->withErrors('Status tidak valid.');
         }
 
-        // Cegah double absen per hari
-        if (Absensi::where('user_id', $user->id)->whereDate('tanggal', $today)->exists()) {
+        // Cek jika sudah ada absen non-alpha yang disetujui
+        $existing = Absensi::where('user_id', $user->id)
+            ->whereDate('tanggal', $today)
+            ->first();
+
+        if ($existing && $existing->status !== 'alpha' && $existing->is_approved) {
             return redirect()->route('dashboard')->with('err', 'Anda sudah absen hari ini, data tidak bisa diubah.');
         }
         
         // ==========================================================
         // PERUBAHAN BATAS WAKTU: Mengambil data dari Settings
         // ==========================================================
-        $jamConfig = Setting::get('jam', ['batas_hadir' => '08:00:00']);
-        $batasHadir = $jamConfig['batas_hadir'];
+        $jamConfig = array_merge([
+            'buka' => '07:00:00',
+            'batas_hadir' => '08:00:00',
+            'batas_akhir' => '16:00:00'
+        ], Setting::get('jam', []));
+        $currentTime = now($tz)->format('H:i:s');
 
-        if ($status === 'Hadir' && now($tz)->format('H:i:s') > $batasHadir) {
-            return redirect()->route('dashboard')->with('err', "Absen Hadir ditutup setelah " . substr($batasHadir, 0, 5) . " WITA.");
+        // 1. Cek Batas Buka
+        if ($currentTime < $jamConfig['buka']) {
+            return redirect()->route('dashboard')->with('err', "Sistem absensi belum dibuka.");
         }
 
-        /*
-        $deviceId = $request->input('device_id');
-        $today = now('Asia/Makassar')->toDateString();
-
-        // Cek apakah device sudah absen hari ini
-        $already = Absensi::where('device_id', $deviceId)
-            ->whereDate('tanggal', $today)
-            ->exists();
-
-        if($already){
-            return back()->withErrors('Device ini sudah melakukan absensi hari ini.');
+        // 2. Cek Batas Akhir
+        if ($currentTime > $jamConfig['batas_akhir']) {
+            return redirect()->route('dashboard')->with('err', "Waktu presensi sudah berakhir.");
         }
-*/
+
+        // 3. Cek Batas Hadir Reguler (Hadir, Izin, Sakit, TL, Cuti)
+        if (in_array($status, ['Hadir', 'Izin', 'Sakit', 'Tugas Luar', 'Cuti']) && $currentTime > $jamConfig['batas_hadir']) {
+            return redirect()->route('dashboard')->with('err', "Di luar batas waktu pengajuan.");
+        }
+
+        // 4. Cek Terlambat (Harus setelah batas_hadir)
+        if ($status === 'Terlambat' && $currentTime <= $jamConfig['batas_hadir']) {
+            return redirect()->route('dashboard')->with('err', "Belum memasuki waktu terlambat.");
+        }
+
         // Handle file upload jika ada
         $berkasPath = null;
         if ($request->hasFile('berkas')) {
             $berkasPath = $request->file('berkas')->store('absensi_berkas', 'public');
         }
 
-        // Simpan absensi beserta device_id
-        $absen = new Absensi();
-        $absen->user_id = $user->id;
-        $absen->tanggal = $today;
-        //$absen->device_id = $deviceId;
-        $absen->jam     = now($tz)->format('H:i:s');
-        $absen->status  = $status;
-        $absen->alasan  = $data['alasan'] ?? null;
-        $absen->berkas  = $berkasPath;
+        // Status Hadir & Terlambat otomatis Approved
+        $isApproved = in_array($status, ['Hadir', 'Terlambat']);
+
+        // Jika ada record alpha, kita update saja. Jika tidak, buat baru.
+        if ($existing) {
+            $absen = $existing;
+        } else {
+            $absen = new Absensi();
+            $absen->user_id = $user->id;
+            $absen->tanggal = $today;
+        }
+
+        $absen->jam         = now($tz)->format('H:i:s');
+        $absen->status      = $status;
+        $absen->is_approved = $isApproved;
+        $absen->alasan      = $data['alasan'] ?? null;
+        $absen->berkas      = $berkasPath;
         $absen->save();
 
-        // ==========================================================
-        // PERUBAHAN POIN: Mengambil data dari Settings
-        // ==========================================================
-        $poinConfig = Setting::get('poin', [
-            'hadir'      => 1,
-            'terlambat'  => -3,
-            'izin'       => 0,
-            'sakit'      => 0,
-            'cuti'       => 0,
-            'tugas_luar' => 0,
-            'alpha'      => -5
-        ]);
-        
-        $delta = 0;
+        // Update Poin HANYA jika otomatis approved (Hadir/Terlambat)
+        if ($isApproved) {
+            $poinConfig = Setting::get('poin', [
+                'hadir'      => 1, 'terlambat'  => -3, 'izin'       => 0,
+                'sakit'      => 0, 'cuti'       => 0, 'tugas_luar' => 0, 'alpha'      => -5
+            ]);
+            
+            $delta = 0;
+            $poinKeyMap = [
+                'Hadir' => 'hadir', 'Terlambat' => 'terlambat',
+            ];
 
-        $poinKeyMap = [
-            'Hadir'      => 'hadir',
-            'Terlambat'  => 'terlambat',
-            'Izin'       => 'izin',
-            'Sakit'      => 'sakit',
-            'Cuti'       => 'cuti',
-            'Tugas Luar' => 'tugas_luar',
-        ];
-
-        $key = $poinKeyMap[$status] ?? null;
-
-        if ($key && isset($poinConfig[$key])) {
-             // Jika status adalah Terlambat dan tidak ada alasan, gunakan poin 'alpha' (Tanpa Keterangan)
-            if ($status === 'Terlambat' && empty(trim($data['alasan'] ?? ''))) {
-                 $delta = (int) ($poinConfig['alpha'] ?? 0);
-            } else {
-                // Untuk status lain atau Terlambat dengan alasan, gunakan poin statusnya
-                 $delta = (int) $poinConfig[$key];
+            $key = $poinKeyMap[$status] ?? null;
+            if ($key && isset($poinConfig[$key])) {
+                if ($status === 'Terlambat' && empty(trim($data['alasan'] ?? ''))) {
+                    $delta = (int) ($poinConfig['alpha'] ?? 0);
+                } else {
+                    $delta = (int) $poinConfig[$key];
+                }
             }
-        }
-        
-        if ($delta !== 0) {
-            DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
+            
+            if ($delta !== 0) {
+                DB::table('users')->where('id', $user->id)->update(['point' => DB::raw("point + ($delta)")]);
+            }
         }
 
         // Update rekap ke Firebase (biar dashboard live)
@@ -364,52 +405,91 @@ class AbsensiController extends Controller
 
         /* ============================
            NOTIFIKASI KE ATASAN
-           - Hanya untuk status selain Hadir
-           - Ke kepala bidang sesuai bidang user
-           - Juga ke PLT kepala dinas
+           - Status selain Hadir butuh approval
            ============================ */
         if ($status !== 'Hadir') {
             $targets = collect();
-
-            // 1. Kepala bidang sesuai bidang user (jika yang absen bukan kabid itu sendiri dan bukan kepala dinas itu sendiri)
             if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
                 $kabidUsername = self::KEPALA_BIDANG_USERNAME[$user->bidang];
-                
-                // Jika yang absen bukan Kabid dan bukan Kepala Dinas, maka kirim ke Kabid-nya
                 if ($user->username !== $kabidUsername && $user->username !== self::PLT_KEPALA_DINAS_USERNAME) {
                     $kepala = User::where('username', $kabidUsername)->first();
                     if ($kepala) $targets->push($kepala);
                 }
             }
 
-            // 2. PLT kepala dinas (Hanya jika yang absen adalah salah satu Kepala Bidang)
             $isKabid = in_array($user->username, self::KEPALA_BIDANG_USERNAME);
             if ($isKabid) {
                 $plt = User::where('username', self::PLT_KEPALA_DINAS_USERNAME)->first();
                 if ($plt) $targets->push($plt);
             }
 
-            // Kirim (hindari duplikasi untuk att_id sama)
             $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz, $berkasPath) {
-                $sudahAda = $atasan->notifications()
-                    ->where('type', \App\Notifications\AbsenceReported::class)
-                    ->where('data->att_id', $absen->id)
-                    ->exists();
-
-                if (!$sudahAda) {
-                    $atasan->notify(new AbsenceReported(
-                        attId:  $absen->id,
-                        namaPegawai: $user->nama,
-                        status: $status,
-                        alasan: $data['alasan'] ?? null,
-                        waktu: now($tz)->format('Y-m-d H:i'),
-                        berkas: $berkasPath
-                    ));
-                }
+                $atasan->notify(new AbsenceReported(
+                    attId:  $absen->id,
+                    namaPegawai: $user->nama,
+                    status: $status,
+                    alasan: $data['alasan'] ?? null,
+                    waktu: now($tz)->format('Y-m-d H:i'),
+                    berkas: $berkasPath
+                ));
             });
         }
 
-        return redirect()->route('dashboard')->with('ok', "Absensi {$status} tersimpan.");
+        $msg = "Absensi {$status} tersimpan.";
+        if (!$isApproved) $msg .= " Menunggu persetujuan atasan.";
+
+        return redirect()->route('dashboard')->with('ok', $msg);
+    }
+
+    public function approve(Request $request, Absensi $absensi)
+    {
+        $user = $request->user();
+        
+        if ($absensi->is_approved) {
+            return back()->with('err', 'Absensi sudah disetujui sebelumnya.');
+        }
+
+        $absensi->is_approved = true;
+        $absensi->is_rejected = false;
+        $absensi->save();
+
+        // Update Poin setelah disetujui
+        $poinConfig = Setting::get('poin', [
+            'hadir'      => 1, 'terlambat'  => -3, 'izin'       => 0,
+            'sakit'      => 0, 'cuti'       => 0, 'tugas_luar' => 0, 'alpha'      => -5
+        ]);
+
+        $poinKeyMap = [
+            'Hadir'      => 'hadir', 'Terlambat'  => 'terlambat', 'Izin'       => 'izin',
+            'Sakit'      => 'sakit', 'Cuti'       => 'cuti', 'Tugas Luar' => 'tugas_luar',
+        ];
+
+        $key = $poinKeyMap[$absensi->status] ?? null;
+        if ($key && isset($poinConfig[$key])) {
+            $delta = (int) $poinConfig[$key];
+            if ($delta !== 0) {
+                DB::table('users')->where('id', $absensi->user_id)->update(['point' => DB::raw("point + ($delta)")]);
+            }
+        }
+
+        $this->updateFirebaseRekap($absensi->tanggal);
+
+        return back()->with('ok', 'Absensi berhasil disetujui.');
+    }
+
+    public function reject(Request $request, Absensi $absensi)
+    {
+        if ($absensi->is_approved) {
+            return back()->with('err', 'Absensi yang sudah disetujui tidak bisa ditolak.');
+        }
+
+        $absensi->is_rejected = true;
+        $absensi->is_approved = false;
+        $absensi->save();
+
+        $this->updateFirebaseRekap($absensi->tanggal);
+
+        return back()->with('ok', 'Absensi berhasil ditolak.');
     }
     private function updateFirebaseRekap(string $tanggal): array
     {
@@ -425,7 +505,10 @@ class AbsensiController extends Controller
         foreach ($usersByBidang as $namaBidang => $usersInBidang) {
             $userIdsInBidang = $usersInBidang->pluck('id');
             $absensiInBidang = $absensiHariIni->whereIn('user_id', $userIdsInBidang);
-            $stats = $absensiInBidang->countBy(fn($item) => strtolower(trim($item->status)));
+            
+            // Hanya hitung yang SUDAH DISETUJUI dan BUKAN status alpha
+            $approvedNonAlpha = $absensiInBidang->where('is_approved', true)->where('status', '!=', 'alpha');
+            $stats = $approvedNonAlpha->countBy(fn($item) => strtolower(trim($item->status)));
 
             $h = $stats->get('hadir', 0);
             $t = $stats->get('terlambat', 0);
@@ -434,10 +517,10 @@ class AbsensiController extends Controller
             $c = $stats->get('cuti', 0);
             $tl = $stats->get('tugas luar', 0);
 
-            $alphaFromDb = $stats->get('alpha', 0);
-            $sudahAbsenInBidang = $absensiInBidang->pluck('user_id')->unique();
-            $alphaFromNoRecord = $userIdsInBidang->diff($sudahAbsenInBidang)->count();
-            $a = $alphaFromDb + $alphaFromNoRecord;
+            // Alpha (Tanpa Keterangan) = Total Pegawai - Pegawai dengan absen yang disetujui
+            // Ini otomatis mencakup: yang belum absen, yang masih pending, dan yang ditolak.
+            $userIdsWithApprovedRecord = $approvedNonAlpha->pluck('user_id')->unique();
+            $a = $userIdsInBidang->diff($userIdsWithApprovedRecord)->count();
 
             $rekapData[$namaBidang] = (object)[
                 'hadir' => $h,
@@ -490,7 +573,9 @@ class AbsensiController extends Controller
         }
 
         // Ambil semua absensi pada bulan terpilih untuk efisiensi
-        $allAbsensiBulan = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get()->groupBy('user_id');
+        $allAbsensiBulan = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->where('is_approved', true) // Hanya yang disetujui
+            ->get()->groupBy('user_id');
 
         // =================================================================
         // KALKULASI UNTUK SEMUA PENGGUNA (PERINGKAT)
@@ -501,6 +586,9 @@ class AbsensiController extends Controller
         // Ambil pengaturan hari libur untuk mengabaikan poin alpha di hari tersebut
         $statusConfig = Setting::get('status', ['hari_libur' => '']);
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+
+        // Kita perlu jamConfig untuk batas Alpha
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
 
         foreach ($allUsers as $u) {
             $userAbsensiLoop = $allAbsensiBulan->get($u->id, collect());
@@ -532,13 +620,12 @@ class AbsensiController extends Controller
                     }
                 } else {
                     // LOGIKA BARU YANG BENAR:
-                    // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam cutoff
-                                      // Logika baru untuk menghitung alpha
+                    // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam batas_hadir
                     $isWeekend = $tanggalLoop->isWeekend();
-                    $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+                    $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
 
-                    // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
-                    if (!$isWeekend && !$isTodayBeforeCutoff) {
+                    // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
+                    if (!$isWeekend && !$isTodayBeforeAlpha) {
                         $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
                     }
                 }
@@ -581,12 +668,11 @@ class AbsensiController extends Controller
                     }
                 }
             } else {
-                $rekapData['Tanpa Keterangan']++;
                 $isWeekend = $tanggalLoop->isWeekend();
-                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+                $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
 
-                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam cutoff
-                if (!$isWeekend && !$isTodayBeforeCutoff) {
+                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
+                if (!$isWeekend && !$isTodayBeforeAlpha) {
                     $rekapData['Tanpa Keterangan']++;
                     $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                 }
@@ -635,10 +721,12 @@ class AbsensiController extends Controller
 
         $absensiBulan = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->where('is_approved', true) // Hanya yang disetujui
             ->get()
             ->keyBy('tanggal');
 
-        $cutoffTime = config('absensi.cutoff', '16:00:00');
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
+        $cutoffTime = $jamConfig['batas_hadir'];
         $statuses = Absensi::getStatuses();
 
         return response()->streamDownload(function () use ($absensiBulan, $carbonBulan, $maxHari, $tz, $cutoffTime, $statuses) {

@@ -85,6 +85,7 @@ class AutoAbsent extends Command
                     'tanggal' => $date->toDateString(),
                     'jam'     => $date->copy()->setTime(16, 1, 0)->format('H:i:s'),
                     'status'  => 'alpha',
+                    'is_approved' => true,
                     'alasan'  => null,
                     'created_at' => now(),
                     'updated_at' => now(),
