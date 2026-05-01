@@ -137,8 +137,7 @@ class AbsensiController extends Controller
         $bulan = now($tz)->format('Y-m');
         $absensiBulan = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-            ->where('is_approved', true) // Hanya yang disetujui
-            ->get();
+            ->get(); // Ambil semua (termasuk pending & rejected)
 
         $carbonBulan = now($tz)->startOfMonth();
         $maxHari = $carbonBulan->isSameMonth(now($tz)) ? now($tz)->day : $carbonBulan->daysInMonth;
@@ -161,7 +160,12 @@ class AbsensiController extends Controller
             $absen = $absensiBulan->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
 
             if ($absen) {
-                if (!Carbon::parse($absen->tanggal)->isWeekend()) {
+                // Logika Poin:
+                if ($absen->is_rejected) {
+                    // Ditolak = Alpha
+                    $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
+                } elseif ($absen->is_approved) {
+                    // Sudah Disetujui = Hitung poin normal
                     $status = $absen->status;
                     $key = $poinKeyMap[$status] ?? null;
                     if ($key && isset($poinConfig[$key])) {
@@ -172,16 +176,13 @@ class AbsensiController extends Controller
                         }
                     }
                 }
+                // Jika is_approved = false dan is_rejected = false (Pending), poin tetap 0 (tidak tambah/kurang)
             } else {
-               // Logika baru untuk menghitung alpha
-                $isWeekend = $tanggalLoop->isWeekend();
-                
-                // Bila belum absen setelah jam absensi dibuka selesai (batas_hadir) maka tanpa keterangan
-                // Kita gunakan jamConfig['batas_hadir'] sebagai pemicu Alpha live
+               // Logika baru untuk menghitung alpha jika tidak ada data sama sekali
                 $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
 
-                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
-                if (!$isWeekend && !$isTodayBeforeAlpha) {
+                // Tambahkan poin alpha HANYA jika BUKAN hari ini sebelum jam batas_hadir
+                if (!$isTodayBeforeAlpha) {
                     $totalPoinBulanan += (int)($poinConfig['alpha'] ?? 0);
                 }
             }

@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class RecalculatePoints extends Command
 {
     protected $signature = 'points:recalc {--user_id=} {--month=}';
-    protected $description = 'Recalculate users.point from absensi history including alpha points';
+    protected $description = 'Recalculate users.point from absensi history including alpha points (Sync with Stat logic)';
 
     public function handle()
     {
@@ -24,7 +24,8 @@ class RecalculatePoints extends Command
         ]);
         
         $statusConfig = Setting::get('status', ['hari_libur' => '']);
-        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        $hariLiburRaw = $statusConfig['hari_libur'] ?? '';
+        $hariLibur = array_filter(explode("\n", str_replace("\r", "", $hariLiburRaw)));
         
         $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
         
@@ -55,7 +56,6 @@ class RecalculatePoints extends Command
             $uPoin = 0;
             $uAbs = Absensi::where('user_id', $user->id)
                 ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-                ->where('is_approved', true)
                 ->get();
 
             for ($i = 1; $i <= $maxHari; $i++) {
@@ -64,14 +64,17 @@ class RecalculatePoints extends Command
 
                 $a = $uAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
                 if ($a) {
-                    $k = $poinKeyMap[$a->status] ?? null;
-                    if ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) {
+                    if ($a->is_rejected) {
                         $uPoin += (int)($poinConfig['alpha'] ?? 0);
-                    } else {
-                        $uPoin += (int)($poinConfig[$k] ?? 0);
+                    } elseif ($a->is_approved) {
+                        $k = $poinKeyMap[$a->status] ?? null;
+                        if ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) {
+                            $uPoin += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            $uPoin += (int)($poinConfig[$k] ?? 0);
+                        }
                     }
                 } else {
-                    // Alpha: hitung jika sudah lewat jam batas_hadir hari ini, atau hari kemarin
                     $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
                     if (!$isTodayBeforeAlpha) {
                         $uPoin += (int)($poinConfig['alpha'] ?? 0);
