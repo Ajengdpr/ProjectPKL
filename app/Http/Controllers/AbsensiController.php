@@ -19,6 +19,16 @@ class AbsensiController extends Controller
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
+    private const KEPALA_BIDANG_USERNAME = [
+        'SEKRETARIAT' => 'noorekahasni',
+        'PPKLH'       => 'emmyariani',
+        'KPPI'        => 'hajiehariyanie',
+        'TALING'      => 'adhimaulana',
+        'PHL'         => 'hardiniwijayanti',
+    ];
+
+    private const PLT_KEPALA_DINAS_USERNAME = 'fathimatuzzahra';
+
     protected $database;
 
     public function __construct(Database $database)
@@ -577,6 +587,38 @@ class AbsensiController extends Controller
             ->get()->groupBy('user_id');
 
         // =================================================================
+        // 1. DATA INDIVIDU (USER LOGIN)
+        // =================================================================
+        $absensi = Absensi::where('user_id', $user->id)
+            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+            ->where('is_approved', true)
+            ->get();
+        
+        $totalPoin = 0;
+        $rekapData = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
+        
+        // Gunakan jamConfig yang sudah ada atau ambil baru
+        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
+
+        for ($i = 1; $i <= $maxHari; $i++) {
+            $tL = $carbonBulan->copy()->day($i);
+            if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+
+            $a = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
+            if ($a) {
+                $rekapData[$a->status]++;
+                $k = $poinKeyMap[$a->status] ?? null;
+                $totalPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+            } else {
+                $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                if (!$isTodayBeforeAlpha) {
+                    $rekapData['Tanpa Keterangan']++;
+                    $totalPoin += (int)($poinConfig['alpha'] ?? 0);
+                }
+            }
+        }
+
+        // =================================================================
         // 2. DATA RANKING (RANKING POIN)
         // =================================================================
         $allUsers = User::where('role', '!=', 'admin')->get();
@@ -590,7 +632,7 @@ class AbsensiController extends Controller
         $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
 
         foreach ($allUsers as $u) {
-            $uAbs = $allAbsBulan->get($u->id, collect());
+            $uAbs = $allAbsensiBulan->get($u->id, collect());
             $uPoin = 0;
             for ($i = 1; $i <= $maxHari; $i++) {
                 $tL = $carbonBulan->copy()->day($i);
@@ -602,18 +644,17 @@ class AbsensiController extends Controller
                 } else {
                     // LOGIKA BARU YANG BENAR:
                     // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam batas_hadir
-                    $isWeekend = $tanggalLoop->isWeekend();
-                    $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                    $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
 
-                    // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
-                    if (!$isWeekend && !$isTodayBeforeAlpha) {
-                        $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
+                    // Tambahkan poin alpha HANYA jika BUKAN hari ini sebelum jam batas_hadir
+                    if (!$isTodayBeforeAlpha) {
+                        $uPoin += (int)($poinConfig['alpha'] ?? 0);
                     }
                 }
             }
-            $scores[] = (object)['nama' => $u->nama, 'poin_total' => $uPoin];
+            $monthlyScores[] = (object)['nama' => $u->nama, 'poin_total' => $uPoin];
         }
-        $col = collect($scores);
+        $col = collect($monthlyScores);
         $top5Global = $col->sortByDesc('poin_total')->take(5)->values();
         $bottom5Global = $col->sortBy('poin_total')->take(5)->values();
 
@@ -632,32 +673,30 @@ class AbsensiController extends Controller
             $subId = $request->input('sub_id');
             if ($subId && $subordinates->contains('id', $subId)) {
                 $targetSub = User::find($subId);
-                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
-                $sPoin = 0; $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
+                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->where('is_approved', true)->get();
+                $sPoin = 0; 
+                $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
+                
                 for ($i = 1; $i <= $maxHari; $i++) {
                     $tL = $carbonBulan->copy()->day($i);
                     if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+                    
                     $a = $subAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
                     if($a){
                         $sRekap[$a->status]++;
                         $k = $poinKeyMap[$a->status] ?? null;
                         $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
                     } else {
-                        $totalPoin += (int)($poinConfig[$key] ?? 0);
+                        $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                        if (!$isTodayBeforeAlpha) {
+                            $sRekap['Tanpa Keterangan']++;
+                            $sPoin += (int)($poinConfig['alpha'] ?? 0);
+                        }
                     }
                 }
-            } else {
-                $isWeekend = $tanggalLoop->isWeekend();
-                $isTodayBeforeAlpha = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
-
-                // Tambahkan poin alpha HANYA jika BUKAN weekend DAN BUKAN hari ini sebelum jam batas_hadir
-                if (!$isWeekend && !$isTodayBeforeAlpha) {
-                    $rekapData['Tanpa Keterangan']++;
-                    $totalPoin += (int)($poinConfig['alpha'] ?? 0);
-                }
+                $subStats = (object)['poin' => $sPoin, 'rekap' => $sRekap];
             }
         }
-        unset($rekapData['alpha']);
 
         $adaData = array_sum($rekapData) > 0;
 
