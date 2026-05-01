@@ -305,8 +305,8 @@
     <div class="toolbar-card">
         <form method="post" action="{{ route('admin.absensi.store') }}" enctype="multipart/form-data">
             @csrf
-            <div class="row g-3">
-                <div class="col-md-4">
+            <div class="row g-4">
+                <div class="col-md-6">
                     <label class="form-label">Pilih Pegawai</label>
                     <select name="user_id" class="form-select" required>
                         <option value="">-- Pilih Pegawai --</option>
@@ -315,31 +315,31 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Tanggal</label>
-                    <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Jam (WITA)</label>
-                    <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Status</label>
+                <div class="col-md-6">
+                    <label class="form-label">Status Kehadiran</label>
                     <select name="status" class="form-select" required>
                         @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-8">
-                    <label class="form-label">Alasan / Keterangan (Opsional)</label>
-                    <input name="alasan" class="form-control" placeholder="Contoh: Mengikuti rapat dinas, sakit, atau izin keperluan keluarga.">
+                <div class="col-md-6">
+                    <label class="form-label">Tanggal Presensi</label>
+                    <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
+                    <label class="form-label">Jam Presensi (WITA)</label>
+                    <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Alasan / Keterangan</label>
+                    <input name="alasan" class="form-control" placeholder="Contoh: Rapat dinas, sakit, dll.">
+                </div>
+                <div class="col-md-6">
                     <label class="form-label">Unggah Berkas Bukti</label>
                     <input type="file" name="berkas" class="form-control">
                 </div>
-                <div class="col-12 mt-4 d-flex justify-content-end">
+                <div class="col-12 mt-2 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm">
                         <i class="bi bi-save2-fill me-2"></i> Simpan Presensi
                     </button>

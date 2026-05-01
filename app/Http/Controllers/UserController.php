@@ -88,12 +88,12 @@ class UserController extends Controller
         ]);
 
         if (!Hash::check($validated['password_lama'], $user->password)) {
-            return back()->withErrors(['password_lama' => 'Password lama yang Anda masukkan tidak sesuai.'])->withInput();
+            return back()->withErrors(['password_lama' => 'Kata sandi lama yang Anda masukkan tidak sesuai.'])->withInput();
         }
 
         $user->update(['password' => Hash::make($validated['password_baru'])]);
 
         $route = $user->role === 'admin' ? 'admin.account' : 'account';
-        return redirect()->route($route)->with('ok', 'Password berhasil diperbarui.');
+        return redirect()->route($route)->with('ok', 'Kata sandi berhasil diperbarui.');
     }
 }

@@ -56,7 +56,7 @@
                     <div class="d-flex flex-md-column gap-2 justify-content-center">
                         <button type="button" class="btn btn-light btn-sm rounded-pill px-4 fw-bold" 
                                 data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                            <i class="bi bi-shield-lock-fill me-2 text-primary"></i> Keamanan
+                            <i class="bi bi-shield-lock-fill me-2 text-primary"></i> Ubah Kata Sandi
                         </button>
                         <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-4" 
                                 data-bs-toggle="modal" data-bs-target="#confirmDeletePhotoModal"
@@ -102,7 +102,7 @@
                             </div>
                         </div>
                         <div class="col-md-6 p-3 info-item">
-                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block" style="font-size: 0.65rem;">Bidang / Bagian</label>
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block" style="font-size: 0.65rem;">Bidang Kerja</label>
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-building-fill text-primary me-2"></i>
                                 <span class="fw-bold text-dark small">{{ $u->bidang }}</span>
@@ -118,7 +118,7 @@
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2 text-primary">
                         <i class="bi bi-shield-lock-fill fs-5 me-2"></i>
-                        <h6 class="fw-bold mb-0 text-uppercase small" style="font-size: 0.7rem; letter-spacing: 1px;">Keamanan Akses</h6>
+                        <h6 class="fw-bold mb-0 text-uppercase small" style="font-size: 0.7rem; letter-spacing: 1px;">Keamanan Akun</h6>
                     </div>
                     <p class="text-muted small mb-0 lh-sm">
                         Sebagai Admin, pastikan untuk selalu menjaga kerahasiaan kredensial Anda dan melakukan logout setelah selesai bertugas.
@@ -126,9 +126,9 @@
                 </div>
             </div>
             
-            <div class="p-3 bg-white shadow-sm rounded-4 border-start border-4 border-info">
-                <h6 class="fw-bold small mb-1">Informasi Sistem</h6>
-                <p class="text-muted small mb-0">Halaman ini menampilkan data identitas Anda sebagai pengelola sistem absensi.</p>
+            <div class="p-3 bg-white shadow-sm rounded-4 border-start border-4 border-warning">
+                <h6 class="fw-bold small mb-1">Butuh Bantuan?</h6>
+                <p class="text-muted small mb-0">Hubungi Pengembang jika terdapat masalah teknis pada akses akun Admin Anda.</p>
             </div>
         </div>
     </div>
@@ -158,21 +158,21 @@
             <form method="POST" action="{{ route('account.password.update') }}">
                 @csrf
                 <div class="modal-header bg-primary text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold small">Ubah Password Admin</h5>
+                    <h5 class="modal-title fw-bold small">Ubah Kata Sandi Akun</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Password Lama</label>
+                        <label class="form-label small fw-bold">Kata Sandi Lama</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_lama" required>
                     </div>
                     <hr class="my-3">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Password Baru</label>
+                        <label class="form-label small fw-bold">Kata Sandi Baru</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_baru" placeholder="Min. 8 Karakter" required minlength="8">
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Konfirmasi Password</label>
+                        <label class="form-label small fw-bold">Konfirmasi Kata Sandi</label>
                         <input type="password" class="form-control form-control-sm bg-light border-0 py-2" name="password_baru_confirmation" required>
                     </div>
                 </div>
