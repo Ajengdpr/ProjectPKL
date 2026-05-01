@@ -227,7 +227,12 @@ $poinKeyMap = [
             {{-- Log Kalender --}}
             <div class="col-lg-7 col-md-6">
                 <div class="stat-card h-100">
-                    <h6 class="fw-bold mb-4 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Kehadiran Bulanan</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Kehadiran Bulanan</h6>
+                        <a href="#" id="btnExportCsvAdmin" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
+                            <i class="bi bi-download me-1"></i> Export CSV
+                        </a>
+                    </div>
                     
                     <div class="table-responsive">
                         <table class="table table-bordered table-calendar mb-0">
@@ -338,7 +343,8 @@ const pieData = {
             {{ $rekapData['Tanpa Keterangan'] }}
         ],
         backgroundColor:['#36A2EB','#FFCE56','#9966FF','#FF6384','#4BC0C0','#FF9F40','#e0e0e0'],
-        borderWidth:1
+        borderWidth:2,
+        borderColor: '#ffffff'
     }]
 };
 if(!{{ $adaData ? 'true':'false' }}){
@@ -346,7 +352,14 @@ if(!{{ $adaData ? 'true':'false' }}){
     pieData.labels=['Tidak ada data'];
     pieData.datasets[0].backgroundColor=['#e0e0e0'];
 }
-new Chart(ctx,{type:'doughnut',data:pieData,options:{responsive:true,plugins:{legend:{display:false}}}});
+new Chart(ctx,{type:'doughnut',data:pieData,options:{responsive:true,cutout:'75%',plugins:{legend:{display:false}}}});
+
+document.getElementById('btnExportCsvAdmin')?.addEventListener('click', function(e){
+    e.preventDefault();
+    const bulan = document.querySelector('input[name="bulan"]').value;
+    const userId = "{{ $selectedUser->id }}";
+    window.location.href = "{{ route('admin.statistik.export') }}?bulan=" + bulan + "&user_id=" + userId;
+});
 @endif
 </script>
 @endpush

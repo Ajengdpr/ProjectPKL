@@ -376,154 +376,157 @@ class AbsensiController extends Controller
         $bulan = $request->input('bulan', now()->format('Y-m'));
         $tz    = config('app.timezone', 'Asia/Makassar');
 
-        // Ambil pengaturan poin dari database
-        $poinConfig = Setting::get('poin', [
-            'hadir'      => 1, 'terlambat'  => 0, 'izin'       => 0, 'sakit'      => 0,
-            'cuti'       => 0, 'tugas_luar' => 0, 'alpha'      => -1
-        ]);
-        $cutoffTime = config('absensi.cutoff', '16:00:00');
-
-        // Definisikan pemetaan dari status di database ke kunci di poinConfig
-        $poinKeyMap = [
-            'Hadir'       => 'hadir', 'Terlambat'   => 'terlambat', 'Izin'        => 'izin',
-            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'alpha'       => 'alpha',
+        // --- KONSTANTA AKSES (Sesuai sistem Anda) ---
+        $kepalaBidangMap = [
+            'SEKRETARIAT' => 'noorekahasni',
+            'PPKLH'       => 'emmyariani',
+            'KPPI'        => 'hajiehariyanie',
+            'TALING'      => 'adhimaulana',
+            'PHL'         => 'hardiniwijayanti',
         ];
+        $pltUsername = 'fathimatuzzahra';
 
-        // Tentukan rentang hari untuk dihitung
-        $carbonBulan = Carbon::parse($bulan.'-01', $tz);
-        $maxHari = $carbonBulan->daysInMonth;
-        if ($carbonBulan->isFuture()) {
-            $maxHari = 0;
-        } elseif ($carbonBulan->isSameMonth(now($tz))) {
-            $maxHari = now($tz)->day;
-        }
+        $isPlt = ($user->username === $pltUsername);
+        $bidangLed = array_search($user->username, $kepalaBidangMap);
+        $isAtasan = ($isPlt || $bidangLed);
+        // --------------------------------------------
 
-        // Ambil semua absensi pada bulan terpilih untuk efisiensi
-        $allAbsensiBulan = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get()->groupBy('user_id');
-
-        // =================================================================
-        // KALKULASI UNTUK SEMUA PENGGUNA (PERINGKAT)
-        // =================================================================
-        $allUsers = User::where('role', '!=', 'admin')->get();
-        $monthlyScores = [];
-
-        // Ambil pengaturan hari libur untuk mengabaikan poin alpha di hari tersebut
+        // Ambil pengaturan poin & hari libur
+        $poinConfig = Setting::get('poin', ['hadir'=>1, 'terlambat'=>0, 'izin'=>0, 'sakit'=>0, 'cuti'=>0, 'tugas_luar'=>0, 'alpha'=>-1]);
         $statusConfig = Setting::get('status', ['hari_libur' => '']);
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        $cutoffTime = config('absensi.cutoff', '16:00:00');
+        $poinKeyMap = ['Hadir'=>'hadir', 'Terlambat'=>'terlambat', 'Izin'=>'izin', 'Sakit'=>'sakit', 'Cuti'=>'cuti', 'Tugas Luar'=>'tugas_luar', 'alpha'=>'alpha'];
 
-        foreach ($allUsers as $u) {
-            $userAbsensiLoop = $allAbsensiBulan->get($u->id, collect());
-            $totalPoinLoop = 0;
-
-            for ($i = 1; $i <= $maxHari; $i++) {
-                $tanggalLoop = $carbonBulan->copy()->day($i);
-                $tanggalLoopString = $tanggalLoop->toDateString();
-
-                // JANGAN HITUNG POIN DI HARI LIBUR (SABTU/MINGGU ATAU TANGGAL LIBUR ADMIN)
-                if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
-                    continue;
-                }
-
-                $absen = $userAbsensiLoop->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
-
-                if ($absen) {
-                // Abaikan data absensi yang ada jika tanggalnya adalah hari Sabtu atau Minggu
-                    if (!Carbon::parse($absen->tanggal)->isWeekend()) {
-                        $status = $absen->status;
-                        $key = $poinKeyMap[$status] ?? null;
-                        if ($key && isset($poinConfig[$key])) {
-                            if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                                $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
-                            } else {
-                                $totalPoinLoop += (int)($poinConfig[$key] ?? 0);
-                            }
-                        }
-                    }
-                } else {
-                    $isWeekend = $tanggalLoop->isWeekend();
-                    $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
-
-                    if (!$isWeekend && !$isTodayBeforeCutoff) {
-                        $totalPoinLoop += (int)($poinConfig['alpha'] ?? 0);
-                    }
-                }
-            }
-            $monthlyScores[] = (object)['nama' => $u->nama, 'poin_total' => $totalPoinLoop];
-        }
-
-        $scoresCollection = collect($monthlyScores);
-        $top5Global = $scoresCollection->sortByDesc('poin_total')->take(5)->values();
-        $bottom5Global = $scoresCollection->sortBy('poin_total')->take(5)->values();
+        // Tentukan rentang hari
+        $carbonBulan = Carbon::parse($bulan.'-01', $tz);
+        $maxHari = $carbonBulan->isFuture() ? 0 : ($carbonBulan->isSameMonth(now($tz)) ? now($tz)->day : $carbonBulan->daysInMonth);
 
         // =================================================================
-        // KALKULASI UNTUK USER LOGIN (DIAGRAM DONAT)
+        // 1. DATA PRIBADI (UNTUK BAGIAN ATAS)
         // =================================================================
-        $absensi = $allAbsensiBulan->get($user->id, collect());
+        $absensi = Absensi::where('user_id', $user->id)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
         $totalPoin = 0; 
-        $rekapData = array_fill_keys(array_keys($poinKeyMap), 0);
-        $rekapData['Tanpa Keterangan'] = 0;
+        $rekapData = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
 
         for ($i = 1; $i <= $maxHari; $i++) {
-            $tanggalLoop = $carbonBulan->copy()->day($i);
-            $tanggalLoopString = $tanggalLoop->toDateString();
-
-            if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
-                continue;
-            }
-            
-            $absen = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tanggalLoop));
-
-            if ($absen) {
-                $status = $absen->status;
-                if (isset($rekapData[$status])) $rekapData[$status]++;
-                
-                $key = $poinKeyMap[$status] ?? null;
-                if ($key && isset($poinConfig[$key])) {
-                    if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                        $totalPoin += (int)($poinConfig['alpha'] ?? 0);
-                    } else {
-                        $totalPoin += (int)($poinConfig[$key] ?? 0);
-                    }
-                }
+            $tLoop = $carbonBulan->copy()->day($i);
+            if ($tLoop->isWeekend() || in_array($tLoop->toDateString(), $hariLibur)) continue;
+            $ab = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tLoop));
+            if ($ab) {
+                $rekapData[$ab->status]++;
+                $key = $poinKeyMap[$ab->status] ?? null;
+                $totalPoin += ($ab->status === 'Terlambat' && empty(trim($ab->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$key] ?? 0);
             } else {
-                $isWeekend = $tanggalLoop->isWeekend();
-                $isTodayBeforeCutoff = $tanggalLoop->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
-
-                if (!$isWeekend && !$isTodayBeforeCutoff) {
+                if (!($tLoop->isToday() && now($tz)->format('H:i:s') <= $cutoffTime)) {
                     $rekapData['Tanpa Keterangan']++;
                     $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                 }
             }
         }
-        unset($rekapData['alpha']);
 
-        $adaData = array_sum($rekapData) > 0;
-        $statusLabels = array_values(\App\Models\Absensi::getStatuses());
+        // =================================================================
+        // 2. DATA RANKING (RANKING POIN)
+        // =================================================================
+        $allUsers = User::where('role', '!=', 'admin')->get();
+        $allAbsBulan = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get()->groupBy('user_id');
+        $scores = [];
+        foreach ($allUsers as $u) {
+            $uAbs = $allAbsBulan->get($u->id, collect());
+            $uPoin = 0;
+            for ($i = 1; $i <= $maxHari; $i++) {
+                $tL = $carbonBulan->copy()->day($i);
+                if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+                $a = $uAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
+                if($a){
+                    $k = $poinKeyMap[$a->status] ?? null;
+                    $uPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                } else {
+                    if (!($tL->isToday() && now($tz)->format('H:i:s') <= $cutoffTime)) $uPoin += (int)($poinConfig['alpha'] ?? 0);
+                }
+            }
+            $scores[] = (object)['nama' => $u->nama, 'poin_total' => $uPoin];
+        }
+        $col = collect($scores);
+        $top5Global = $col->sortByDesc('poin_total')->take(5)->values();
+        $bottom5Global = $col->sortBy('poin_total')->take(5)->values();
+
+        // =================================================================
+        // 3. DATA ANGGOTA BIDANG (UNTUK ATASAN)
+        // =================================================================
+        $subordinates = collect();
+        $targetSub = null;
+        $subStats = null;
+
+        if ($isAtasan) {
+            $qSub = User::where('role', '!=', 'admin')->where('id', '!=', $user->id)->orderBy('nama');
+            if (!$isPlt) $qSub->where('bidang', $bidangLed);
+            $subordinates = $qSub->get();
+
+            $subId = $request->input('sub_id');
+            if ($subId && $subordinates->contains('id', $subId)) {
+                $targetSub = User::find($subId);
+                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
+                $sPoin = 0; $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
+                for ($i = 1; $i <= $maxHari; $i++) {
+                    $tL = $carbonBulan->copy()->day($i);
+                    if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+                    $a = $subAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
+                    if($a){
+                        $sRekap[$a->status]++;
+                        $k = $poinKeyMap[$a->status] ?? null;
+                        $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                    } else {
+                        if (!($tL->isToday() && now($tz)->format('H:i:s') <= $cutoffTime)) {
+                            $sRekap['Tanpa Keterangan']++;
+                            $sPoin += (int)($poinConfig['alpha'] ?? 0);
+                        }
+                    }
+                }
+                $subStats = ['poin' => $sPoin, 'rekap' => $sRekap, 'absensi' => $subAbs];
+            }
+        }
 
         return view('statistik', [
-            'user'          => $user,
-            'absensi'       => $absensi,
-            'top5Global'    => $top5Global,
-            'bottom5Global' => $bottom5Global,
-            'poinConfig'    => $poinConfig,
-            'totalPoin'     => $totalPoin,
-            'rekapData'     => $rekapData,
-            'adaData'       => $adaData,
-            'statusLabels'  => $statusLabels,
-            'statusColors'  => [
-                'Hadir' => '#36A2EB', 'Izin' => '#FFCE56', 'Cuti' => '#9966FF',
-                'Sakit' => '#FF6384', 'Terlambat' => '#4BC0C0', 'Tugas Luar' => '#FF9F40',
-                'Tanpa Keterangan' => '#e0e0e0'
-            ],
+            'user' => $user, 'absensi' => $absensi, 'bulan' => $bulan, 'totalPoin' => $totalPoin, 'rekapData' => $rekapData,
+            'top5Global' => $top5Global, 'bottom5Global' => $bottom5Global, 'poinConfig' => $poinConfig,
+            'isAtasan' => $isAtasan, 'subordinates' => $subordinates, 'targetSub' => $targetSub, 'subStats' => $subStats,
+            'statusColors' => ['Hadir'=>'#36A2EB', 'Izin'=>'#FFCE56', 'Cuti'=>'#9966FF', 'Sakit'=>'#FF6384', 'Terlambat'=>'#4BC0C0', 'Tugas Luar'=>'#FF9F40', 'Tanpa Keterangan'=>'#e0e0e0'],
+            'poinKeyMap' => $poinKeyMap, 'adaData' => array_sum($rekapData) > 0
         ]);
     }
 
     public function exportCsvUser(Request $r): StreamedResponse
     {
-        $user = $r->user();
+        $loggedInUser = $r->user();
         $bulan = $r->input('bulan', now()->format('Y-m'));
         $tz = config('app.timezone', 'Asia/Makassar');
-        $filename = 'rekap_absensi_' . $user->username . '_' . $bulan . '.csv';
+
+        // Logic to determine which user data to export
+        $targetUser = $loggedInUser;
+        $requestedUserId = $r->input('user_id');
+
+        if ($requestedUserId && $requestedUserId != $loggedInUser->id) {
+            // Check if logged in user is Atasan
+            $kepalaBidangMap = [
+                'SEKRETARIAT' => 'noorekahasni',
+                'PPKLH'       => 'emmyariani',
+                'KPPI'        => 'hajiehariyanie',
+                'TALING'      => 'adhimaulana',
+                'PHL'         => 'hardiniwijayanti',
+            ];
+            $pltUsername = 'fathimatuzzahra';
+            
+            $isPlt = ($loggedInUser->username === $pltUsername);
+            $bidangLed = array_search($loggedInUser->username, $kepalaBidangMap);
+            
+            $requestedUser = User::find($requestedUserId);
+            if ($requestedUser && ($isPlt || ($bidangLed && $requestedUser->bidang === $bidangLed))) {
+                $targetUser = $requestedUser;
+            }
+        }
+
+        $filename = 'rekap_absensi_' . $targetUser->username . '_' . $bulan . '.csv';
 
         $carbonBulan = Carbon::parse($bulan . '-01', $tz);
         $maxHari = $carbonBulan->daysInMonth;
@@ -533,7 +536,7 @@ class AbsensiController extends Controller
             $maxHari = now($tz)->day;
         }
 
-        $absensiBulan = Absensi::where('user_id', $user->id)
+        $absensiBulan = Absensi::where('user_id', $targetUser->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
             ->get()
             ->keyBy('tanggal');

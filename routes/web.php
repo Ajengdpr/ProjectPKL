@@ -76,6 +76,7 @@ Route::middleware(['auth', IsAdmin::class])
 
         // Statistik Admin
         Route::get('statistik', [AdminStatistikController::class, 'index'])->name('statistik.index');
+        Route::get('statistik/export', [AdminStatistikController::class, 'export'])->name('statistik.export');
     });
 
 /* -------------------- ROOT REDIRECT -------------------- */
