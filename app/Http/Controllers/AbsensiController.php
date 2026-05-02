@@ -686,7 +686,8 @@ class AbsensiController extends Controller
             $subId = $request->input('sub_id');
             if ($subId && $subordinates->contains('id', $subId)) {
                 $targetSub = User::find($subId);
-                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->where('is_approved', true)->get();
+                // Ambil semua data absensi (termasuk pending dan rejected) untuk dipantau atasan
+                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
                 $sPoin = 0; 
                 $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
                 
@@ -696,9 +697,17 @@ class AbsensiController extends Controller
                     
                     $a = $subAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
                     if($a){
-                        $sRekap[$a->status]++;
-                        $k = $poinKeyMap[$a->status] ?? null;
-                        $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                        if ($a->is_rejected) {
+                            $sRekap['Tanpa Keterangan']++;
+                            $sPoin += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            // Pending atau Approved
+                            $sRekap[$a->status]++;
+                            if ($a->is_approved) {
+                                $k = $poinKeyMap[$a->status] ?? null;
+                                $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                            }
+                        }
                     } else {
                         $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
                         if (!$isTodayBeforeAlpha) {
@@ -707,7 +716,11 @@ class AbsensiController extends Controller
                         }
                     }
                 }
-                $subStats = (object)['poin' => $sPoin, 'rekap' => $sRekap];
+                $subStats = [
+                    'poin' => $sPoin, 
+                    'rekap' => $sRekap,
+                    'absensi' => $subAbs // Tambahkan data absensi untuk kalender
+                ];
             }
         }
 

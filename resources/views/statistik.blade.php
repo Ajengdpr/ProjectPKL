@@ -291,7 +291,7 @@ $adaData = array_sum($rekapData) > 0;
                     {{-- Pilih Anggota --}}
                     <div class="month-picker-box" style="min-width: 180px;">
                         <label>Pilih Anggota</label>
-                        <select name="sub_id" class="month-input-clean form-select shadow-none" style="background: none !important;" onchange="this.form.submit()">
+                        <select name="sub_id" id="subIdPicker" class="month-input-clean form-select shadow-none" style="background: none !important;" onchange="this.form.submit()">
                             <option value="">-- Pilih Nama --</option>
                             @foreach($subordinates as $sub)
                                 <option value="{{ $sub->id }}" @selected(request('sub_id') == $sub->id)>{{ $sub->nama }}</option>
@@ -369,13 +369,33 @@ $adaData = array_sum($rekapData) > 0;
                                         @if(!$curr->isWeekend())
                                             @php
                                                 $abs = $subStats['absensi']->firstWhere('tanggal', $curr->toDateString());
-                                                $st = $abs ? $abs->status : ($day <= $maxHari ? 'Tanpa Keterangan' : '');
+                                                $st = '';
+                                                $isPending = false;
+                                                $isRejected = false;
+                                                $origStatus = '';
+
+                                                if ($abs) {
+                                                    $isPending = !$abs->is_approved && !$abs->is_rejected;
+                                                    $isRejected = $abs->is_rejected;
+                                                    $origStatus = $abs->status;
+                                                    $st = $isRejected ? 'Tanpa Keterangan' : $abs->status;
+                                                } else {
+                                                    $isTodayBeforeAlpha = $curr->isToday() && (now('Asia/Makassar')->format('H:i:s') <= $jamConfig['batas_hadir']);
+                                                    if (!$isTodayBeforeAlpha && $day <= $maxHari) {
+                                                        $st = 'Tanpa Keterangan';
+                                                    }
+                                                }
                                                 $bC = $st ? ($statusColors[$st] ?? '#fff') : '#fff';
                                             @endphp
                                             <td class="p-0" style="height: 60px;">
-                                                <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $bC }}22; border-left: 2px solid {{ $bC }};">
+                                                <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $st ? ($isPending ? '#f1f5f9' : $bC.'22') : '#fff' }}; border-left: 2px solid {{ $isPending ? '#94a3b8' : $bC }};">
                                                     <div class="fw-bold" style="font-size: 0.75rem;">{{ $day }}</div>
-                                                    <div class="mt-auto" style="font-size: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $st }}</div>
+                                                    <div class="mt-auto" style="font-size: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                        {{ $st }} @if($isPending) <i class="bi bi-clock-history"></i> @endif
+                                                    </div>
+                                                    @if($isRejected)
+                                                        <div class="text-danger" style="font-size: 0.45rem;">({{ $origStatus }})</div>
+                                                    @endif
                                                 </div>
                                             </td>
                                         @endif
