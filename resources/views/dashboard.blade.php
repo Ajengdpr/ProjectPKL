@@ -599,10 +599,14 @@
         const wrapper = document.getElementById('alasanWrapper');
         const fileContainer = document.getElementById('fileUploadContainer');
         const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        
         field.value = s;
         preview.value = s;
         fileContainer.style.display = 'none';
         fileInput.removeAttribute('required');
+        fileLabel.innerHTML = 'Upload Lampiran (PDF/Gambar)';
+        
         if (s === 'Hadir') {
             alasan.removeAttribute('required');
             wrapper.style.display = 'none';
@@ -610,9 +614,12 @@
             wrapper.style.display = 'block';
             if (['Terlambat', 'Izin'].includes(s)) alasan.setAttribute('required', 'required');
             else alasan.removeAttribute('required');
-            if (['Sakit', 'Tugas Luar', 'Cuti'].includes(s)) {
+            
+            // WAJIB UPLOAD UNTUK: Izin, Sakit, Tugas Luar, Cuti
+            if (['Izin', 'Sakit', 'Tugas Luar', 'Cuti'].includes(s)) {
                 fileContainer.style.display = 'block';
-                if (s !== 'Sakit') fileInput.setAttribute('required', 'required');
+                fileInput.setAttribute('required', 'required');
+                fileLabel.innerHTML = 'Upload Lampiran (Wajib)';
             }
         }
     }

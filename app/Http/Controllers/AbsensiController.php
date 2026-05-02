@@ -301,11 +301,12 @@ class AbsensiController extends Controller
         $today = now($tz)->toDateString();
 
         // Validasi
+        $statusInput = $request->input('status');
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
             'berkas' => [
-                'nullable',
+                in_array($statusInput, ['Izin', 'Sakit', 'Cuti', 'Tugas Luar']) ? 'required' : 'nullable',
                 'file', // Bisa berupa gambar atau dokumen
                 'mimes:jpg,jpeg,png,pdf,doc,docx', // Tipe file yang diizinkan
                 'max:2048' // Ukuran maksimum 2MB
