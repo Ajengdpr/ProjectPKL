@@ -230,7 +230,17 @@
                                     <img src="{{ $foto }}" class="user-avatar" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                                     <div>
                                         <div class="user-name">{{ $u->nama }}</div>
-                                        <div class="user-meta text-primary fw-medium">{{ $u->role === 'admin' ? 'Administrator' : 'Pegawai' }}</div>
+                                        <div class="user-meta text-primary fw-medium">
+                                            @if($u->role === 'admin')
+                                                Administrator
+                                            @else
+                                                @switch($u->hak_akses)
+                                                    @case('kadin') Kepala Dinas @break
+                                                    @case('kabid') Kepala Bidang @break
+                                                    @default Pegawai Bidang
+                                                @endswitch
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -249,7 +259,8 @@
                                         data-nama="{{ $u->nama }}"
                                         data-username="{{ $u->username }}"
                                         data-bidang="{{ $u->bidang }}"
-                                        data-jabatan="{{ $u->jabatan }}">
+                                        data-jabatan="{{ $u->jabatan }}"
+                                        data-hak_akses="{{ $u->hak_akses }}">
                                         <i class="bi bi-pencil-fill"></i>
                                     </button>
                                     <button class="btn-action btn-delete" title="Hapus Pegawai"
@@ -313,6 +324,14 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label">Hak Akses</label>
+                        <select name="hak_akses" class="form-select" required>
+                            <option value="pegawai">Pegawai Bidang</option>
+                            <option value="kabid">Kepala Bidang</option>
+                            <option value="kadin">Kepala Dinas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
                         <label class="form-label">Jabatan</label>
                         <input name="jabatan" class="form-control" placeholder="Contoh: Ahli Muda">
                     </div>
@@ -353,6 +372,14 @@
                                 @foreach($listBidang as $b)
                                     <option value="{{ $b }}">{{ $b }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hak Akses</label>
+                            <select name="hak_akses" id="edit-hak_akses" class="form-select" required>
+                                <option value="pegawai">Pegawai Bidang</option>
+                                <option value="kabid">Kepala Bidang</option>
+                                <option value="kadin">Kepala Dinas</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -406,6 +433,7 @@ document.getElementById('modalEdit')?.addEventListener('show.bs.modal', function
     document.getElementById('edit-username').value = btn.getAttribute('data-username') || '';
     document.getElementById('edit-bidang').value = btn.getAttribute('data-bidang') || '';
     document.getElementById('edit-jabatan').value = btn.getAttribute('data-jabatan') || '';
+    document.getElementById('edit-hak_akses').value = btn.getAttribute('data-hak_akses') || 'pegawai';
     document.getElementById('formEdit').action = "{{ url('admin/users') }}/" + id;
     const resetBtn = document.getElementById('btnResetPwd');
     resetBtn.setAttribute('data-route', "{{ url('admin/users') }}/" + id + "/reset-password");

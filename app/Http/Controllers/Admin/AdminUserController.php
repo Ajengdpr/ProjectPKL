@@ -51,11 +51,12 @@ class AdminUserController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama'     => 'required|string|max:100',
-            'username' => 'required|string|max:100|unique:users,username',
-            'jabatan'  => 'nullable|string|max:100',
-            'bidang'   => 'nullable|string|max:100',
-            'password' => 'required|string|min:4',
+            'nama'      => 'required|string|max:100',
+            'username'  => 'required|string|max:100|unique:users,username',
+            'jabatan'   => 'nullable|string|max:100',
+            'bidang'    => 'nullable|string|max:100',
+            'hak_akses' => 'required|string|in:pegawai,kabid,kadin',
+            'password'  => 'required|string|min:4',
         ]);
 
         $data['password'] = Hash::make($data['password']);
@@ -67,10 +68,11 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'nama'     => 'required|string|max:100',
-            'username' => 'required|string|max:100|unique:users,username,' . $user->id,
-            'jabatan'  => 'nullable|string|max:100',
-            'bidang'   => 'nullable|string|max:100',
+            'nama'      => 'required|string|max:100',
+            'username'  => 'required|string|max:100|unique:users,username,' . $user->id,
+            'jabatan'   => 'nullable|string|max:100',
+            'bidang'    => 'nullable|string|max:100',
+            'hak_akses' => 'required|string|in:pegawai,kabid,kadin',
         ]);
 
         $user->update($data);

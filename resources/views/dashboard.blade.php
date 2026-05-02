@@ -333,7 +333,7 @@
                                     <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
                                 @endif
                             </div>
-                            @if(!($isAbsensiActive ?? true))
+                            @if(!($isAbsensiActive ?? true) && !\Carbon\Carbon::now('Asia/Makassar')->isWeekend())
                             <div class="ux-message">
                                 <i class="bi bi-info-circle-fill me-1"></i> {{ $disableReason ?? 'Sistem presensi dinonaktifkan.' }}
                             </div>
@@ -673,6 +673,19 @@
             tfoot.cells[7].textContent = totals.i;
             tfoot.cells[8].textContent = totals.a;
         }
+    });
+
+    // Menampilkan pesan dari session jika ada
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('ok'))
+            showCustomAlert("{{ session('ok') }}", 'success');
+        @endif
+        @if(session('err'))
+            showCustomAlert("{{ session('err') }}", 'danger');
+        @endif
+        @if($errors->any())
+            showCustomAlert("{{ $errors->first() }}", 'danger');
+        @endif
     });
 </script>
 @endpush

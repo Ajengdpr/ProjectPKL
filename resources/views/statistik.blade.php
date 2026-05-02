@@ -291,7 +291,7 @@ $adaData = array_sum($rekapData) > 0;
                     {{-- Pilih Anggota --}}
                     <div class="month-picker-box" style="min-width: 180px;">
                         <label>Pilih Anggota</label>
-                        <select name="sub_id" class="month-input-clean form-select shadow-none" style="background: none !important;" onchange="this.form.submit()">
+                        <select name="sub_id" id="subIdPicker" class="month-input-clean form-select shadow-none" style="background: none !important;" onchange="this.form.submit()">
                             <option value="">-- Pilih Nama --</option>
                             @foreach($subordinates as $sub)
                                 <option value="{{ $sub->id }}" @selected(request('sub_id') == $sub->id)>{{ $sub->nama }}</option>

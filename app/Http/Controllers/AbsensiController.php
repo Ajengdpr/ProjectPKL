@@ -19,16 +19,6 @@ class AbsensiController extends Controller
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
-    private const KEPALA_BIDANG_USERNAME = [
-        'SEKRETARIAT' => 'noorekahasni',
-        'PPKLH'       => 'emmyariani',
-        'KPPI'        => 'hajiehariyanie',
-        'TALING'      => 'adhimaulana',
-        'PHL'         => 'hardiniwijayanti',
-    ];
-
-    private const PLT_KEPALA_DINAS_USERNAME = 'fathimatuzzahra';
-
     protected $database;
 
     public function __construct(Database $database)
@@ -107,6 +97,13 @@ class AbsensiController extends Controller
         $disableReason   = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
         $isAbsensiActive = true;
         
+        /* 
+        // Cek jika hari ini adalah weekend (Sabtu/Minggu)
+        if (now('Asia/Makassar')->isWeekend()) {
+            $isAbsensiActive = false;
+        }
+        */
+
         // Cek jika hari ini ada dalam daftar tanggal libur
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
         if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
@@ -222,6 +219,15 @@ class AbsensiController extends Controller
     {
         $statusConfig = Setting::get('status', ['reason' => 'Hari Libur', 'hari_libur' => '']);
         $isAbsensiActive = true;
+        $reason = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
+
+        /* 
+        // Cek jika hari ini adalah weekend (Sabtu/Minggu)
+        if (now('Asia/Makassar')->isWeekend()) {
+            $isAbsensiActive = false;
+            $reason = 'Sistem presensi dinonaktifkan pada hari Sabtu dan Minggu.';
+        }
+        */
         
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
         if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
@@ -229,7 +235,6 @@ class AbsensiController extends Controller
         }
 
         if (!$isAbsensiActive) {
-            $reason = $statusConfig['reason'] ?? 'Hari Libur Nasional / Kantor Tutup';
             return redirect()->route('dashboard')->with('err', "Absensi Ditutup: {$reason}");
         }
 
@@ -284,10 +289,12 @@ class AbsensiController extends Controller
             return redirect()->route('dashboard')->with('err', "Absensi Ditutup: {$reason}");
         }
 
+        /* 
         // Cek jika hari ini adalah weekend (Sabtu/Minggu)
         if (now('Asia/Makassar')->isWeekend()) {
             return redirect()->route('dashboard')->with('err', 'Absensi tidak dapat dilakukan pada hari Sabtu atau Minggu.');
         }
+        */
 
 
         $user  = $request->user();
@@ -410,18 +417,15 @@ class AbsensiController extends Controller
            ============================ */
         if ($status !== 'Hadir') {
             $targets = collect();
-            if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
-                $kabidUsername = self::KEPALA_BIDANG_USERNAME[$user->bidang];
-                if ($user->username !== $kabidUsername && $user->username !== self::PLT_KEPALA_DINAS_USERNAME) {
-                    $kepala = User::where('username', $kabidUsername)->first();
-                    if ($kepala) $targets->push($kepala);
-                }
-            }
 
-            $isKabid = in_array($user->username, self::KEPALA_BIDANG_USERNAME);
-            if ($isKabid) {
-                $plt = User::where('username', self::PLT_KEPALA_DINAS_USERNAME)->first();
-                if ($plt) $targets->push($plt);
+            if ($user->hak_akses === 'pegawai') {
+                // Pegawai melapor ke Kabid di bidang yang sama
+                $targets = User::where('bidang', $user->bidang)
+                    ->where('hak_akses', 'kabid')
+                    ->get();
+            } elseif ($user->hak_akses === 'kabid') {
+                // Kabid melapor ke Kepala Dinas
+                $targets = User::where('hak_akses', 'kadin')->get();
             }
 
             $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz, $berkasPath) {
@@ -556,19 +560,11 @@ class AbsensiController extends Controller
         $bulan = $request->input('bulan', now()->format('Y-m'));
         $tz    = config('app.timezone', 'Asia/Makassar');
 
-        // --- KONSTANTA AKSES (Sesuai sistem Anda) ---
-        $kepalaBidangMap = [
-            'SEKRETARIAT' => 'noorekahasni',
-            'PPKLH'       => 'emmyariani',
-            'KPPI'        => 'hajiehariyanie',
-            'TALING'      => 'adhimaulana',
-            'PHL'         => 'hardiniwijayanti',
-        ];
-        $pltUsername = 'fathimatuzzahra';
-
-        $isPlt = ($user->username === $pltUsername);
-        $bidangLed = array_search($user->username, $kepalaBidangMap);
-        $isAtasan = ($isPlt || $bidangLed);
+        // --- LOGIKA AKSES BERDASARKAN HAK AKSES ---
+        $isPlt    = ($user->hak_akses === 'kadin');
+        $isKabid  = ($user->hak_akses === 'kabid');
+        $isAtasan = ($isPlt || $isKabid);
+        $bidangLed = $isKabid ? $user->bidang : null;
         // --------------------------------------------
 
         // Ambil pengaturan poin & hari libur
@@ -673,7 +669,15 @@ class AbsensiController extends Controller
 
         if ($isAtasan) {
             $qSub = User::where('role', '!=', 'admin')->where('id', '!=', $user->id)->orderBy('nama');
-            if (!$isPlt) $qSub->where('bidang', $bidangLed);
+            
+            if ($isKabid) {
+                // Kepala Bidang hanya melihat anggota di bidangnya
+                $qSub->where('bidang', $bidangLed);
+            } elseif ($isPlt) {
+                // Kepala Dinas hanya melihat para Kepala Bidang
+                $qSub->where('hak_akses', 'kabid');
+            }
+
             $subordinates = $qSub->get();
 
             $subId = $request->input('sub_id');
@@ -700,7 +704,11 @@ class AbsensiController extends Controller
                         }
                     }
                 }
-                $subStats = (object)['poin' => $sPoin, 'rekap' => $sRekap];
+                $subStats = [
+                    'poin' => $sPoin,
+                    'rekap' => $sRekap,
+                    'absensi' => $subAbs
+                ];
             }
         }
 
@@ -731,20 +739,12 @@ class AbsensiController extends Controller
 
         if ($requestedUserId && $requestedUserId != $loggedInUser->id) {
             // Check if logged in user is Atasan
-            $kepalaBidangMap = [
-                'SEKRETARIAT' => 'noorekahasni',
-                'PPKLH'       => 'emmyariani',
-                'KPPI'        => 'hajiehariyanie',
-                'TALING'      => 'adhimaulana',
-                'PHL'         => 'hardiniwijayanti',
-            ];
-            $pltUsername = 'fathimatuzzahra';
-            
-            $isPlt = ($loggedInUser->username === $pltUsername);
-            $bidangLed = array_search($loggedInUser->username, $kepalaBidangMap);
+            $isPlt    = ($loggedInUser->hak_akses === 'kadin');
+            $isKabid  = ($loggedInUser->hak_akses === 'kabid');
+            $bidangLed = $isKabid ? $loggedInUser->bidang : null;
             
             $requestedUser = User::find($requestedUserId);
-            if ($requestedUser && ($isPlt || ($bidangLed && $requestedUser->bidang === $bidangLed))) {
+            if ($requestedUser && ($isPlt || ($isKabid && $requestedUser->bidang === $bidangLed))) {
                 $targetUser = $requestedUser;
             }
         }

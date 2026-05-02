@@ -114,16 +114,8 @@
     $u = auth()->user();
     $isAdmin = ($u->role ?? 'user') === 'admin';
     
-    // Daftar username atasan yang berhak menerima/melihat notifikasi
-    $atasanUsernames = [
-        'noorekahasni',   // Sekretariat
-        'emmyariani',     // PPKLH
-        'hajiehariyanie', // KPPI
-        'adhimaulana',    // TALING
-        'hardiniwijayanti', // PHL
-        'fathimatuzzahra'  // PLT Kepala Dinas
-    ];
-    $isAtasan = in_array($u->username, $atasanUsernames);
+    // Seorang user dianggap atasan jika hak_aksesnya adalah kabid atau kadin
+    $isAtasan = in_array($u->hak_akses, ['kabid', 'kadin']);
 
     $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
     $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
