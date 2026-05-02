@@ -113,6 +113,12 @@ class AbsensiController extends Controller
             $isAbsensiActive = false;
         }
 
+        // TAMBAHAN: Cek jika hari ini adalah weekend (Sabtu/Minggu)
+        if (now('Asia/Makassar')->isWeekend()) {
+            $isAbsensiActive = false;
+            $disableReason = 'Absensi tidak tersedia pada hari Sabtu dan Minggu.';
+        }
+
         $currentTime = now('Asia/Makassar')->format('H:i:s');
         $isBeforeBuka = $currentTime < $jamConfig['buka'];
         $isPastBatasHadir = $currentTime > $jamConfig['batas_hadir'];
