@@ -454,7 +454,7 @@
                         <th class="text-center">TL</th>
                         <th class="text-center">Terlambat</th>
                         <th class="text-center">Izin</th>
-                        <th class="text-center pe-4">Alpha</th>
+                        <th class="text-center pe-4">TK</th>
                     </tr>
                 </thead>
                 <tbody>
