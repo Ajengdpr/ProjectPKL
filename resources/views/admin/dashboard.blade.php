@@ -273,7 +273,7 @@
                 <tr>
                   <td>
                     <div class="d-flex align-items-center gap-2">
-                      @php $foto = $l->user->foto ? asset('storage/'.$l->user->foto) : asset('img/default-avatar.jpg'); @endphp
+                      @php $foto = $l->user->foto ? asset('storage/'.$l->user->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                       <img src="{{ $foto }}" class="avatar-sm rounded-circle" alt="avatar">
                       <span class="fw-medium">{{ $l->user->nama ?? '-' }}</span>
                     </div>
@@ -338,7 +338,7 @@
                     <div class="horizontal-scroll-content">
                         @foreach($users as $u)
                         <div class="user-card-mini">
-                            @php $foto = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg'); @endphp
+                            @php $foto = $u->foto ? asset('storage/'.$u->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                             <img src="{{ $foto }}" class="rounded-circle" alt="avatar">
                             <div class="name" title="{{ $u->nama }}">{{ $u->nama }}</div>
                         </div>
@@ -409,7 +409,7 @@
 
                   {{-- Profil Pegawai --}}
                   <div class="d-flex align-items-center gap-2">
-                    @php $foto = $rp->foto ? asset('storage/'.$rp->foto) : asset('img/default-avatar.jpg'); @endphp
+                    @php $foto = $rp->foto ? asset('storage/'.$rp->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                     <img src="{{ $foto }}" class="rounded-circle shadow-sm border border-2 border-white" style="width: 38px; height: 38px; object-fit: cover;">
                     <div>
                       <div class="fw-bold text-dark small mb-0">{{ $rp->nama }}</div>

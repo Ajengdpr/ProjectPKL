@@ -24,7 +24,7 @@ class UserController extends Controller
     public function updatePhoto(Request $request)
     {
         $request->validate([
-            'foto' => 'required|image|mimes:jpg,jpeg,png|max:2048'
+            'foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120'
         ]);
 
         $user = auth()->user();

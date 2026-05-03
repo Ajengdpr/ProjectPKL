@@ -316,7 +316,7 @@
         <div class="premium-card welcome-card">
             <div class="d-flex justify-content-between align-items-center gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    @php $avatar = $user->foto ? asset('storage/'.$user->foto) : asset('img/default-avatar.jpg'); @endphp
+                    @php $avatar = $user->foto ? asset('storage/'.$user->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                     <img src="{{ $avatar }}" class="user-avatar-modern" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                     <div class="greeting-text">
                         <h5 class="text-muted mb-0 small">Selamat {{ \Carbon\Carbon::now()->hour < 12 ? 'Pagi' : (\Carbon\Carbon::now()->hour < 15 ? 'Siang' : (\Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }}</h5>

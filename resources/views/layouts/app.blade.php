@@ -125,7 +125,7 @@
     ];
     $isAtasan = in_array($u->username, $atasanUsernames);
 
-    $avatar = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
+    $avatar = $u->foto ? asset('storage/'.$u->foto).'?v='.time() : asset('img/default-avatar.jpg');
     $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
     $profileRouteParams = $isAdmin ? ['tab' => 'account'] : [];
     $unread = (method_exists($u, 'unreadNotifications') && \Illuminate\Support\Facades\Schema::hasTable('notifications'))

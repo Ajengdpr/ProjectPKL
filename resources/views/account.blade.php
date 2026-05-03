@@ -4,7 +4,7 @@
 @section('content')
 @php
   $u   = $user ?? auth()->user();
-  $src = $u->foto ? asset('storage/'.$u->foto) : asset('img/default-avatar.jpg');
+  $src = $u->foto ? asset('storage/'.$u->foto).'?v='.time() : asset('img/default-avatar.jpg');
 @endphp
 
 <div class="container-fluid py-4 px-md-5">
@@ -12,6 +12,13 @@
     @if(session('ok'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('ok') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ $errors->first() }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -28,7 +35,7 @@
                         
                         <form id="formChangePhoto" method="POST" action="{{ route('account.photo') }}" enctype="multipart/form-data">
                             @csrf
-                            <input type="file" id="inputPhoto" name="foto" class="d-none" accept="image/*">
+                            <input type="file" id="inputPhoto" name="foto" class="d-none" accept=".jpg,.jpeg,.png,.webp">
                             <button type="button" class="btn btn-light btn-sm rounded-circle position-absolute shadow" 
                                     style="bottom: 0; right: 0; width: 32px; height: 32px; padding: 0;"
                                     id="btnChange" title="Ganti Foto">

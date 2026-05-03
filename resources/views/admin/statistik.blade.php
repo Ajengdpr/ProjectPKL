@@ -150,7 +150,7 @@ $poinKeyMap = [
         </div>
         @if($selectedUser)
             <div class="user-pill d-none d-md-flex shadow-sm">
-                @php $foto = $selectedUser->foto ? asset('storage/'.$selectedUser->foto) : asset('img/default-avatar.jpg'); @endphp
+                @php $foto = $selectedUser->foto ? asset('storage/'.$selectedUser->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                 <img src="{{ $foto }}" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                 <span>{{ $selectedUser->nama }}</span>
             </div>

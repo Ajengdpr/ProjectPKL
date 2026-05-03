@@ -272,7 +272,7 @@
                             </td>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-3">
-                                    @php $foto = $a->user && $a->user->foto ? asset('storage/'.$a->user->foto) : asset('img/default-avatar.jpg'); @endphp
+                                    @php $foto = $a->user && $a->user->foto ? asset('storage/'.$a->user->foto).'?v='.time() : asset('img/default-avatar.jpg'); @endphp
                                     <img src="{{ $foto }}" class="user-avatar" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                                     <div>
                                         <div class="user-name">{{ $a->user->nama ?? '-' }}</div>
