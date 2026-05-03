@@ -161,7 +161,7 @@ $poinKeyMap = [
     <div class="toolbar-card">
         <form method="get">
             <div class="row g-3 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-8">
                     <label class="form-label">Pilih Pegawai</label>
                     <select name="user_id" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Pegawai --</option>
@@ -173,10 +173,6 @@ $poinKeyMap = [
                 <div class="col-md-4">
                     <label class="form-label">Pilih Bulan</label>
                     <input type="month" name="bulan" value="{{ $bulan }}" class="form-control" onchange="this.form.submit()">
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary rounded-3 w-100 fw-bold">Tampilkan</button>
-                    <a href="{{ route('admin.statistik.index') }}" class="btn btn-outline-secondary rounded-3 w-100 fw-bold">Reset</a>
                 </div>
             </div>
         </form>
