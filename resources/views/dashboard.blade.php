@@ -330,12 +330,12 @@
                                     <i class="bi bi-hourglass-split"></i> <span>Menunggu Persetujuan</span>
                                 @else
                                     <i class="bi {{ $sudahAbsenToday ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
-                                    <span>{{ $sudahAbsenToday ? 'Presensi Selesai' : 'Belum Presensi' }}</span>
+                                    <span>{{ $sudahAbsenToday ? 'Absensi Selesai' : 'Belum Absensi' }}</span>
                                 @endif
                             </div>
                             @if(!($isAbsensiActive ?? true))
                             <div class="ux-message">
-                                <i class="bi bi-info-circle-fill me-1"></i> {{ $disableReason ?? 'Sistem presensi dinonaktifkan.' }}
+                                <i class="bi bi-info-circle-fill me-1"></i> {{ $disableReason ?? 'Sistem absensi dinonaktifkan.' }}
                             </div>
                             @endif
                         </div>
@@ -399,7 +399,7 @@
     </div>
 
     {{-- 2. Attendance Menu Section --}}
-    <h5 class="section-title">Menu Utama Presensi</h5>
+    <h5 class="section-title">Menu Utama Absensi</h5>
     <div class="menu-grid">
         @php
             $actions = [
@@ -422,7 +422,7 @@
                         @elseif($isBeforeBatasHadir ?? false)
                             onclick="showCustomAlert('Belum memasuki waktu terlambat', 'warning')"
                         @else
-                            onclick="showCustomAlert('Waktu presensi sudah berakhir', 'warning')"
+                            onclick="showCustomAlert('Waktu absensi sudah berakhir', 'warning')"
                         @endif
                     @else
                         @if($isBeforeBuka ?? false)
@@ -498,7 +498,7 @@
             <form method="POST" action="{{ route('absen.store') }}" onsubmit="return lockSubmit(this)" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header border-0 p-4 pb-0">
-                    <h5 class="fw-bold mb-0">Input Presensi</h5>
+                    <h5 class="fw-bold mb-0">Input Absensi</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">

@@ -131,6 +131,7 @@
       </div>
       <div class="col-12 col-md-auto">
         <form method="get" class="d-flex align-items-center gap-2 flex-nowrap">
+          <input type="hidden" name="month" value="{{ $month }}">
           <div class="input-group input-group-sm shadow-sm">
             <span class="input-group-text bg-white border-end-0"><i class="bi bi-filter"></i></span>
             <input type="date" name="date" value="{{ $date }}" class="form-control border-start-0" style="width: 140px;">
@@ -379,14 +380,26 @@
     {{-- Ranking Poin Pegawai (Desain Leaderboard) --}}
     <div class="col-12 col-lg-5">
       <div class="app-card p-3 h-100 d-flex flex-column">
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
-          <div>
+        <div class="d-flex flex-column gap-3 mb-3">
+          <div class="d-flex justify-content-between align-items-center">
             <h6 class="fw-bold mb-0">Ranking Poin Pegawai</h6>
-            <small class="text-muted">Top performa berdasarkan poin bulan ini</small>
+            <a href="{{ route('admin.export.points', ['month' => $month]) }}" class="btn btn-sm btn-success shadow-sm text-nowrap">
+              <i class="bi bi-download me-1"></i> Export
+            </a>
           </div>
-          <a href="{{ route('admin.export.points') }}" class="btn btn-sm btn-success shadow-sm text-nowrap">
-            <i class="bi bi-download me-1"></i> Export CSV
-          </a>
+          
+          <form method="get" action="{{ route('admin.dashboard') }}" class="row g-2 align-items-center">
+            <input type="hidden" name="date" value="{{ $date }}">
+            <div class="col">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar-month"></i></span>
+                <input type="month" name="month" value="{{ $month }}" class="form-control border-start-0" onchange="this.form.submit()">
+              </div>
+            </div>
+            <div class="col-auto">
+                <small class="text-muted fw-semibold">{{ \Carbon\Carbon::parse($month)->locale('id')->isoFormat('MMMM YYYY') }}</small>
+            </div>
+          </form>
         </div>
         
         <div class="flex-grow-1 overflow-auto pe-2" style="max-height: 280px;">

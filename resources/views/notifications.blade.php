@@ -165,7 +165,7 @@
     <div class="header-section">
         <div class="header-content">
             <h3>Notifikasi</h3>
-            <p>Kelola semua pemberitahuan dan aktivitas sistem presensi Anda.</p>
+            <p>Kelola semua pemberitahuan dan aktivitas sistem absensi Anda.</p>
         </div>
     </div>
 

@@ -260,7 +260,7 @@ class AbsensiController extends Controller
         }
 
         if ($currentTime > $jamConfig['batas_akhir']) {
-            return redirect()->route('dashboard')->with('err', 'Waktu presensi sudah berakhir.');
+            return redirect()->route('dashboard')->with('err', 'Waktu absensi sudah berakhir.');
         }
 
         if (in_array($preset, ['Hadir', 'Izin', 'Sakit', 'Tugas Luar', 'Cuti']) && $currentTime > $jamConfig['batas_hadir']) {
@@ -344,7 +344,7 @@ class AbsensiController extends Controller
 
         // 2. Cek Batas Akhir
         if ($currentTime > $jamConfig['batas_akhir']) {
-            return redirect()->route('dashboard')->with('err', "Waktu presensi sudah berakhir.");
+            return redirect()->route('dashboard')->with('err', "Waktu absensi sudah berakhir.");
         }
 
         // 3. Cek Batas Hadir Reguler (Hadir, Izin, Sakit, TL, Cuti)

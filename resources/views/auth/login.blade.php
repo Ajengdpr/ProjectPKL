@@ -302,7 +302,7 @@
         <div class="row g-4 justify-content-center">
             @php
                 $features = [
-                    ['icon' => 'bi-eye', 'title' => 'Transparan', 'color' => 'warning', 'desc' => 'Riwayat presensi dapat dipantau langsung kapan saja.'],
+                    ['icon' => 'bi-eye', 'title' => 'Transparan', 'color' => 'warning', 'desc' => 'Riwayat absensi dapat dipantau langsung kapan saja.'],
                     ['icon' => 'bi-shield-check', 'title' => 'Akuntabel', 'color' => 'primary', 'desc' => 'Data kehadiran tercatat secara otomatis dan transparan.'],
                     ['icon' => 'bi-lightning-charge', 'title' => 'Efisien', 'color' => 'success', 'desc' => 'Rekapitulasi data kehadiran bulanan jadi lebih cepat.'],
                     ['icon' => 'bi-diagram-3', 'title' => 'Terpadu', 'color' => 'info', 'desc' => 'Sistem terhubung antara data pegawai dan lokasi.'],

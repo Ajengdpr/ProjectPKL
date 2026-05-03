@@ -135,7 +135,7 @@ $adaData = array_sum($rekapData) > 0;
     <div class="header-section">
         <div class="header-content">
             <h3>Statistik Kehadiran</h3>
-            <p>Pantau analisis poin dan riwayat presensi bulanan Anda.</p>
+            <p>Pantau analisis poin dan riwayat absensi bulanan Anda.</p>
         </div>
         <div class="d-flex align-items-center gap-3">
              {{-- Pilih Bulan --}}

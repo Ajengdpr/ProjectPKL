@@ -204,7 +204,7 @@
     <div class="header-section">
         <div class="header-content">
             <h3>Manajemen Absensi</h3>
-            <p>Monitor dan kelola riwayat presensi seluruh pegawai secara realtime.</p>
+            <p>Monitor dan kelola riwayat absensi seluruh pegawai secara realtime.</p>
         </div>
         <button type="button" class="btn btn-white bg-white text-primary rounded-pill px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalExportCSV">
             <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> Export CSV
@@ -361,7 +361,7 @@
     </div>
 
     {{-- Manual Input Section --}}
-    <div class="section-title">Input Presensi Manual</div>
+    <div class="section-title">Input Absensi Manual</div>
     <div class="toolbar-card">
         <form method="post" action="{{ route('admin.absensi.store') }}" enctype="multipart/form-data">
             @csrf
@@ -384,11 +384,11 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Tanggal Presensi</label>
+                    <label class="form-label">Tanggal Absensi</label>
                     <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Jam Presensi (WITA)</label>
+                    <label class="form-label">Jam Absensi (WITA)</label>
                     <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
                 </div>
                 <div class="col-md-6">
@@ -401,7 +401,7 @@
                 </div>
                 <div class="col-12 mt-2 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm">
-                        <i class="bi bi-save2-fill me-2"></i> Simpan Presensi
+                        <i class="bi bi-save2-fill me-2"></i> Simpan Absensi
                     </button>
                 </div>
             </div>
@@ -416,7 +416,7 @@
             <form method="post" id="formEditAbsensi" enctype="multipart/form-data">
                 @csrf @method('put')
                 <div class="modal-header border-0">
-                    <h5 class="fw-bold mb-0">Edit Log Presensi</h5>
+                    <h5 class="fw-bold mb-0">Edit Log Absensi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">

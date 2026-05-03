@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $date = $request->query('date', now()->toDateString());
+        $month = $request->query('month', now()->format('Y-m'));
 
         // 1. Ambil data dasar
         $totalPegawai = User::count();
@@ -120,27 +121,28 @@ public function index(Request $request)
         usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
 
         // 6. Ranking Poin Pegawai (Sinkron Bulanan dengan Dashboard User)
-        $rankingPoin = $this->getMonthlyRankingData();
+        $rankingPoin = $this->getMonthlyRankingData($month);
 
         // Data lengkap dikirim ke view
         return view('admin.dashboard', compact(
-            'date', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
+            'date', 'month', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
             'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang', 'rankingPoin'
         ));
     }
 
-    public function exportPoints()
+    public function exportPoints(Request $request)
     {
-        $users = $this->getMonthlyRankingData();
+        $month = $request->query('month', now()->format('Y-m'));
+        $users = $this->getMonthlyRankingData($month);
 
-        $filename = "Ranking_Poin_Pegawai_" . date('Y-m-d') . ".csv";
+        $filename = "Ranking_Poin_Pegawai_" . $month . ".csv";
         $handle = fopen('php://output', 'w');
 
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
 
         // Header CSV
-        fputcsv($handle, ['Peringkat', 'Nama Pegawai', 'Username', 'Bidang', 'Jabatan', 'Total Poin (Bulan Ini)']);
+        fputcsv($handle, ['Peringkat', 'Nama Pegawai', 'Username', 'Bidang', 'Jabatan', "Total Poin ({$month})"]);
 
         foreach ($users as $index => $u) {
             fputcsv($handle, [
@@ -161,12 +163,15 @@ public function index(Request $request)
      * Helper untuk menghitung poin bulanan seluruh pegawai secara live.
      * Logika ini disamakan persis dengan dashboard user.
      */
-    private function getMonthlyRankingData()
+    private function getMonthlyRankingData($month = null)
     {
         $tz = config('absensi.timezone', 'Asia/Makassar');
         $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
         $cutoffStr = $jamConfig['batas_hadir'];
-        $bulan = now($tz)->format('Y-m');
+        
+        if (!$month) {
+            $month = now($tz)->format('Y-m');
+        }
         
         $poinConfig = Setting::get('poin', [
             'hadir'      => 1,
@@ -184,8 +189,10 @@ public function index(Request $request)
         $hariLiburRaw = $statusConfig['hari_libur'] ?? '';
         $hariLibur = array_filter(explode("\n", str_replace("\r", "", $hariLiburRaw)));
 
-        $carbonBulan = now($tz)->startOfMonth();
-        $maxHari = $carbonBulan->isSameMonth(now($tz)) ? now($tz)->day : $carbonBulan->daysInMonth;
+        $carbonBulan = Carbon::parse($month . '-01', $tz);
+        $isCurrentMonth = $carbonBulan->isSameMonth(now($tz));
+        
+        $maxHari = $isCurrentMonth ? now($tz)->day : $carbonBulan->daysInMonth;
 
         $workdaysSoFar = [];
         for ($i = 1; $i <= $maxHari; $i++) {
@@ -205,7 +212,7 @@ public function index(Request $request)
         }
 
         $allUsers = User::where('role', '!=', 'admin')->get(['id', 'nama', 'foto', 'bidang', 'jabatan', 'username']);
-        $allAbsensi = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+        $allAbsensi = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$month])
             ->where('is_approved', true) // Hanya yang disetujui
             ->get()
             ->groupBy('user_id');

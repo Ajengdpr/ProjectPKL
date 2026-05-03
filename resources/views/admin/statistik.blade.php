@@ -146,7 +146,7 @@ $poinKeyMap = [
     <div class="header-section">
         <div class="header-content">
             <h3>Statistik Pegawai</h3>
-            <p>Analisis poin dan riwayat presensi bulanan pegawai secara realtime.</p>
+            <p>Analisis poin dan riwayat absensi bulanan pegawai secara realtime.</p>
         </div>
         @if($selectedUser)
             <div class="user-pill d-none d-md-flex shadow-sm">
