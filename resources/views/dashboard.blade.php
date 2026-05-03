@@ -544,12 +544,21 @@
 
     function showCustomAlert(message, type = 'danger') {
         const container = document.getElementById('custom-alert-container');
-        if (!container) return;
+        if (!container) {
+            alert(message);
+            return;
+        }
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-dark alert-dismissible fade show border-0 shadow-lg rounded-4 p-3 mb-2`;
         alertDiv.innerHTML = `<strong><i class="bi bi-info-circle me-2"></i></strong> ${message}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>`;
         container.appendChild(alertDiv);
-        setTimeout(() => bootstrap.Alert.getOrCreateInstance(alertDiv)?.close(), 4000);
+        setTimeout(() => {
+            try {
+                bootstrap.Alert.getOrCreateInstance(alertDiv)?.close();
+            } catch (e) {
+                alertDiv.remove();
+            }
+        }, 4000);
     }
 
     const officeLat = {{ $office['lat'] }};
@@ -635,9 +644,31 @@
                 showCustomAlert('Anda harus berada di dalam jangkauan area kantor.');
             }
         });
+
+        // Validasi Ukuran Berkas (Realtime saat pilih file)
+        const fileInput = document.getElementById('fileInput');
+        fileInput?.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const fileSize = this.files[0].size / 1024 / 1024; // MB
+                if (fileSize > 2) {
+                    showCustomAlert('Ukuran berkas terlalu besar! Maksimal adalah 2MB.');
+                    this.value = ''; // Reset input
+                }
+            }
+        });
     });
 
     function lockSubmit(form){
+        // Validasi Akhir sebelum submit
+        const fInput = document.getElementById('fileInput');
+        if (fInput && fInput.files && fInput.files[0]) {
+            if (fInput.files[0].size / 1024 / 1024 > 2) {
+                showCustomAlert('Ukuran berkas terlalu besar! Maksimal adalah 2MB.');
+                fInput.value = '';
+                return false;
+            }
+        }
+
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.querySelector('.btn-text').classList.add('d-none');

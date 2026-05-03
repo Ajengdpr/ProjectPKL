@@ -200,6 +200,7 @@
 
 @section('content')
 <div class="container-fluid px-md-4 absensi-page-container">
+    <div id="custom-alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 2000; max-width: 350px;"></div>
     {{-- Header --}}
     <div class="header-section">
         <div class="header-content">
@@ -497,7 +498,34 @@ modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
     form.action = "{{ url('admin/absensi') }}/" + id;
 });
 
+function showCustomAlert(message, type = 'danger') {
+    const container = document.getElementById('custom-alert-container');
+    if (!container) return;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-dark alert-dismissible fade show border-0 shadow-lg rounded-4 p-3 mb-2`;
+    alertDiv.innerHTML = `<strong><i class="bi bi-info-circle me-2"></i></strong> ${message}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>`;
+    container.appendChild(alertDiv);
+    setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+        bsAlert.close();
+    }, 4000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Validasi Ukuran Berkas untuk semua input file
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const fileSize = this.files[0].size / 1024 / 1024; // MB
+                if (fileSize > 2) {
+                    showCustomAlert('Ukuran berkas terlalu besar! Maksimal adalah 2MB.', 'danger');
+                    this.value = ''; // Reset input
+                }
+            }
+        });
+    });
+
     const doExportBtn = document.getElementById('btn-do-export');
     const monthInput = document.getElementById('export-month-input');
     const exportModalElement = document.getElementById('modalExportCSV');
