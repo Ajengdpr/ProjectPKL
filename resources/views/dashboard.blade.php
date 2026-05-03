@@ -475,15 +475,15 @@
                 </tbody>
                 <tfoot class="bg-light-subtle">
                     <tr class="fw-bold">
-                        <td class="ps-4 text-dark text-uppercase">TOTAL KESELURUHAN</td>
-                        <td class="text-center text-dark">{{ $daftarBidang->sum('jumlah_pegawai') }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
-                        <td class="text-center">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
-                        <td class="text-center pe-4 text-danger">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->alpha) }}</td>
+                        <td class="ps-4 text-dark text-uppercase fw-bold">TOTAL KESELURUHAN</td>
+                        <td class="text-center text-dark fw-bold">{{ $daftarBidang->sum('jumlah_pegawai') }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->hadir) }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->cuti) }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->sakit) }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->tugas_luar) }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->terlambat) }}</td>
+                        <td class="text-center fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->izin) }}</td>
+                        <td class="text-center pe-4 text-danger fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->alpha) }}</td>
                     </tr>
                 </tfoot>
             </table>
