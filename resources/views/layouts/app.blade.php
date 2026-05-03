@@ -150,7 +150,7 @@
       <a href="{{ route($profileRouteName, $profileRouteParams) }}" class="d-flex align-items-center gap-2 text-decoration-none bg-white bg-opacity-10 py-1 ps-3 pe-1 rounded-pill border border-white border-opacity-10 transition-all hover-bg-opacity-20">
         <div class="text-end d-none d-md-block">
           <div class="fw-bold text-white small" style="line-height: 1.2;">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
-          <div class="text-white-50" style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ ($u->role ?? 'user') === 'admin' ? 'Admin' : 'Pegawai' }}</div>
+          <div class="text-white-50" style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ \Illuminate\Support\Str::title(str_replace('_', ' ', $u->level ?: ($u->role === 'admin' ? 'Admin' : 'Pegawai'))) }}</div>
         </div>
         <img src="{{ $avatar }}" alt="avatar" class="rounded-circle border border-white border-opacity-20" style="width:32px; height:32px; object-fit:cover;">
       </a>

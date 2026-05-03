@@ -13,9 +13,16 @@ class AdminAbsensiController extends Controller
 {
     public function index(Request $r)
     {
-        $q = trim($r->get('q'));
+        $tz = 'Asia/Makassar';
+        $today = Carbon::now($tz)->toDateString();
+        
+        $from = $r->get('from', $today);
+        $to   = $r->get('to', $today);
+        $q    = trim($r->get('q'));
 
         $query = Absensi::with('user')
+            ->whereDate('tanggal', '>=', $from)
+            ->whereDate('tanggal', '<=', $to)
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
 
@@ -27,8 +34,7 @@ class AdminAbsensiController extends Controller
                         });
             });
         }
-        if ($r->filled('from'))    $query->whereDate('tanggal', '>=', $r->from);
-        if ($r->filled('to'))      $query->whereDate('tanggal', '<=', $r->to);
+        
         if ($r->filled('user_id')) $query->where('user_id', $r->user_id);
         if ($r->filled('bidang'))  $query->whereHas('user', fn($u) => $u->where('bidang', $r->bidang));
         if ($r->filled('status'))  $query->where('status', $r->status);
@@ -38,7 +44,7 @@ class AdminAbsensiController extends Controller
         $users   = User::orderBy('nama')->get();
         $bidangs = User::select('bidang')->whereNotNull('bidang')->distinct()->pluck('bidang');
 
-        return view('admin.absensi.index', compact('absensi', 'users', 'bidangs'));
+        return view('admin.absensi.index', compact('absensi', 'users', 'bidangs', 'from', 'to'));
     }
 
     public function store(Request $r)

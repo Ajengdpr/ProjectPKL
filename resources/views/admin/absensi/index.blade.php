@@ -235,11 +235,11 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="from" value="{{ request('from') }}" class="form-control">
+                    <input type="date" name="from" value="{{ $from }}" class="form-control">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="to" value="{{ request('to') }}" class="form-control">
+                    <input type="date" name="to" value="{{ $to }}" class="form-control">
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3">Cari</button>
