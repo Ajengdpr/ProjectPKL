@@ -211,7 +211,9 @@ class AdminDashboardController extends Controller
             }
         }
 
-        $allUsers = User::where('role', '!=', 'admin')->get(['id', 'nama', 'foto', 'bidang', 'jabatan', 'username']);
+        $allUsers = User::where('role', '!=', 'admin')
+            ->where('is_active', true) // Hanya hitung pegawai yang aktif
+            ->get(['id', 'nama', 'foto', 'bidang', 'jabatan', 'username']);
         $allAbsensi = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$month])
             ->where('is_approved', true) // Hanya yang disetujui
             ->get()

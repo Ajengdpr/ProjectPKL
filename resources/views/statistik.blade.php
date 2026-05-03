@@ -276,7 +276,7 @@ $adaData = array_sum($rekapData) > 0;
     </div>
 
     {{-- ================================================================= --}}
-    {{-- PANTAU ANGGOTA BIDANG (HANYA UNTUK KEPALA BIDANG/PLT) --}}
+    {{-- PANTAU ANGGOTA (HANYA UNTUK KEPALA BIDANG / KEPALA DINAS) --}}
     {{-- ================================================================= --}}
     @if($isAtasan)
     <div id="atasan-section" class="mt-5 pt-4 border-top">
@@ -284,17 +284,17 @@ $adaData = array_sum($rekapData) > 0;
         <form method="get" action="#atasan-section">
             <div class="header-section" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
                 <div class="header-content">
-                    <h3>Pantau Anggota Bidang</h3>
-                    <p>Analisis kedisiplinan pegawai di bawah naungan Anda secara realtime.</p>
+                    <h3>{{ auth()->user()->level === 'kadin' ? 'Pantau Seluruh Pegawai' : 'Pantau Anggota Bidang' }}</h3>
+                    <p>Analisis kedisiplinan pegawai secara realtime berdasarkan hirarki jabatan Anda.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     {{-- Pilih Anggota --}}
                     <div class="month-picker-box" style="min-width: 180px;">
-                        <label>Pilih Anggota</label>
+                        <label>Pilih Pegawai</label>
                         <select name="sub_id" id="subIdPicker" class="month-input-clean form-select shadow-none" style="background: none !important;" onchange="this.form.submit()">
                             <option value="">-- Pilih Nama --</option>
                             @foreach($subordinates as $sub)
-                                <option value="{{ $sub->id }}" @selected(request('sub_id') == $sub->id)>{{ $sub->nama }}</option>
+                                <option value="{{ $sub->id }}" @selected(request('sub_id') == $sub->id)>{{ $sub->nama }} ({{ strtoupper($sub->bidang ?? 'Umum') }})</option>
                             @endforeach
                         </select>
                     </div>

@@ -55,6 +55,7 @@ class AdminUserController extends Controller
             'username' => 'required|string|max:100|unique:users,username',
             'jabatan'  => 'nullable|string|max:100',
             'bidang'   => 'nullable|string|max:100',
+            'level'    => 'required|in:anggota,kabid,kadin',
             'password' => 'required|string|min:4',
         ]);
 
@@ -67,11 +68,15 @@ class AdminUserController extends Controller
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'nama'     => 'required|string|max:100',
-            'username' => 'required|string|max:100|unique:users,username,' . $user->id,
-            'jabatan'  => 'nullable|string|max:100',
-            'bidang'   => 'nullable|string|max:100',
+            'nama'      => 'required|string|max:100',
+            'username'  => 'required|string|max:100|unique:users,username,' . $user->id,
+            'jabatan'   => 'nullable|string|max:100',
+            'bidang'    => 'nullable|string|max:100',
+            'level'     => 'required|in:anggota,kabid,kadin',
         ]);
+
+        // Secara otomatis diatur Aktif di belakang layar
+        $data['is_active'] = true;
 
         $user->update($data);
 

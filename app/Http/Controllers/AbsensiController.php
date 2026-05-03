@@ -19,16 +19,6 @@ class AbsensiController extends Controller
         'Hadir', 'Izin', 'Cuti', 'Sakit', 'Terlambat', 'Tugas Luar',
     ];
 
-    private const KEPALA_BIDANG_USERNAME = [
-        'SEKRETARIAT' => 'noorekahasni',
-        'PPKLH'       => 'emmyariani',
-        'KPPI'        => 'hajiehariyanie',
-        'TALING'      => 'adhimaulana',
-        'PHL'         => 'hardiniwijayanti',
-    ];
-
-    private const PLT_KEPALA_DINAS_USERNAME = 'fathimatuzzahra';
-
     protected $database;
 
     public function __construct(Database $database)
@@ -412,26 +402,40 @@ class AbsensiController extends Controller
         $this->updateFirebaseRekap($today);
 
         /* ============================
-           NOTIFIKASI KE ATASAN
+           NOTIFIKASI KE ATASAN (LOGIKA HIRARKI BARU)
            - Status selain Hadir butuh approval
            ============================ */
         if ($status !== 'Hadir') {
             $targets = collect();
-            if (isset(self::KEPALA_BIDANG_USERNAME[$user->bidang])) {
-                $kabidUsername = self::KEPALA_BIDANG_USERNAME[$user->bidang];
-                if ($user->username !== $kabidUsername && $user->username !== self::PLT_KEPALA_DINAS_USERNAME) {
-                    $kepala = User::where('username', $kabidUsername)->first();
-                    if ($kepala) $targets->push($kepala);
+            
+            if ($user->level === 'anggota') {
+                // Anggota -> Notif ke Kabid bidang yang sama
+                if ($user->bidang) {
+                    $kabid = User::where('bidang', $user->bidang)
+                        ->where('level', 'kabid')
+                        ->where('is_active', true)
+                        ->get();
+                    $targets = $targets->merge($kabid);
                 }
+            } elseif ($user->level === 'kabid') {
+                // Kabid -> Notif ke Kadin
+                $kadin = User::where('level', 'kadin')
+                    ->where('is_active', true)
+                    ->get();
+                $targets = $targets->merge($kadin);
             }
 
-            $isKabid = in_array($user->username, self::KEPALA_BIDANG_USERNAME);
-            if ($isKabid) {
-                $plt = User::where('username', self::PLT_KEPALA_DINAS_USERNAME)->first();
-                if ($plt) $targets->push($plt);
+            // Jika tidak ada atasan spesifik, atau user adalah kadin, 
+            // Opsional: Notif ke Admin
+            if ($targets->isEmpty()) {
+                $admins = User::where('role', 'admin')->get();
+                $targets = $targets->merge($admins);
             }
 
             $targets->each(function (User $atasan) use ($absen, $user, $status, $data, $tz, $berkasPath) {
+                // Jangan kirim notif ke diri sendiri
+                if ($atasan->id === $user->id) return;
+                
                 $atasan->notify(new AbsenceReported(
                     attId:  $absen->id,
                     namaPegawai: $user->nama,
@@ -453,6 +457,22 @@ class AbsensiController extends Controller
     {
         $user = $request->user();
         
+        // --- VALIDASI HIRARKI ---
+        $owner = $absensi->user;
+        $isAuthorized = false;
+
+        if ($user->role === 'admin' || $user->level === 'kadin') {
+            $isAuthorized = true;
+        } elseif ($user->level === 'kabid' && ($owner->bidang ?? '') === $user->bidang) {
+            // Kabid hanya bisa approve anggota di bidangnya sendiri
+            $isAuthorized = true;
+        }
+
+        if (!$isAuthorized) {
+            return back()->with('err', 'Anda tidak memiliki wewenang untuk menyetujui absensi ini.');
+        }
+        // -------------------------
+
         if ($absensi->is_approved) {
             return back()->with('err', 'Absensi sudah disetujui sebelumnya.');
         }
@@ -492,6 +512,23 @@ class AbsensiController extends Controller
 
     public function reject(Request $request, Absensi $absensi)
     {
+        $user = $request->user();
+
+        // --- VALIDASI HIRARKI ---
+        $owner = $absensi->user;
+        $isAuthorized = false;
+
+        if ($user->role === 'admin' || $user->level === 'kadin') {
+            $isAuthorized = true;
+        } elseif ($user->level === 'kabid' && ($owner->bidang ?? '') === $user->bidang) {
+            $isAuthorized = true;
+        }
+
+        if (!$isAuthorized) {
+            return back()->with('err', 'Anda tidak memiliki wewenang untuk menolak absensi ini.');
+        }
+        // -------------------------
+
         if ($absensi->is_approved) {
             return back()->with('err', 'Absensi yang sudah disetujui tidak bisa ditolak.');
         }
@@ -563,19 +600,11 @@ class AbsensiController extends Controller
         $bulan = $request->input('bulan', now()->format('Y-m'));
         $tz    = config('app.timezone', 'Asia/Makassar');
 
-        // --- KONSTANTA AKSES (Sesuai sistem Anda) ---
-        $kepalaBidangMap = [
-            'SEKRETARIAT' => 'noorekahasni',
-            'PPKLH'       => 'emmyariani',
-            'KPPI'        => 'hajiehariyanie',
-            'TALING'      => 'adhimaulana',
-            'PHL'         => 'hardiniwijayanti',
-        ];
-        $pltUsername = 'fathimatuzzahra';
-
-        $isPlt = ($user->username === $pltUsername);
-        $bidangLed = array_search($user->username, $kepalaBidangMap);
-        $isAtasan = ($isPlt || $bidangLed);
+        // --- LOGIKA AKSES HIRARKI ---
+        $isKadin  = ($user->level === 'kadin');
+        $isKabid  = ($user->level === 'kabid');
+        $bidangLed = $isKabid ? $user->bidang : null;
+        $isAtasan = ($isKadin || $isKabid);
         // --------------------------------------------
 
         // Ambil pengaturan poin & hari libur
@@ -680,7 +709,9 @@ class AbsensiController extends Controller
 
         if ($isAtasan) {
             $qSub = User::where('role', '!=', 'admin')->where('id', '!=', $user->id)->orderBy('nama');
-            if (!$isPlt) $qSub->where('bidang', $bidangLed);
+            if (!$isKadin) {
+                $qSub->where('bidang', $bidangLed);
+            }
             $subordinates = $qSub->get();
 
             $subId = $request->input('sub_id');
@@ -750,21 +781,13 @@ class AbsensiController extends Controller
         $requestedUserId = $r->input('user_id');
 
         if ($requestedUserId && $requestedUserId != $loggedInUser->id) {
-            // Check if logged in user is Atasan
-            $kepalaBidangMap = [
-                'SEKRETARIAT' => 'noorekahasni',
-                'PPKLH'       => 'emmyariani',
-                'KPPI'        => 'hajiehariyanie',
-                'TALING'      => 'adhimaulana',
-                'PHL'         => 'hardiniwijayanti',
-            ];
-            $pltUsername = 'fathimatuzzahra';
-            
-            $isPlt = ($loggedInUser->username === $pltUsername);
-            $bidangLed = array_search($loggedInUser->username, $kepalaBidangMap);
+            // Check if logged in user is Atasan (Hierarchical Check)
+            $isKadin = ($loggedInUser->level === 'kadin');
+            $isKabid = ($loggedInUser->level === 'kabid');
+            $bidangLed = $isKabid ? $loggedInUser->bidang : null;
             
             $requestedUser = User::find($requestedUserId);
-            if ($requestedUser && ($isPlt || ($bidangLed && $requestedUser->bidang === $bidangLed))) {
+            if ($requestedUser && ($isKadin || ($isKabid && $requestedUser->bidang === $bidangLed))) {
                 $targetUser = $requestedUser;
             }
         }

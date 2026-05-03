@@ -230,7 +230,14 @@
                                     <img src="{{ $foto }}" class="user-avatar" alt="Avatar" onerror="this.src='{{ asset('img/default-avatar.jpg') }}'">
                                     <div>
                                         <div class="user-name">{{ $u->nama }}</div>
-                                        <div class="user-meta text-primary fw-medium">{{ $u->role === 'admin' ? 'Administrator' : 'Pegawai' }}</div>
+                                        <div class="user-meta d-flex gap-1 align-items-center">
+                                            <span class="text-primary fw-medium">{{ $u->role === 'admin' ? 'Administrator' : 'Pegawai' }}</span>
+                                            <span class="text-muted">•</span>
+                                            <span class="badge {{ $u->level === 'kadin' ? 'bg-danger' : ($u->level === 'kabid' ? 'bg-warning text-dark' : 'bg-secondary') }} rounded-pill" style="font-size: 0.65rem;">{{ strtoupper($u->level ?? 'anggota') }}</span>
+                                            @if(!($u->is_active ?? true))
+                                                <span class="badge bg-dark text-white rounded-pill" style="font-size: 0.65rem;">NONAKTIF</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -249,7 +256,9 @@
                                         data-nama="{{ $u->nama }}"
                                         data-username="{{ $u->username }}"
                                         data-bidang="{{ $u->bidang }}"
-                                        data-jabatan="{{ $u->jabatan }}">
+                                        data-jabatan="{{ $u->jabatan }}"
+                                        data-level="{{ $u->level ?? 'anggota' }}"
+                                        data-active="{{ $u->is_active ? '1' : '0' }}">
                                         <i class="bi bi-pencil-fill"></i>
                                     </button>
                                     <button class="btn-action btn-delete" title="Hapus Pegawai"
@@ -316,6 +325,17 @@
                         <label class="form-label">Jabatan</label>
                         <input name="jabatan" class="form-control" placeholder="Contoh: Ahli Muda">
                     </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Level Akses Hirarki</label>
+                        <select name="level" class="form-select border-primary border-opacity-25" required>
+                            <option value="anggota">Anggota Bidang (Staff Biasa)</option>
+                            <option value="kabid">Kepala Bidang (Bisa Pantau Bidang Sendiri)</option>
+                            <option value="kadin">Kepala Dinas (Bisa Pantau Semua Bidang)</option>
+                        </select>
+                        <div class="form-text text-primary" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle-fill me-1"></i> Level ini menentukan notifikasi dan akses statistik.
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -353,6 +373,14 @@
                                 @foreach($listBidang as $b)
                                     <option value="{{ $b }}">{{ $b }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Level Akses</label>
+                            <select name="level" id="edit-level" class="form-select" required>
+                                <option value="anggota">Anggota Bidang</option>
+                                <option value="kabid">Kepala Bidang</option>
+                                <option value="kadin">Kepala Dinas</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -406,6 +434,7 @@ document.getElementById('modalEdit')?.addEventListener('show.bs.modal', function
     document.getElementById('edit-username').value = btn.getAttribute('data-username') || '';
     document.getElementById('edit-bidang').value = btn.getAttribute('data-bidang') || '';
     document.getElementById('edit-jabatan').value = btn.getAttribute('data-jabatan') || '';
+    document.getElementById('edit-level').value = btn.getAttribute('data-level') || 'anggota';
     document.getElementById('formEdit').action = "{{ url('admin/users') }}/" + id;
     const resetBtn = document.getElementById('btnResetPwd');
     resetBtn.setAttribute('data-route', "{{ url('admin/users') }}/" + id + "/reset-password");
