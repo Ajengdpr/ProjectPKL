@@ -380,9 +380,9 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Status Absensi</label>
-                    <select name="status" class="form-select" required>
+                    <select name="status" id="manual-status" class="form-select" required onchange="toggleManualFields()">
                         @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
+                            <option value="{{ $key }}" @selected($key === 'hadir')>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -394,13 +394,13 @@
                     <label class="form-label">Jam Absensi (WITA)</label>
                     <input type="time" name="jam" class="form-control" value="{{ now()->format('H:i') }}" required>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" id="manual-alasan-wrapper">
                     <label class="form-label">Alasan / Keterangan</label>
-                    <input name="alasan" class="form-control" placeholder="Contoh: Rapat dinas, sakit, dll.">
+                    <input name="alasan" id="manual-alasan" class="form-control" placeholder="Contoh: Rapat dinas, sakit, dll.">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" id="manual-berkas-wrapper">
                     <label class="form-label">Unggah Berkas Bukti</label>
-                    <input type="file" name="berkas" class="form-control">
+                    <input type="file" name="berkas" id="manual-berkas" class="form-control">
                 </div>
                 <div class="col-12 mt-2 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary px-5 fw-bold rounded-pill shadow-sm">
@@ -551,7 +551,38 @@ document.addEventListener('DOMContentLoaded', function() {
             bootstrap.Modal.getInstance(exportModalElement).hide();
         });
     }
+
+    // Jalankan fungsi toggle untuk inisialisasi form manual
+    toggleManualFields();
 });
+
+function toggleManualFields() {
+    const status = document.getElementById('manual-status').value;
+    const alasanWrapper = document.getElementById('manual-alasan-wrapper');
+    const berkasWrapper = document.getElementById('manual-berkas-wrapper');
+    const alasanInput = document.getElementById('manual-alasan');
+    const berkasInput = document.getElementById('manual-berkas');
+
+    if (!alasanWrapper || !berkasWrapper) return;
+
+    if (status === 'hadir' || status === 'alpha') {
+        alasanWrapper.style.display = 'none';
+        berkasWrapper.style.display = 'none';
+        alasanInput.removeAttribute('required');
+        berkasInput.removeAttribute('required');
+    } else if (status === 'terlambat') {
+        alasanWrapper.style.display = 'block';
+        berkasWrapper.style.display = 'none';
+        alasanInput.setAttribute('required', 'required');
+        berkasInput.removeAttribute('required');
+    } else {
+        // Izin, Sakit, Cuti, Tugas Luar
+        alasanWrapper.style.display = 'block';
+        berkasWrapper.style.display = 'block';
+        alasanInput.setAttribute('required', 'required');
+        berkasInput.setAttribute('required', 'required');
+    }
+}
 </script>
 @endpush
 @endsection
