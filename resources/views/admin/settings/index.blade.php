@@ -287,7 +287,6 @@
             <div class="mb-2">
                 <label class="form-label">Daftar Tanggal Libur</label>
                 <div class="text-muted small mb-2" style="margin-top: -0.25rem;">
-                    Gunakan format <code>YYYY-MM-DD</code> (Tahun-Bulan-Tanggal) dan pisahkan dengan baris baru (Enter).<br>
                     Contoh: <code>2026-05-01</code>
                 </div>
                 <textarea class="form-control" name="status[hari_libur]" rows="4" placeholder="Contoh:&#10;2026-05-01&#10;2026-05-25">{{ $status['hari_libur'] ?? '' }}</textarea>
