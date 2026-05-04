@@ -147,6 +147,34 @@
         outline: none;
     }
 
+    .password-toggle {
+        position: absolute;
+        right: 1.25rem;
+        left: auto !important;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #94a3b8;
+        z-index: 11;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .input-group-modern:focus-within .password-toggle {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .password-toggle:hover {
+        color: var(--primary-blue);
+    }
+
+    .form-control-password {
+        padding-right: 3.5rem !important;
+    }
+
     .btn-login-modern {
         background: var(--primary-gradient);
         color: white;
@@ -269,9 +297,29 @@
                     <label class="form-label">Kata Sandi</label>
                     <div class="input-group-modern">
                         <i class="bi bi-shield-lock-fill"></i>
-                        <input class="form-control-modern" type="password" name="password" placeholder="Password" required>
+                        <input class="form-control-modern form-control-password" type="password" name="password" id="password" placeholder="Password" required>
+                        <i class="bi bi-eye-slash password-toggle" id="togglePassword"></i>
                     </div>
                 </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const togglePassword = document.querySelector('#togglePassword');
+                        const password = document.querySelector('#password');
+
+                        if (togglePassword && password) {
+                            togglePassword.addEventListener('click', function() {
+                                // toggle the type attribute
+                                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                                password.setAttribute('type', type);
+                                
+                                // toggle the eye / eye slash icon
+                                this.classList.toggle('bi-eye');
+                                this.classList.toggle('bi-eye-slash');
+                            });
+                        }
+                    });
+                </script>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div class="form-check">
