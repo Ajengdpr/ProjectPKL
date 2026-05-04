@@ -175,6 +175,19 @@
         padding-right: 3.5rem !important;
     }
 
+    /* Sembunyikan ikon mata bawaan browser (Edge/Chrome) agar tidak double */
+    input::-ms-reveal,
+    input::-ms-clear {
+        display: none;
+    }
+
+    input::-webkit-contacts-auto-fill-button,
+    input::-webkit-credentials-auto-fill-button {
+        visibility: hidden;
+        display: none !important;
+        pointer-events: none;
+    }
+
     .btn-login-modern {
         background: var(--primary-gradient);
         color: white;
