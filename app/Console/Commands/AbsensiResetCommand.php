@@ -58,6 +58,10 @@ class AbsensiResetCommand extends Command
         DB::table('absensi')->truncate();
         $this->info('Absensi table truncated successfully.');
 
+        // Reset all users' points to 0
+        DB::table('users')->update(['point' => 0]);
+        $this->info('All users\' points have been reset to 0.');
+
         // Clear the Firebase rekap node
         $this->database->getReference('rekap')->remove();
         $this->info('Firebase rekap node cleared successfully.');
