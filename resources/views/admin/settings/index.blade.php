@@ -168,7 +168,7 @@
         <div class="settings-card">
             <div class="card-title-group">
                 <i class="bi bi-star-fill"></i>
-                <h6>Konfigurasi Poin Kehadiran</h6>
+                <h6>Konfigurasi Poin Absensi</h6>
             </div>
             <div class="row g-4">
                 @foreach(\App\Models\Absensi::getStatuses() as $key=>$label)

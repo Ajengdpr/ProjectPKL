@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','Statistik Kehadiran')
+@section('title','Statistik Absensi')
 
 @section('content')
 @php
@@ -134,7 +134,7 @@ $adaData = array_sum($rekapData) > 0;
     {{-- Header Utama (Statistik Pribadi) --}}
     <div class="header-section">
         <div class="header-content">
-            <h3>Statistik Kehadiran</h3>
+            <h3>Statistik Absensi</h3>
             <p>Pantau analisis poin dan riwayat absensi bulanan Anda.</p>
         </div>
         <div class="d-flex align-items-center gap-3">
@@ -220,7 +220,7 @@ $adaData = array_sum($rekapData) > 0;
         <div class="col-lg-7 col-md-6">
             <div class="stat-card-custom">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Kehadiran Bulanan</h6>
+                    <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Absensi Bulanan</h6>
                     <a href="#" id="btnExportCsv" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
                         <i class="bi bi-download me-1"></i> Export CSV
                     </a>
@@ -348,7 +348,7 @@ $adaData = array_sum($rekapData) > 0;
                 <div class="col-lg-7 col-md-6">
                     <div class="stat-card-custom">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Kehadiran: {{ $targetSub->nama }}</h6>
+                            <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Absensi: {{ $targetSub->nama }}</h6>
                             <a href="#" id="btnExportCsvSub" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
                                 <i class="bi bi-download me-1"></i> Export CSV
                             </a>

@@ -122,7 +122,7 @@
             <i class="bi bi-calendar3 fs-5"></i>
           </div>
           <div>
-            <div class="small text-body-secondary fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">Ringkasan Kehadiran</div>
+            <div class="small text-body-secondary fw-semibold text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">Ringkasan Absensi</div>
             <h1 class="h5 fw-bold mb-0 text-dark">
               {{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
             </h1>
@@ -358,7 +358,7 @@
     {{-- Ringkasan per Bidang --}}
     <div class="col-12 col-lg-7">
       <div class="app-card p-3 h-100">
-        <h6 class="fw-bold mb-3">Ringkasan Kehadiran per Bidang</h6>
+        <h6 class="fw-bold mb-3">Ringkasan Absensi per Bidang</h6>
         <div class="row g-3">
             @foreach($byBidang as $b)
             <div class="col-12">
@@ -366,7 +366,7 @@
                 <strong class="text-dark">{{ $b['bidang'] }}</strong>
                 <span class="text-body-secondary">{{ $b['hadir_total'] }} dari {{ $b['total'] }} pegawai hadir</span>
                 </div>
-                <div class="progress" style="height: 10px;" title="Total Kehadiran: {{ $b['hadir_total_rate'] }}%">
+                <div class="progress" style="height: 10px;" title="Total Absensi: {{ $b['hadir_total_rate'] }}%">
                 <div class="progress-bar bg-success" role="progressbar" style="width: {{ $b['hadir_rate'] }}%" title="Hadir: {{ $b['hadir_rate'] }}%"></div>
                 <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $b['terlambat_rate'] }}%" title="Terlambat: {{ $b['terlambat_rate'] }}%"></div>
                 <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $b['alpha_rate'] }}%" title="Tanpa Keterangan: {{ $b['alpha_rate'] }}%"></div>

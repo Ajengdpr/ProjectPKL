@@ -224,7 +224,7 @@ $poinKeyMap = [
             <div class="col-lg-7 col-md-6">
                 <div class="stat-card h-100">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Kehadiran Bulanan</h6>
+                        <h6 class="fw-bold mb-0 text-secondary text-uppercase small" style="letter-spacing: 1px;">Log Absensi Bulanan</h6>
                         <a href="#" id="btnExportCsvAdmin" class="btn btn-outline-success btn-sm px-3 rounded-pill fw-bold">
                             <i class="bi bi-download me-1"></i> Export CSV
                         </a>

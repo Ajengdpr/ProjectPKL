@@ -236,7 +236,7 @@
     <div class="login-left">
         <div class="login-left-content">
             <h1>E-Absensi<br>Pegawai</h1>
-            <p>Sistem Informasi Manajemen Kehadiran Terintegrasi<br>Dinas Lingkungan Hidup Provinsi Kalimantan Selatan</p>
+            <p>Sistem Informasi Manajemen Absensi Terintegrasi<br>Dinas Lingkungan Hidup Provinsi Kalimantan Selatan</p>
             <a href="#tentang" class="about-link">Pelajari Selengkapnya</a>
         </div>
     </div>
@@ -294,7 +294,7 @@
         <div class="text-center mb-5" style="max-width: 900px; margin: 0 auto;">
             <h2 class="fw-bold text-dark mb-3">E-Absensi DLH Kalsel</h2>
             <p class="text-secondary fs-6 leading-relaxed">
-                E-Absensi Pegawai Dinas Lingkungan Hidup Provinsi Kalimantan Selatan merupakan sistem terintegrasi yang digunakan untuk mendukung pengelolaan kehadiran pegawai. Sistem ini dirancang agar lebih transparan, akuntabel, efisien, dan terpadu.
+                E-Absensi Pegawai Dinas Lingkungan Hidup Provinsi Kalimantan Selatan merupakan sistem terintegrasi yang digunakan untuk mendukung pengelolaan absensi pegawai. Sistem ini dirancang agar lebih transparan, akuntabel, efisien, dan terpadu.
             </p>
             <div class="mx-auto bg-primary rounded-pill mt-4" style="width: 50px; height: 4px; opacity: 0.3;"></div>
         </div>
@@ -303,8 +303,8 @@
             @php
                 $features = [
                     ['icon' => 'bi-eye', 'title' => 'Transparan', 'color' => 'warning', 'desc' => 'Riwayat absensi dapat dipantau langsung kapan saja.'],
-                    ['icon' => 'bi-shield-check', 'title' => 'Akuntabel', 'color' => 'primary', 'desc' => 'Data kehadiran tercatat secara otomatis dan transparan.'],
-                    ['icon' => 'bi-lightning-charge', 'title' => 'Efisien', 'color' => 'success', 'desc' => 'Rekapitulasi data kehadiran bulanan jadi lebih cepat.'],
+                    ['icon' => 'bi-shield-check', 'title' => 'Akuntabel', 'color' => 'primary', 'desc' => 'Data absensi tercatat secara otomatis dan transparan.'],
+                    ['icon' => 'bi-lightning-charge', 'title' => 'Efisien', 'color' => 'success', 'desc' => 'Rekapitulasi data absensi bulanan jadi lebih cepat.'],
                     ['icon' => 'bi-diagram-3', 'title' => 'Terpadu', 'color' => 'info', 'desc' => 'Sistem terhubung antara data pegawai dan lokasi.'],
                 ];
             @endphp

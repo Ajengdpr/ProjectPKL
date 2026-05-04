@@ -379,7 +379,7 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Status Kehadiran</label>
+                    <label class="form-label">Status Absensi</label>
                     <select name="status" class="form-select" required>
                         @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
