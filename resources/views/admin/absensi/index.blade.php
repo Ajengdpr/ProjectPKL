@@ -286,6 +286,7 @@
                                 @php 
                                     $origStatus = $a->status;
                                     $showStatus = $origStatus;
+                                    $effectiveStatusKey = str_replace(' ', '_', strtolower($origStatus));
                                     $approvalClass = 'approval-pending';
                                     $approvalLabel = 'Menunggu';
                                     $approvalIcon = 'bi-clock-history';
@@ -299,6 +300,7 @@
                                         $approvalLabel = 'Ditolak';
                                         $approvalIcon = 'bi-x-circle-fill';
                                         $showStatus = 'Tanpa Keterangan';
+                                        $effectiveStatusKey = 'alpha';
                                     }
                                     $statusKey = str_replace(' ', '_', strtolower($showStatus));
                                 @endphp
@@ -339,7 +341,7 @@
                                     @endif
                                     <button class="btn-action btn-edit" data-bs-toggle="modal" data-bs-target="#modalEditAbsensi"
                                         data-id="{{ $a->id }}" data-tanggal="{{ \Carbon\Carbon::parse($a->tanggal)->format('Y-m-d') }}"
-                                        data-status="{{ $a->status }}" data-alasan="{{ $a->alasan }}">
+                                        data-status="{{ $effectiveStatusKey }}" data-alasan="{{ $a->alasan }}">
                                         <i class="bi bi-pencil-fill"></i>
                                     </button>
                                     <button class="btn-action btn-delete" data-bs-toggle="modal" data-bs-target="#confirmModal"
@@ -426,7 +428,9 @@
                         <div class="col-12">
                             <label class="form-label">Status</label>
                             <select name="status" id="edit-status" class="form-select" required>
-                                <option value="hadir">Hadir</option><option value="terlambat">Terlambat</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="cuti">Cuti</option><option value="tugas_luar">Tugas Luar</option><option value="alpha">Tanpa Keterangan</option>
+                                @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12"><label class="form-label">Keterangan</label><textarea name="alasan" id="edit-alasan" class="form-control" rows="3"></textarea></div>
@@ -491,6 +495,7 @@ const modalEditAbsensi = document.getElementById('modalEditAbsensi');
 modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
     const btn = event.relatedTarget;
     const id = btn.getAttribute('data-id');
+    
     document.getElementById('edit-tanggal').value = btn.getAttribute('data-tanggal') || '';
     document.getElementById('edit-status').value = btn.getAttribute('data-status') || 'hadir';
     document.getElementById('edit-alasan').value = btn.getAttribute('data-alasan') || '';

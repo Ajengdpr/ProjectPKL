@@ -99,15 +99,15 @@ class AbsensiController extends Controller
         
         // Cek jika hari ini ada dalam daftar tanggal libur
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
-        /* if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
+        if (in_array(now('Asia/Makassar')->toDateString(), $hariLibur)) {
             $isAbsensiActive = false;
-        } */
+        }
 
         // TAMBAHAN: Cek jika hari ini adalah weekend (Sabtu/Minggu)
-        /* if (now('Asia/Makassar')->isWeekend()) {
+        if (now('Asia/Makassar')->isWeekend()) {
             $isAbsensiActive = false;
             $disableReason = 'Absensi tidak tersedia pada hari Sabtu dan Minggu.';
-        } */
+        }
 
         $currentTime = now('Asia/Makassar')->format('H:i:s');
         $isBeforeBuka = $currentTime < $jamConfig['buka'];

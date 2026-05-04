@@ -323,7 +323,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Jabatan</label>
-                        <input name="jabatan" class="form-control" placeholder="Contoh: Ahli Muda">
+                        <input name="jabatan" class="form-control" required placeholder="Contoh: Ahli Muda">
                     </div>
                     <div class="col-md-12">
                         <label class="form-label fw-bold">Level Akses Hirarki</label>
@@ -368,7 +368,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Bidang</label>
-                            <select name="bidang" id="edit-bidang" class="form-select">
+                            <select name="bidang" id="edit-bidang" class="form-select" required>
                                 <option value="">-- Pilih Bidang --</option>
                                 @foreach($listBidang as $b)
                                     <option value="{{ $b }}">{{ $b }}</option>
@@ -385,7 +385,7 @@
                         </div>
                         <div class="col-md-12">
                             <label class="form-label">Jabatan</label>
-                            <input name="jabatan" id="edit-jabatan" class="form-control">
+                            <input name="jabatan" id="edit-jabatan" class="form-control" required>
                         </div>
                     </div>
                 </div>

@@ -53,8 +53,8 @@ class AdminUserController extends Controller
         $data = $request->validate([
             'nama'     => 'required|string|max:100',
             'username' => 'required|string|max:100|unique:users,username',
-            'jabatan'  => 'nullable|string|max:100',
-            'bidang'   => 'nullable|string|max:100',
+            'jabatan'  => 'required|string|max:100',
+            'bidang'   => 'required|string|max:100',
             'level'    => 'required|in:anggota,kabid,kadin',
             'password' => 'required|string|min:4',
         ]);
@@ -70,8 +70,8 @@ class AdminUserController extends Controller
         $data = $request->validate([
             'nama'      => 'required|string|max:100',
             'username'  => 'required|string|max:100|unique:users,username,' . $user->id,
-            'jabatan'   => 'nullable|string|max:100',
-            'bidang'    => 'nullable|string|max:100',
+            'jabatan'   => 'required|string|max:100',
+            'bidang'    => 'required|string|max:100',
             'level'     => 'required|in:anggota,kabid,kadin',
         ]);
 
