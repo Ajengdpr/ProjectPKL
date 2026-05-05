@@ -20,22 +20,6 @@ class AdminDashboardController extends Controller
         // 1. Ambil data dasar
         $totalPegawai = User::count();
 
-        // 2. Hitung statistik berdasarkan data yang sudah masuk di tabel absensi
-        // [FIX FINAL] Menggunakan LOWER(status) untuk mengatasi masalah case-sensitivity
-        $stats = DB::table('absensi')
-            ->whereDate('tanggal', $date)
-            ->where('is_approved', true) // Hanya yang disetujui
-            ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
-            ->groupBy('status')
-            ->pluck('jumlah', 'status');
-
-        $hadir = $stats->get('hadir', 0);
-        $terlambat = $stats->get('terlambat', 0);
-        $izin = $stats->get('izin', 0);
-        $sakit = $stats->get('sakit', 0);
-        $cuti = $stats->get('cuti', 0);
-        $tugas_luar = $stats->get('tugas luar', 0); // Sesuaikan dengan nilai di DB
-        
         // 3. Hitung "Tanpa Keterangan" (Alpha) dengan logika yang benar dan kondisional
         $tz = 'Asia/Makassar';
         $carbonDate = \Carbon\Carbon::parse($date, $tz);
@@ -48,9 +32,32 @@ class AdminDashboardController extends Controller
         $alpha = 0;
 
         // Cek kondisi kapan alpha harus dihitung
+        $statusConfig = Setting::get('status', ['hari_libur' => '']);
+        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+        $isHariLibur = in_array($date, $hariLibur);
         $isWeekend = $carbonDate->isWeekend();
+        $isHoliday = $isWeekend || $isHariLibur;
         $isFuture = $carbonDate->isFuture();
         $isTodayBeforeCutoff = $carbonDate->isToday() && (now($tz)->format('H:i:s') <= $cutoffTime);
+
+        // 2. Hitung statistik berdasarkan data yang sudah masuk di tabel absensi
+        $hadir = $terlambat = $izin = $sakit = $cuti = $tugas_luar = 0;
+        
+        if (!$isHoliday) {
+            $stats = DB::table('absensi')
+                ->whereDate('tanggal', $date)
+                ->where('is_approved', true) // Hanya yang disetujui
+                ->select(DB::raw('LOWER(status) as status'), DB::raw('COUNT(*) as jumlah'))
+                ->groupBy('status')
+                ->pluck('jumlah', 'status');
+
+            $hadir = $stats->get('hadir', 0);
+            $terlambat = $stats->get('terlambat', 0);
+            $izin = $stats->get('izin', 0);
+            $sakit = $stats->get('sakit', 0);
+            $cuti = $stats->get('cuti', 0);
+            $tugas_luar = $stats->get('tugas luar', 0);
+        }
 
         // Ambil ID user yang sudah absen (dan disetujui) pada tanggal yang dipilih
         $sudahAbsenUserIds = DB::table('absensi')
@@ -66,14 +73,16 @@ class AdminDashboardController extends Controller
 
         // Logika untuk menampilkan daftar "Belum Absen"
         // Tampilkan jika bukan hari libur dan bukan tanggal di masa depan
-        if (!$isWeekend && !$isFuture) {
+        if (!$isHoliday && !$isFuture) {
             $belumAbsen = (clone $belumAbsenQuery)->orderBy('bidang')->orderBy('nama')->get()->groupBy('bidang');
             $belumAbsenCount = (clone $belumAbsenQuery)->count();
         }
 
         // Hitung alpha hanya jika ini adalah hari kerja yang sudah lewat, atau hari ini setelah jam cutoff
-        if (!$isWeekend && !$isFuture && !$isTodayBeforeCutoff) {
+        if (!$isHoliday && !$isFuture && !$isTodayBeforeCutoff) {
             $alpha = $belumAbsenCount;
+        } else {
+            $alpha = 0;
         }
 
         // 4. Log Absensi Terbaru (Menampilkan semua di hari yang dipilih)
@@ -143,7 +152,7 @@ class AdminDashboardController extends Controller
         // Data lengkap dikirim ke view
         return view('admin.dashboard', compact(
             'date', 'month', 'totalPegawai', 'hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'tugas_luar',
-            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang', 'rankingPoin'
+            'logTerbaru', 'belumAbsen', 'belumAbsenCount', 'byBidang', 'rankingPoin', 'isHoliday'
         ));
     }
 
@@ -236,12 +245,17 @@ class AdminDashboardController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        $rankingData = $allUsers->map(function($u) use ($allAbsensi, $workdaysSoFar, $poinConfig) {
+        $rankingData = $allUsers->map(function($u) use ($allAbsensi, $workdaysSoFar, $poinConfig, $hariLibur) {
             $userAbsensi = $allAbsensi->get($u->id, collect());
             $points = 0;
             $presentDates = [];
 
             foreach ($userAbsensi as $absen) {
+                // JIKA HARI LIBUR: Lewati kalkulasi poin (Poin harian otomatis 0)
+                if (in_array($absen->tanggal, $hariLibur)) {
+                    continue;
+                }
+
                 $presentDates[] = $absen->tanggal;
                 $status = $absen->status;
                 

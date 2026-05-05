@@ -53,7 +53,7 @@ class AdminAbsensiController extends Controller
             'user_id' => 'required|exists:users,id',
             'tanggal' => 'required|date',
             'jam'     => 'required|date_format:H:i',
-            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
+            'status'  => 'required|in:Hadir,Terlambat,Izin,Sakit,alpha,Cuti,Tugas Luar',
             'alasan'  => 'nullable|string',
             'berkas'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
         ]);
@@ -80,12 +80,23 @@ class AdminAbsensiController extends Controller
 
     public function update(Request $r, Absensi $absensi)
     {
-        $data = $r->validate([
+        $status = $r->status; // Ambil status asli (Kapital)
+        // Selain Hadir, alpha (TK), Terlambat -> alasan & berkas wajib
+        $needsFileAndReason = !in_array($status, ['Hadir', 'alpha', 'Terlambat']);
+
+        $rules = [
             'tanggal' => 'required|date',
-            'status'  => 'required|in:hadir,terlambat,izin,sakit,alpha,cuti,tugas_luar',
-            'alasan'  => 'nullable|string',
+            'status'  => 'required|in:Hadir,Terlambat,Izin,Sakit,alpha,Cuti,Tugas Luar',
+            'alasan'  => ($needsFileAndReason) ? 'required|string' : 'nullable|string',
             'berkas'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
-        ]);
+        ];
+
+        $data = $r->validate($rules);
+
+        // Validasi tambahan: Jika butuh berkas tapi belum ada di DB dan tidak diupload baru
+        if ($needsFileAndReason && !$absensi->berkas && !$r->hasFile('berkas')) {
+            return back()->withErrors(['msg' => 'Keterangan dan berkas bukti wajib diisi/diunggah untuk status ' . strtoupper($status)])->withInput();
+        }
 
         if ($r->hasFile('berkas')) {
             // Hapus berkas lama jika ada
@@ -93,6 +104,14 @@ class AdminAbsensiController extends Controller
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($absensi->berkas);
             }
             $data['berkas'] = $r->file('berkas')->store('absensi_berkas', 'public');
+        } else {
+            // Jika status berubah ke Hadir/Alpha/Terlambat, hapus berkas lama dari storage dan set null di DB
+            if (in_array($status, ['Hadir', 'alpha', 'Terlambat'])) {
+                if ($absensi->berkas && \Illuminate\Support\Facades\Storage::disk('public')->exists($absensi->berkas)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($absensi->berkas);
+                }
+                $data['berkas'] = null;
+            }
         }
 
         $data['is_approved'] = true; // Admin update otomatis approved

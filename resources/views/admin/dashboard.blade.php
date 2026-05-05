@@ -397,22 +397,33 @@
               </tr>
             </thead>
             <tbody>
-              @foreach($byBidang as $b)
+              @if($isHoliday ?? false)
                 <tr>
-                  <td class="ps-4 fw-bold text-dark">{{ $b['bidang'] }}</td>
-                  <td class="text-center">
-                    <span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0;">{{ $b['total'] }}</span>
-                  </td>
-                  <td class="text-center fw-bold text-success">{{ $b['hadir'] }}</td>
-                  <td class="text-center text-muted">{{ $b['cuti'] }}</td>
-                  <td class="text-center text-muted">{{ $b['sakit'] }}</td>
-                  <td class="text-center text-muted">{{ $b['tugas_luar'] }}</td>
-                  <td class="text-center text-warning fw-bold">{{ $b['terlambat'] }}</td>
-                  <td class="text-center text-muted">{{ $b['izin'] }}</td>
-                  <td class="text-center pe-4 text-danger fw-bold">{{ $b['alpha'] }}</td>
+                    <td colspan="9" class="text-center py-5">
+                        <div class="text-danger opacity-75 mb-2"><i class="bi bi-calendar-x fs-1"></i></div>
+                        <div class="fw-bold text-danger text-uppercase" style="letter-spacing: 1px;">Sistem Absensi Dinonaktifkan (Hari Libur)</div>
+                        <div class="text-muted small">Poin hari ini diabaikan untuk seluruh pegawai.</div>
+                    </td>
                 </tr>
-              @endforeach
+              @else
+                @foreach($byBidang as $b)
+                    <tr>
+                    <td class="ps-4 fw-bold text-dark">{{ $b['bidang'] }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0;">{{ $b['total'] }}</span>
+                    </td>
+                    <td class="text-center fw-bold text-success">{{ $b['hadir'] }}</td>
+                    <td class="text-center text-muted">{{ $b['cuti'] }}</td>
+                    <td class="text-center text-muted">{{ $b['sakit'] }}</td>
+                    <td class="text-center text-muted">{{ $b['tugas_luar'] }}</td>
+                    <td class="text-center text-warning fw-bold">{{ $b['terlambat'] }}</td>
+                    <td class="text-center text-muted">{{ $b['izin'] }}</td>
+                    <td class="text-center pe-4 text-danger fw-bold">{{ $b['alpha'] }}</td>
+                    </tr>
+                @endforeach
+              @endif
             </tbody>
+            @if(!($isHoliday ?? false))
             <tfoot class="bg-light-subtle">
               <tr class="fw-bold">
                 <td class="ps-4 text-dark text-uppercase fw-bold">TOTAL KESELURUHAN</td>
@@ -428,6 +439,7 @@
                 <td class="text-center pe-4 text-danger fw-bold">{{ collect($byBidang)->sum('alpha') }}</td>
               </tr>
             </tfoot>
+            @endif
           </table>
         </div>
       </div>

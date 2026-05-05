@@ -306,7 +306,7 @@
                                 @php 
                                     $origStatus = $a->status;
                                     $showStatus = $origStatus;
-                                    $effectiveStatusKey = str_replace(' ', '_', strtolower($origStatus));
+                                    $effectiveStatusKey = $origStatus; // Gunakan nilai asli (Kapital) sesuai model
                                     $approvalClass = 'approval-pending';
                                     $approvalLabel = 'Menunggu';
                                     $approvalIcon = 'bi-clock-history';
@@ -329,9 +329,11 @@
                                     <span class="badge-status status-{{ $statusKey }}">
                                         {{ $showStatus }}
                                     </span>
-                                    <span class="badge-approval {{ $approvalClass }}">
-                                        <i class="bi {{ $approvalIcon }}"></i> {{ $approvalLabel }}
-                                    </span>
+                                    @if(!in_array($showStatus, ['Hadir', 'Terlambat', 'Tanpa Keterangan']))
+                                        <span class="badge-approval {{ $approvalClass }}">
+                                            <i class="bi {{ $approvalIcon }}"></i> {{ $approvalLabel }}
+                                        </span>
+                                    @endif
                                     @if($a->is_rejected)
                                         <small class="text-muted mt-1" style="font-size: 0.6rem;">({{ strtoupper($origStatus) }})</small>
                                     @endif
@@ -447,14 +449,14 @@
                         <div class="col-12"><label class="form-label">Tanggal</label><input type="date" name="tanggal" id="edit-tanggal" class="form-control" required></div>
                         <div class="col-12">
                             <label class="form-label">Status</label>
-                            <select name="status" id="edit-status" class="form-select" required>
+                            <select name="status" id="edit-status" class="form-select" required onchange="toggleEditFields()">
                                 @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
                                     <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-12"><label class="form-label">Keterangan</label><textarea name="alasan" id="edit-alasan" class="form-control" rows="3"></textarea></div>
-                        <div class="col-12"><label class="form-label">Update Berkas</label><input type="file" name="berkas" class="form-control"></div>
+                        <div class="col-12"><label class="form-label" id="edit-berkas-label">Update Berkas</label><input type="file" name="berkas" id="edit-berkas" class="form-control"></div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
@@ -521,7 +523,32 @@ modalEditAbsensi?.addEventListener('show.bs.modal', function (event) {
     document.getElementById('edit-alasan').value = btn.getAttribute('data-alasan') || '';
     const form = document.getElementById('formEditAbsensi');
     form.action = "{{ url('admin/absensi') }}/" + id;
+    
+    // Inisialisasi tampilan field berdasarkan status
+    toggleEditFields();
 });
+
+function toggleEditFields() {
+    const status = document.getElementById('edit-status').value;
+    const alasan = document.getElementById('edit-alasan');
+    const berkasLabel = document.getElementById('edit-berkas-label');
+    const berkasInput = document.getElementById('edit-berkas');
+
+    if (!alasan || !berkasInput) return;
+
+    // Selain hadir, alpha (TK), terlambat -> wajib isi
+    const isMandatory = !['hadir', 'alpha', 'terlambat'].includes(status);
+
+    if (isMandatory) {
+        alasan.setAttribute('required', 'required');
+        berkasInput.setAttribute('required', 'required');
+        berkasLabel.innerHTML = 'Update Berkas (Wajib)';
+    } else {
+        alasan.removeAttribute('required');
+        berkasInput.removeAttribute('required');
+        berkasLabel.innerHTML = 'Update Berkas (Opsional)';
+    }
+}
 
 function showCustomAlert(message, type = 'danger') {
     const container = document.getElementById('custom-alert-container');

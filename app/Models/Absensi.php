@@ -26,12 +26,12 @@ class Absensi extends Model
     public static function getStatuses(): array
     {
         return [
-            'hadir'       => 'Hadir',
-            'terlambat'   => 'Terlambat',
-            'izin'        => 'Izin',
-            'sakit'       => 'Sakit',
-            'cuti'        => 'Cuti',
-            'tugas_luar'  => 'Tugas Luar',
+            'Hadir'       => 'Hadir',
+            'Terlambat'   => 'Terlambat',
+            'Izin'        => 'Izin',
+            'Sakit'       => 'Sakit',
+            'Cuti'        => 'Cuti',
+            'Tugas Luar'  => 'Tugas Luar',
             'alpha'       => 'Tanpa Keterangan',
         ];
     }

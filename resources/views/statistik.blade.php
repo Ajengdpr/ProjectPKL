@@ -4,83 +4,8 @@
 @section('content')
 @php
 use Carbon\Carbon;
-
-$bulan = request('bulan', date('Y-m'));
-$absensiBulan = $absensi->filter(fn($a) => Carbon::parse($a->tanggal)->format('Y-m') === $bulan);
-
+$tz = config('app.timezone', 'Asia/Makassar');
 $hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
-$now = Carbon::now();
-
-// Tentukan batas hari yang dihitung
-if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
-    $maxHari = $hariDalamBulan; // bulan lalu
-} elseif(Carbon::parse($bulan.'-01')->format('Y-m') == $now->format('Y-m')){
-    $maxHari = $now->day; // bulan ini
-} else {
-    $maxHari = 0; // bulan depan
-}
-
-$statusColors = [
-    'Hadir' => '#36A2EB',
-    'Izin' => '#FFCE56',
-    'Cuti' => '#9966FF',
-    'Sakit' => '#FF6384',
-    'Terlambat' => '#4BC0C0',
-    'Tugas Luar' => '#FF9F40',
-    'Tanpa Keterangan' => '#e0e0e0'
-];
-
-$rekapData = [
-    'Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0
-];
-
-$totalPoin = 0;
-
-// Definisikan pemetaan dari status di database ke kunci di poinConfig
-$poinKeyMap = [
-    'Hadir'            => 'hadir',
-    'Terlambat'        => 'terlambat',
-    'Izin'             => 'izin',
-    'Sakit'            => 'sakit',
-    'Cuti'             => 'cuti',
-    'Tugas Luar'       => 'tugas_luar',
-    'Tanpa Keterangan' => 'alpha',
-];
-
-// Hitung rekap dan poin
-foreach ($absensiBulan as $absen) {
-    $tanggalAbsen = Carbon::parse($absen->tanggal);
-    if (!$tanggalAbsen->isWeekend()) {
-        $status = $absen->status;
-        if(isset($rekapData[$status])) $rekapData[$status]++;
-        
-        $key = $poinKeyMap[$status] ?? null;
-        if ($key && isset($poinConfig[$key])) {
-            if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
-                $totalPoin += (int)($poinConfig['alpha'] ?? 0);
-            } else {
-                $totalPoin += (int)($poinConfig[$key] ?? 0);
-            }
-        }
-    }
-}
-
-// Tambahkan logika Tanpa Keterangan (Alpha)
-for($i=1; $i<=$maxHari; $i++){
-    $tglLoop = Carbon::parse($bulan.'-'.str_pad($i,2,'0',STR_PAD_LEFT));
-    if(!$tglLoop->isWeekend()){
-        $exists = $absensiBulan->firstWhere('tanggal', $tglLoop->toDateString());
-        if(!$exists){
-            $isTodayBeforeCutoff = $tglLoop->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
-            if(!$isTodayBeforeCutoff){
-                $rekapData['Tanpa Keterangan']++;
-                $totalPoin += (int)($poinConfig['alpha'] ?? 0);
-            }
-        }
-    }
-}
-
-$adaData = array_sum($rekapData) > 0;
 @endphp
 
 <style>
@@ -243,16 +168,21 @@ $adaData = array_sum($rekapData) > 0;
                                 @if (!$currentDate->isWeekend())
                                     @php
                                         $tanggalString = $currentDate->toDateString();
-                                        $absen = $absensiBulan->firstWhere('tanggal', $tanggalString);
+                                        $absen = $absensi->firstWhere('tanggal', $tanggalString);
                                         $status = '';
                                         $statusConfig = \App\Models\Setting::get('status', ['hari_libur' => '']);
-                                        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
-                                        if (in_array($tanggalString, $hariLibur)) { $status = 'LIBUR'; }
-                                        elseif ($day <= $maxHari) {
-                                            if ($absen) { $status = $absen->status; } 
-                                            else {
-                                                $isTodayBeforeCutoff = $currentDate->isToday() && (Carbon::now('Asia/Makassar')->format('H:i:s') <= config('absensi.cutoff', '16:00:00'));
-                                                if (!$isTodayBeforeCutoff) { $status = 'Tanpa Keterangan'; }
+                                        $hariLiburArr = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
+                                        
+                                        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], \App\Models\Setting::get('jam', []));
+
+                                        if (in_array($tanggalString, $hariLiburArr)) { 
+                                            $status = 'LIBUR'; 
+                                        } elseif ($day <= $maxHari) {
+                                            if ($absen) { 
+                                                $status = $absen->status; 
+                                            } else {
+                                                $isTodayBeforeAlpha = $currentDate->isToday() && (Carbon::now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                                                if (!$isTodayBeforeAlpha) { $status = 'Tanpa Keterangan'; }
                                             }
                                         }
                                         $bgColor = $status === 'LIBUR' ? '#fff1f2' : '#ffffff';
@@ -374,23 +304,37 @@ $adaData = array_sum($rekapData) > 0;
                                                 $isRejected = false;
                                                 $origStatus = '';
 
-                                                if ($abs) {
-                                                    $isPending = !$abs->is_approved && !$abs->is_rejected;
-                                                    $isRejected = $abs->is_rejected;
-                                                    $origStatus = $abs->status;
-                                                    $st = $isRejected ? 'Tanpa Keterangan' : $abs->status;
-                                                } else {
-                                                    $isTodayBeforeAlpha = $curr->isToday() && (now('Asia/Makassar')->format('H:i:s') <= $jamConfig['batas_hadir']);
-                                                    if (!$isTodayBeforeAlpha && $day <= $maxHari) {
-                                                        $st = 'Tanpa Keterangan';
+                                                $sConfig = \App\Models\Setting::get('status', ['hari_libur' => '']);
+                                                $hLArr = explode("\n", str_replace("\r", "", $sConfig['hari_libur'] ?? ''));
+                                                $jConfig = array_merge(['batas_hadir' => '08:00:00'], \App\Models\Setting::get('jam', []));
+
+                                                if (in_array($curr->toDateString(), $hLArr)) {
+                                                    $st = 'LIBUR';
+                                                } elseif ($day <= $maxHari) {
+                                                    if ($abs) {
+                                                        $isPending = !$abs->is_approved && !$abs->is_rejected;
+                                                        $isRejected = $abs->is_rejected;
+                                                        $origStatus = $abs->status;
+                                                        $st = $isRejected ? 'Tanpa Keterangan' : $abs->status;
+                                                    } else {
+                                                        $isTBA = $curr->isToday() && (now($tz)->format('H:i:s') <= $jConfig['batas_hadir']);
+                                                        if (!$isTBA) {
+                                                            $st = 'Tanpa Keterangan';
+                                                        }
                                                     }
                                                 }
-                                                $bC = $st ? ($statusColors[$st] ?? '#fff') : '#fff';
+                                                
+                                                $bC = '#ffffff';
+                                                if($st === 'LIBUR') {
+                                                    $bC = '#f43f5e';
+                                                } elseif($st) {
+                                                    $bC = $statusColors[$st] ?? '#94a3b8';
+                                                }
                                             @endphp
                                             <td class="p-0" style="height: 60px;">
-                                                <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $st ? ($isPending ? '#f1f5f9' : $bC.'22') : '#fff' }}; border-left: 2px solid {{ $isPending ? '#94a3b8' : $bC }};">
-                                                    <div class="fw-bold" style="font-size: 0.75rem;">{{ $day }}</div>
-                                                    <div class="mt-auto" style="font-size: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                <div class="h-100 p-2 d-flex flex-column" style="background-color: {{ $st ? ($st === 'LIBUR' ? '#fff1f2' : ($isPending ? '#f1f5f9' : $bC.'22')) : '#fff' }}; border-left: 2px solid {{ $isPending ? '#94a3b8' : $bC }};">
+                                                    <div class="fw-bold {{ $st === 'LIBUR' ? 'text-danger' : '' }}" style="font-size: 0.75rem;">{{ $day }}</div>
+                                                    <div class="mt-auto" style="font-size: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; {{ $st === 'LIBUR' ? 'color: #f43f5e; font-weight: bold;' : '' }}">
                                                         {{ $st }} @if($isPending) <i class="bi bi-clock-history"></i> @endif
                                                     </div>
                                                     @if($isRejected)

@@ -458,21 +458,32 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($daftarBidang as $b)
-                        @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
+                    @if($isHoliday ?? false)
                         <tr>
-                            <td class="ps-4 bidang-name">{{ $b->bidang }}</td>
-                            <td class="text-center"><span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.8rem; font-weight: 600;">{{ $b->jumlah_pegawai }}</span></td>
-                            <td class="text-center">{{ $r->hadir ?? 0 }}</td>
-                            <td class="text-center">{{ $r->cuti ?? 0 }}</td>
-                            <td class="text-center">{{ $r->sakit ?? 0 }}</td>
-                            <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
-                            <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
-                            <td class="text-center">{{ $r->izin ?? 0 }}</td>
-                            <td class="text-center pe-4 text-danger fw-bold">{{ $r->alpha ?? 0 }}</td>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="text-danger opacity-75 mb-2"><i class="bi bi-calendar-x fs-1"></i></div>
+                                <div class="fw-bold text-danger text-uppercase" style="letter-spacing: 1px;">Sistem Absensi Dinonaktifkan (Hari Libur)</div>
+                                <div class="text-muted small">{{ $disableReason ?? '' }}</div>
+                            </td>
                         </tr>
-                    @endforeach
+                    @else
+                        @foreach($daftarBidang as $b)
+                            @php $r = $rekapPerBidang[$b->bidang] ?? null; @endphp
+                            <tr>
+                                <td class="ps-4 bidang-name">{{ $b->bidang }}</td>
+                                <td class="text-center"><span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.8rem; font-weight: 600;">{{ $b->jumlah_pegawai }}</span></td>
+                                <td class="text-center">{{ $r->hadir ?? 0 }}</td>
+                                <td class="text-center">{{ $r->cuti ?? 0 }}</td>
+                                <td class="text-center">{{ $r->sakit ?? 0 }}</td>
+                                <td class="text-center">{{ $r->tugas_luar ?? 0 }}</td>
+                                <td class="text-center">{{ $r->terlambat ?? 0 }}</td>
+                                <td class="text-center">{{ $r->izin ?? 0 }}</td>
+                                <td class="text-center pe-4 text-danger fw-bold">{{ $r->alpha ?? 0 }}</td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
+                @if(!($isHoliday ?? false))
                 <tfoot class="bg-light-subtle">
                     <tr class="fw-bold">
                         <td class="ps-4 text-dark text-uppercase fw-bold">TOTAL KESELURUHAN</td>
@@ -486,6 +497,7 @@
                         <td class="text-center pe-4 text-danger fw-bold">{{ $rekapPerBidang->sum(fn($rekap) => $rekap->alpha) }}</td>
                     </tr>
                 </tfoot>
+                @endif
             </table>
         </div>
     </div>

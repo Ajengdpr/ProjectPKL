@@ -148,6 +148,14 @@ class AbsensiController extends Controller
             $tanggalLoop = $carbonBulan->copy()->day($i);
             $tanggalLoopString = $tanggalLoop->toDateString();
 
+            // JIKA HARI LIBUR: Lewati kalkulasi poin (Poin harian otomatis 0)
+            if (in_array($tanggalLoopString, $hariLibur)) {
+                continue;
+            }
+
+            if ($tanggalLoop->isWeekend()) {
+                continue;
+            }
             // JANGAN HITUNG ALPHA JIKA: Weekend ATAU Hari Libur yang diatur Admin
             if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
                 continue;
@@ -208,6 +216,7 @@ class AbsensiController extends Controller
             'isPastBatasAkhir' => $isPastBatasAkhir,
             'poinConfig'       => $poinConfig,
             'isAbsensiActive'  => $isAbsensiActive,
+            'isHoliday'        => !$isAbsensiActive,
             'disableReason'    => $disableReason,
             'jamConfig'        => $jamConfig,
         ]);
@@ -633,8 +642,7 @@ class AbsensiController extends Controller
         // =================================================================
         $absensi = Absensi::where('user_id', $user->id)
             ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-            ->where('is_approved', true)
-            ->get();
+            ->get(); // Ambil semua status (Hadir, Izin, Pending, Rejected) untuk histori log
         
         $totalPoin = 0;
         $rekapData = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
@@ -648,9 +656,21 @@ class AbsensiController extends Controller
 
             $a = $absensi->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
             if ($a) {
-                $rekapData[$a->status]++;
-                $k = $poinKeyMap[$a->status] ?? null;
-                $totalPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                if ($a->is_rejected) {
+                    $rekapData['Tanpa Keterangan']++;
+                    $totalPoin += (int)($poinConfig['alpha'] ?? 0);
+                } else {
+                    $rekapData[$a->status]++;
+                    // Hitung poin HANYA jika sudah Approved
+                    if ($a->is_approved) {
+                        $k = $poinKeyMap[$a->status] ?? null;
+                        if ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) {
+                            $totalPoin += (int)($poinConfig['alpha'] ?? 0);
+                        } else {
+                            $totalPoin += (int)($poinConfig[$k] ?? 0);
+                        }
+                    }
+                }
             } else {
                 $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
                 if (!$isTodayBeforeAlpha) {
@@ -715,43 +735,47 @@ class AbsensiController extends Controller
             $subordinates = $qSub->get();
 
             $subId = $request->input('sub_id');
-            if ($subId && $subordinates->contains('id', $subId)) {
+            if ($subId) {
                 $targetSub = User::find($subId);
-                // Ambil semua data absensi (termasuk pending dan rejected) untuk dipantau atasan
-                $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
-                $sPoin = 0; 
-                $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
-                
-                for ($i = 1; $i <= $maxHari; $i++) {
-                    $tL = $carbonBulan->copy()->day($i);
-                    if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+                if ($targetSub && ($isKadin || ($isKabid && $targetSub->bidang === $bidangLed))) {
+                    // Ambil semua data absensi (termasuk pending dan rejected) untuk dipantau atasan
+                    $subAbs = Absensi::where('user_id', $subId)->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])->get();
+                    $sPoin = 0; 
+                    $sRekap = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
                     
-                    $a = $subAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
-                    if($a){
-                        if ($a->is_rejected) {
-                            $sRekap['Tanpa Keterangan']++;
-                            $sPoin += (int)($poinConfig['alpha'] ?? 0);
+                    for ($i = 1; $i <= $maxHari; $i++) {
+                        $tL = $carbonBulan->copy()->day($i);
+                        if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
+                        
+                        $a = $subAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
+                        if($a){
+                            if ($a->is_rejected) {
+                                $sRekap['Tanpa Keterangan']++;
+                                $sPoin += (int)($poinConfig['alpha'] ?? 0);
+                            } else {
+                                // Pending atau Approved
+                                $sRekap[$a->status]++;
+                                if ($a->is_approved) {
+                                    $k = $poinKeyMap[$a->status] ?? null;
+                                    $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                                }
+                            }
                         } else {
-                            // Pending atau Approved
-                            $sRekap[$a->status]++;
-                            if ($a->is_approved) {
-                                $k = $poinKeyMap[$a->status] ?? null;
-                                $sPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                            $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
+                            if (!$isTodayBeforeAlpha) {
+                                $sRekap['Tanpa Keterangan']++;
+                                $sPoin += (int)($poinConfig['alpha'] ?? 0);
                             }
                         }
-                    } else {
-                        $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
-                        if (!$isTodayBeforeAlpha) {
-                            $sRekap['Tanpa Keterangan']++;
-                            $sPoin += (int)($poinConfig['alpha'] ?? 0);
-                        }
                     }
+                    $subStats = [
+                        'poin' => $sPoin, 
+                        'rekap' => $sRekap,
+                        'absensi' => $subAbs
+                    ];
+                } else {
+                    $targetSub = null;
                 }
-                $subStats = [
-                    'poin' => $sPoin, 
-                    'rekap' => $sRekap,
-                    'absensi' => $subAbs // Tambahkan data absensi untuk kalender
-                ];
             }
         }
 
@@ -766,7 +790,7 @@ class AbsensiController extends Controller
             'top5Global' => $top5Global, 'bottom5Global' => $bottom5Global, 'poinConfig' => $poinConfig,
             'isAtasan' => $isAtasan, 'subordinates' => $subordinates, 'targetSub' => $targetSub, 'subStats' => $subStats,
             'statusColors' => ['Hadir'=>'#36A2EB', 'Izin'=>'#FFCE56', 'Cuti'=>'#9966FF', 'Sakit'=>'#FF6384', 'Terlambat'=>'#4BC0C0', 'Tugas Luar'=>'#FF9F40', 'Tanpa Keterangan'=>'#e0e0e0'],
-            'poinKeyMap' => $poinKeyMap, 'adaData' => array_sum($rekapData) > 0
+            'poinKeyMap' => $poinKeyMap, 'adaData' => $adaData, 'maxHari' => $maxHari, 'statusLabels' => $statusLabels
         ]);
     }
 

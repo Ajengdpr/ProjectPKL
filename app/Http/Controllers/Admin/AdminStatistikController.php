@@ -70,7 +70,12 @@ class AdminStatistikController extends Controller
                     $tanggalLoop = $carbonBulan->copy()->day($i);
                     $tanggalLoopString = $tanggalLoop->toDateString();
 
-                    if ($tanggalLoop->isWeekend() || in_array($tanggalLoopString, $hariLibur)) {
+                    // JIKA HARI LIBUR: Lewati kalkulasi poin (Poin harian otomatis 0)
+                    if (in_array($tanggalLoopString, $hariLibur)) {
+                        continue;
+                    }
+
+                    if ($tanggalLoop->isWeekend()) {
                         continue;
                     }
 
