@@ -625,24 +625,29 @@ class AbsensiController extends Controller
 
         // Tentukan rentang hari
         $carbonBulan = Carbon::parse($bulan.'-01', $tz);
-        $maxHari = $carbonBulan->daysInMonth;
+        $hariDalamBulan = $carbonBulan->daysInMonth;
+        
+        // maxHari: Digunakan untuk membatasi status "Tanpa Keterangan" s/d hari ini jika bulan berjalan
+        $maxHari = $hariDalamBulan; 
         if ($carbonBulan->isFuture()) {
             $maxHari = 0;
         } elseif ($carbonBulan->isSameMonth(now($tz))) {
             $maxHari = now($tz)->day;
         }
 
+        // loopMaxPoin: Khusus untuk menghitung ranking/poin historis, 
+        // Jika bulan lalu, hitung sampai akhir bulan. Jika bulan ini, hitung sampai hari ini.
+        $loopMaxPoin = ($carbonBulan->isSameMonth(now($tz))) ? now($tz)->day : $hariDalamBulan;
+        if ($carbonBulan->isFuture()) $loopMaxPoin = 0;
+
         // Ambil semua absensi pada bulan terpilih untuk efisiensi
         $allAbsensiBulan = Absensi::whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-            ->where('is_approved', true) // Hanya yang disetujui
             ->get()->groupBy('user_id');
 
         // =================================================================
         // 1. DATA INDIVIDU (USER LOGIN)
         // =================================================================
-        $absensi = Absensi::where('user_id', $user->id)
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
-            ->get(); // Ambil semua status (Hadir, Izin, Pending, Rejected) untuk histori log
+        $absensi = $allAbsensiBulan->get($user->id, collect());
         
         $totalPoin = 0;
         $rekapData = ['Hadir'=>0, 'Izin'=>0, 'Cuti'=>0, 'Sakit'=>0, 'Terlambat'=>0, 'Tugas Luar'=>0, 'Tanpa Keterangan'=>0];
@@ -686,29 +691,22 @@ class AbsensiController extends Controller
         $allUsers = User::where('role', '!=', 'admin')->get();
         $monthlyScores = [];
 
-        // Ambil pengaturan hari libur untuk mengabaikan poin alpha di hari tersebut
-        $statusConfig = Setting::get('status', ['hari_libur' => '']);
-        $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
-
-        // Kita perlu jamConfig untuk batas Alpha
-        $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
-
         foreach ($allUsers as $u) {
             $uAbs = $allAbsensiBulan->get($u->id, collect());
             $uPoin = 0;
-            for ($i = 1; $i <= $maxHari; $i++) {
+            for ($i = 1; $i <= $loopMaxPoin; $i++) {
                 $tL = $carbonBulan->copy()->day($i);
                 if ($tL->isWeekend() || in_array($tL->toDateString(), $hariLibur)) continue;
                 $a = $uAbs->first(fn($item) => Carbon::parse($item->tanggal)->isSameDay($tL));
                 if($a){
-                    $k = $poinKeyMap[$a->status] ?? null;
-                    $uPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                    if ($a->is_approved) {
+                        $k = $poinKeyMap[$a->status] ?? null;
+                        $uPoin += ($a->status === 'Terlambat' && empty(trim($a->alasan ?? ''))) ? (int)($poinConfig['alpha'] ?? 0) : (int)($poinConfig[$k] ?? 0);
+                    } elseif ($a->is_rejected) {
+                        $uPoin += (int)($poinConfig['alpha'] ?? 0);
+                    }
                 } else {
-                    // LOGIKA BARU YANG BENAR:
-                    // Hitung alpha jika hari sudah lewat, ATAU jika hari ini & sudah lewat jam batas_hadir
                     $isTodayBeforeAlpha = $tL->isToday() && (now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
-
-                    // Tambahkan poin alpha HANYA jika BUKAN hari ini sebelum jam batas_hadir
                     if (!$isTodayBeforeAlpha) {
                         $uPoin += (int)($poinConfig['alpha'] ?? 0);
                     }
