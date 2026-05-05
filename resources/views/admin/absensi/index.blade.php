@@ -201,6 +201,26 @@
 @section('content')
 <div class="container-fluid px-md-4 absensi-page-container">
     <div id="custom-alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 2000; max-width: 350px;"></div>
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+            <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Terjadi Kesalahan:</div>
+            <ul class="mb-0 small">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('ok'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('ok') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="header-section">
         <div class="header-content">

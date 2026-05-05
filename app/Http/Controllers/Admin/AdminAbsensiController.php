@@ -58,6 +58,16 @@ class AdminAbsensiController extends Controller
             'berkas'  => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048',
         ]);
 
+        // Cek duplikasi: Apakah user ini sudah ada absensi di tanggal yang diinput?
+        $exists = Absensi::where('user_id', $data['user_id'])
+            ->whereDate('tanggal', $data['tanggal'])
+            ->exists();
+
+        if ($exists) {
+            $user = User::find($data['user_id']);
+            return back()->withErrors(['msg' => "Pegawai {$user->nama} sudah memiliki catatan absensi pada tanggal " . \Carbon\Carbon::parse($data['tanggal'])->format('d-m-Y') . "."])->withInput();
+        }
+
         if ($r->hasFile('berkas')) {
             $data['berkas'] = $r->file('berkas')->store('absensi_berkas', 'public');
         }
