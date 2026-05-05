@@ -404,7 +404,7 @@
                     <label class="form-label">Status Absensi</label>
                     <select name="status" id="manual-status" class="form-select" required onchange="toggleManualFields()">
                         @foreach(\App\Models\Absensi::getStatuses() as $key => $label)
-                            <option value="{{ $key }}" @selected($key === 'hadir')>{{ $label }}</option>
+                            <option value="{{ $key }}" @selected($key === 'Hadir')>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -536,17 +536,24 @@ function toggleEditFields() {
 
     if (!alasan || !berkasInput) return;
 
-    // Selain hadir, alpha (TK), terlambat -> wajib isi
-    const isMandatory = !['hadir', 'alpha', 'terlambat'].includes(status);
-
-    if (isMandatory) {
-        alasan.setAttribute('required', 'required');
-        berkasInput.setAttribute('required', 'required');
-        berkasLabel.innerHTML = 'Update Berkas (Wajib)';
-    } else {
+    // Logika Validasi Dinamis:
+    // 1. Hadir / Tanpa Keterangan (alpha) -> Tidak wajib semua
+    if (status === 'Hadir' || status === 'alpha') {
         alasan.removeAttribute('required');
         berkasInput.removeAttribute('required');
         berkasLabel.innerHTML = 'Update Berkas (Opsional)';
+    } 
+    // 2. Terlambat -> Alasan wajib, Berkas TIDAK wajib
+    else if (status === 'Terlambat') {
+        alasan.setAttribute('required', 'required');
+        berkasInput.removeAttribute('required');
+        berkasLabel.innerHTML = 'Update Berkas (Opsional)';
+    }
+    // 3. Izin, Sakit, Cuti, Tugas Luar -> Wajib semua
+    else {
+        alasan.setAttribute('required', 'required');
+        berkasInput.setAttribute('required', 'required');
+        berkasLabel.innerHTML = 'Update Berkas (Wajib)';
     }
 }
 
@@ -612,12 +619,12 @@ function toggleManualFields() {
 
     if (!alasanWrapper || !berkasWrapper) return;
 
-    if (status === 'hadir' || status === 'alpha') {
+    if (status === 'Hadir' || status === 'alpha') {
         alasanWrapper.style.display = 'none';
         berkasWrapper.style.display = 'none';
         alasanInput.removeAttribute('required');
         berkasInput.removeAttribute('required');
-    } else if (status === 'terlambat') {
+    } else if (status === 'Terlambat') {
         alasanWrapper.style.display = 'block';
         berkasWrapper.style.display = 'none';
         alasanInput.setAttribute('required', 'required');
