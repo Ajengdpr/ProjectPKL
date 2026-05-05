@@ -80,19 +80,39 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
   .user-card-mini .name {
-    font-size: 0.7rem;
-    font-weight: 600;
-    margin-top: 5px;
-    line-height: 1.2;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 1.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 5px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 1.7rem;
   }
-</style>
-@endonce
 
+  /* Table Modern Style */
+  .table-modern thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 1rem 0.75rem;
+  font-weight: 700;
+  border: none;
+  }
+  .table-modern tbody td, .table-modern tfoot td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.85rem;
+  color: #1e293b;
+  }
+  .table-modern tbody tr:hover {
+  background-color: #f8fafc;
+  }
+  </style>
+  @endonce
 @section('content')
 @php
   // Fungsi untuk class badge status
@@ -357,22 +377,58 @@
   <div class="row g-3 mt-1">
     {{-- Ringkasan per Bidang --}}
     <div class="col-12 col-lg-7">
-      <div class="app-card p-3 h-100">
-        <h6 class="fw-bold mb-3">Ringkasan Absensi per Bidang</h6>
-        <div class="row g-3">
-            @foreach($byBidang as $b)
-            <div class="col-12">
-                <div class="d-flex justify-content-between small mb-1">
-                <strong class="text-dark">{{ $b['bidang'] }}</strong>
-                <span class="text-body-secondary">{{ $b['hadir_total'] }} dari {{ $b['total'] }} pegawai hadir</span>
-                </div>
-                <div class="progress" style="height: 10px;" title="Total Absensi: {{ $b['hadir_total_rate'] }}%">
-                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $b['hadir_rate'] }}%" title="Hadir: {{ $b['hadir_rate'] }}%"></div>
-                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $b['terlambat_rate'] }}%" title="Terlambat: {{ $b['terlambat_rate'] }}%"></div>
-                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $b['alpha_rate'] }}%" title="Tanpa Keterangan: {{ $b['alpha_rate'] }}%"></div>
-                </div>
-            </div>
-            @endforeach
+      <div class="app-card p-3 h-100 shadow-sm border-0">
+        <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-pie-chart-fill text-primary"></i> Rekap Absensi Per Bidang
+        </h6>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 table-modern">
+            <thead>
+              <tr>
+                <th class="ps-4">Bidang</th>
+                <th class="text-center">Staf</th>
+                <th class="text-center">Hadir</th>
+                <th class="text-center">Cuti</th>
+                <th class="text-center">Sakit</th>
+                <th class="text-center">TL</th>
+                <th class="text-center">Terlambat</th>
+                <th class="text-center">Izin</th>
+                <th class="text-center pe-4">TK</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($byBidang as $b)
+                <tr>
+                  <td class="ps-4 fw-bold text-dark">{{ $b['bidang'] }}</td>
+                  <td class="text-center">
+                    <span class="badge bg-light text-dark rounded-pill px-3" style="font-size: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0;">{{ $b['total'] }}</span>
+                  </td>
+                  <td class="text-center fw-bold text-success">{{ $b['hadir'] }}</td>
+                  <td class="text-center text-muted">{{ $b['cuti'] }}</td>
+                  <td class="text-center text-muted">{{ $b['sakit'] }}</td>
+                  <td class="text-center text-muted">{{ $b['tugas_luar'] }}</td>
+                  <td class="text-center text-warning fw-bold">{{ $b['terlambat'] }}</td>
+                  <td class="text-center text-muted">{{ $b['izin'] }}</td>
+                  <td class="text-center pe-4 text-danger fw-bold">{{ $b['alpha'] }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+            <tfoot class="bg-light-subtle">
+              <tr class="fw-bold">
+                <td class="ps-4 text-dark text-uppercase fw-bold">TOTAL KESELURUHAN</td>
+                <td class="text-center fw-bold">
+                    <span class="badge bg-dark text-white rounded-pill px-3" style="font-size: 0.75rem;">{{ collect($byBidang)->sum('total') }}</span>
+                </td>
+                <td class="text-center fw-bold text-success">{{ collect($byBidang)->sum('hadir') }}</td>
+                <td class="text-center fw-bold">{{ collect($byBidang)->sum('cuti') }}</td>
+                <td class="text-center fw-bold">{{ collect($byBidang)->sum('sakit') }}</td>
+                <td class="text-center fw-bold">{{ collect($byBidang)->sum('tugas_luar') }}</td>
+                <td class="text-center fw-bold text-warning">{{ collect($byBidang)->sum('terlambat') }}</td>
+                <td class="text-center fw-bold">{{ collect($byBidang)->sum('izin') }}</td>
+                <td class="text-center pe-4 text-danger fw-bold">{{ collect($byBidang)->sum('alpha') }}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
     </div>

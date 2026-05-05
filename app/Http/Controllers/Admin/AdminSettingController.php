@@ -24,9 +24,9 @@ class AdminSettingController extends Controller
         ]);
 
         $lokasi = Setting::get('lokasi', [
-            'lat'=>0,
-            'lng'=>0,
-            'radius'=>100
+            'lat' => null,
+            'lng' => null,
+            'radius' => 100
         ]);
 
         // ✅ Gunakan array_merge untuk memastikan semua key ada meskipun DB memiliki struktur lama
@@ -48,9 +48,9 @@ class AdminSettingController extends Controller
     {
         $data = $request->validate([
             'poin' => 'array',
-            'lokasi.lat' => 'nullable|numeric',
-            'lokasi.lng' => 'nullable|numeric',
-            'lokasi.radius' => 'nullable|numeric',
+            'lokasi.lat' => 'required|numeric',
+            'lokasi.lng' => 'required|numeric',
+            'lokasi.radius' => 'required|numeric',
             'jam.buka' => 'required',
             'jam.batas_hadir' => 'required',
             'jam.batas_akhir' => 'required',

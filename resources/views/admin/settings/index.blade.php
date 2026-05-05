@@ -162,7 +162,19 @@
         </div>
     @endif
 
-    <form method="post" action="{{ route('admin.settings.save') }}">
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-4 mb-4" role="alert">
+            <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Pengaturan Gagal Disimpan:</div>
+            <ul class="mb-0 small">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <form id="settingsForm" method="post" action="{{ route('admin.settings.save') }}">
         @csrf
 
         <div class="settings-card">
@@ -196,16 +208,16 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Latitude</label>
-                        <input type="number" step="any" class="form-control" name="lokasi[lat]" value="{{ $lokasi['lat'] }}">
+                        <input type="number" step="any" class="form-control" name="lokasi[lat]" value="{{ $lokasi['lat'] }}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Longitude</label>
-                        <input type="number" step="any" class="form-control" name="lokasi[lng]" value="{{ $lokasi['lng'] }}">
+                        <input type="number" step="any" class="form-control" name="lokasi[lng]" value="{{ $lokasi['lng'] }}" required>
                     </div>
                     <div class="mb-0">
                         <label class="form-label">Radius (Meter)</label>
                         <div class="input-group">
-                            <input type="number" class="form-control border-end-0" name="lokasi[radius]" value="{{ $lokasi['radius'] }}">
+                            <input type="number" class="form-control border-end-0" name="lokasi[radius]" value="{{ $lokasi['radius'] }}" required>
                             <span class="input-group-text bg-white text-muted" style="border-radius: 0 12px 12px 0;">M</span>
                         </div>
                     </div>
@@ -289,7 +301,7 @@
                 <div class="text-muted small mb-2" style="margin-top: -0.25rem;">
                     Contoh: <code>2026-05-01</code>
                 </div>
-                <textarea class="form-control" name="status[hari_libur]" rows="4" placeholder="Contoh:&#10;2026-05-01&#10;2026-05-25">{{ $status['hari_libur'] ?? '' }}</textarea>
+                <textarea class="form-control" name="status[hari_libur]" rows="4">{{ $status['hari_libur'] ?? '' }}</textarea>
             </div>
             <div class="status-info text-dark small">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -306,3 +318,22 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('settingsForm');
+        const btnSave = document.querySelector('.btn-save-main');
+        
+        if (btnSave && form) {
+            btnSave.addEventListener('click', function(e) {
+                // Jika form tidak valid, stop submit dan paksa munculkan gelembung peringatan
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    form.reportValidity();
+                }
+            });
+        }
+    });
+</script>
+@endpush

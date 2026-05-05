@@ -93,9 +93,12 @@ class AdminDashboardController extends Controller
             ->where('absensi.is_approved', true) // Hanya yang disetujui
             ->select(
                 'users.bidang',
-                DB::raw("COUNT(CASE WHEN absensi.status = 'hadir' THEN 1 END) as hadir"),
-                DB::raw("COUNT(CASE WHEN absensi.status = 'terlambat' THEN 1 END) as terlambat"),
-                DB::raw("COUNT(CASE WHEN absensi.status = 'alpha' THEN 1 END) as alpha")
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'hadir' THEN 1 END) as hadir"),
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'terlambat' THEN 1 END) as terlambat"),
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'izin' THEN 1 END) as izin"),
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'sakit' THEN 1 END) as sakit"),
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'cuti' THEN 1 END) as cuti"),
+                DB::raw("COUNT(CASE WHEN LOWER(absensi.status) = 'tugas luar' THEN 1 END) as tugas_luar")
             )
             ->groupBy('users.bidang')
             ->get()
@@ -106,16 +109,30 @@ class AdminDashboardController extends Controller
             $statBidang = $statsPerBidang->get($namaBidang);
             $h = $statBidang->hadir ?? 0;
             $t = $statBidang->terlambat ?? 0;
-            $a = $statBidang->alpha ?? 0;
+            $i = $statBidang->izin ?? 0;
+            $s = $statBidang->sakit ?? 0;
+            $c = $statBidang->cuti ?? 0;
+            $tl = $statBidang->tugas_luar ?? 0;
             
+            // Alpha (TK) = Total - (semua yang disetujui)
+            // Namun kita harus cek jam cutoff jika hari ini
+            $a = 0;
+            if (!$isWeekend && !$isFuture && !$isTodayBeforeCutoff) {
+                $a = $total - ($h + $t + $i + $s + $c + $tl);
+                if ($a < 0) $a = 0;
+            }
+
             $byBidang[] = [
                 'bidang' => $namaBidang,
                 'total' => $total,
-                'hadir_total' => $h + $t,
+                'hadir' => $h,
+                'terlambat' => $t,
+                'izin' => $i,
+                'sakit' => $s,
+                'cuti' => $c,
+                'tugas_luar' => $tl,
+                'alpha' => $a,
                 'hadir_total_rate' => $total ? round(($h + $t) * 100 / $total) : 0,
-                'hadir_rate' => $total ? round($h * 100 / $total) : 0,
-                'terlambat_rate' => $total ? round($t * 100 / $total) : 0,
-                'alpha_rate' => $total ? round($a * 100 / $total) : 0,
             ];
         }
         usort($byBidang, fn($a, $b) => $b['hadir_total_rate'] <=> $a['hadir_total_rate']);
