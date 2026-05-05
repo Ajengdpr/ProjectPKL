@@ -26,7 +26,7 @@ public function login(Request $request)
     $user = User::where('username', $cred['username'])->first();
 
     if (!$user) {
-        return back()->withErrors(['msg' => 'Username tidak ditemukan'])->withInput(['username']);
+        return back()->withErrors(['msg' => 'Nama pengguna atau kata sandi salah'])->withInput(['username']);
     }
 
     // Helper untuk redirect sesuai role
@@ -62,7 +62,7 @@ public function login(Request $request)
     }
 
     // 3) Gagal
-    return back()->withErrors(['msg' => 'Password salah'])->withInput(['username']);
+    return back()->withErrors(['msg' => 'Nama pengguna atau kata sandi salah'])->withInput(['username']);
 }
 
 
