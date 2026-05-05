@@ -268,22 +268,31 @@ $poinKeyMap = [
 
                                             $jamConfig = array_merge(['batas_hadir' => '08:00:00'], \App\Models\Setting::get('jam', []));
 
+                                            $allStatuses = \App\Models\Absensi::getStatuses();
                                             $status = '';
+                                            $displayLabel = '';
                                             $isPending = false;
+                                            
                                             if ($isHariLibur) {
                                                 $status = 'LIBUR';
+                                                $displayLabel = 'LIBUR';
                                             } elseif ($day <= $maxHari) {
                                                 if ($absen) { 
                                                     if ($absen->is_rejected) {
                                                         $status = 'Tanpa Keterangan';
+                                                        $displayLabel = 'Tanpa Keterangan';
                                                     } else {
-                                                        $status = $absen->status;
+                                                        $sKey = strtolower(str_replace(' ', '_', $absen->status));
+                                                        $displayLabel = $allStatuses[$sKey] ?? $absen->status;
+                                                        // Petakan label kembali ke key warna yang konsisten
+                                                        $status = ($displayLabel === 'Tanpa Keterangan') ? 'Tanpa Keterangan' : $displayLabel;
                                                         $isPending = !$absen->is_approved;
                                                     }
                                                 } else {
                                                     $isTodayBeforeAlpha = $currentDate->isToday() && (Carbon::now($tz)->format('H:i:s') <= $jamConfig['batas_hadir']);
                                                     if (!$isTodayBeforeAlpha) { 
-                                                        $status = 'Tanpa Keterangan'; 
+                                                        $status = 'Tanpa Keterangan';
+                                                        $displayLabel = 'Tanpa Keterangan';
                                                     }
                                                 }
                                             }
@@ -305,10 +314,10 @@ $poinKeyMap = [
                                                 <div class="fw-bold {{ $currentDate->isToday() ? 'text-primary' : $textColor }}" style="font-size: 0.85rem;">
                                                     {{ $day }}
                                                 </div>
-                                                @if($status)
+                                                @if($displayLabel)
                                                     <div class="mt-auto">
-                                                        <span class="badge p-0 {{ $status === 'LIBUR' ? 'text-danger fw-bold' : ($isPending ? 'text-muted fw-normal' : 'text-dark fw-medium') }}" style="font-size: 0.6rem; text-wrap: balance;">
-                                                            {{ $status }} @if($isPending) <i class="bi bi-clock-history" title="Menunggu Persetujuan"></i> @endif
+                                                        <span class="badge p-0 {{ $displayLabel === 'LIBUR' ? 'text-danger fw-bold' : ($isPending ? 'text-muted fw-normal' : 'text-dark fw-medium') }}" style="font-size: 0.6rem; text-wrap: balance;">
+                                                            {{ $displayLabel }} @if($isPending) <i class="bi bi-clock-history" title="Menunggu Persetujuan"></i> @endif
                                                         </span>
                                                     </div>
                                                 @endif

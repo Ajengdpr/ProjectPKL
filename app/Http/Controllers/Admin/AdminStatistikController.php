@@ -64,6 +64,7 @@ class AdminStatistikController extends Controller
                 $statusConfig = Setting::get('status', ['hari_libur' => '']);
                 $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
                 $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
+                $allStatuses = Absensi::getStatuses();
 
                 for ($i = 1; $i <= $maxHari; $i++) {
                     $tanggalLoop = $carbonBulan->copy()->day($i);
@@ -81,18 +82,24 @@ class AdminStatistikController extends Controller
                             $rekapData['Tanpa Keterangan']++;
                             $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                         } else {
-                            // Approved atau Pending tetap tampil status aslinya
-                            $status = $absen->status;
-                            if (isset($rekapData[$status])) $rekapData[$status]++;
+                            // Ambil label status yang benar dari key (handle lowercase from admin edit)
+                            $sKey = strtolower(str_replace(' ', '_', $absen->status));
+                            $label = $allStatuses[$sKey] ?? $absen->status;
+                            
+                            if (isset($rekapData[$label])) {
+                                $rekapData[$label]++;
+                            } elseif ($label === 'Tanpa Keterangan') {
+                                $rekapData['Tanpa Keterangan']++;
+                            }
                             
                             // Hitung poin HANYA jika sudah Approved
                             if ($absen->is_approved) {
-                                $key = $poinKeyMap[$status] ?? null;
-                                if ($key && isset($poinConfig[$key])) {
-                                    if ($status === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
+                                $pKey = $poinKeyMap[$label] ?? $sKey;
+                                if (isset($poinConfig[$pKey])) {
+                                    if ($label === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
                                         $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                                     } else {
-                                        $totalPoin += (int)($poinConfig[$key] ?? 0);
+                                        $totalPoin += (int)($poinConfig[$pKey] ?? 0);
                                     }
                                 }
                             }
