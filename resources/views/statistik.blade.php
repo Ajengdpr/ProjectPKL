@@ -38,7 +38,7 @@ $hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-width: 150px;
     }
     .month-picker-box label { color: #64748b; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
-    .month-input-clean { border: none !important; padding: 0 !important; font-weight: 700; color: #1e293b; font-size: 0.9rem; cursor: pointer; outline: none !important; }
+    .month-input-clean { border: none !important; padding: 0 !important; font-weight: 700; color: #1e293b; font-size: 0.9rem; cursor: pointer; outline: none !important; width: 100%; }
 
     .stat-card-custom {
         background: white; border-radius: 24px; border: 1px solid rgba(226,232,240,0.8);
@@ -53,6 +53,32 @@ $hariDalamBulan = Carbon::parse($bulan.'-01')->daysInMonth;
     .table-calendar { border-collapse: separate; border-spacing: 4px; }
     .table-calendar td { border: 1px solid #f0f0f0 !important; border-radius: 8px; overflow: hidden; }
     .border-bottom-dotted { border-bottom: 1px dotted #dee2e6; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.25rem;
+            gap: 1rem;
+        }
+        
+        .header-section > .d-flex {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+        }
+
+        .month-picker-box {
+            width: 100%;
+            min-width: unset !important;
+        }
+
+        .header-content h3 {
+            font-size: 1.25rem;
+        }
+    }
 </style>
 
 <div class="container-fluid px-md-4 py-4">

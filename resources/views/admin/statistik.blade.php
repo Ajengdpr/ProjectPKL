@@ -111,6 +111,32 @@
     .table-calendar { border-collapse: separate; border-spacing: 4px; }
     .table-calendar td { border: 1px solid #f0f0f0 !important; border-radius: 8px; overflow: hidden; }
     .border-bottom-dotted { border-bottom: 1px dotted #dee2e6; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            text-align: center;
+            padding: 1.5rem 1rem;
+            gap: 1.5rem;
+        }
+        
+        .header-content h3 {
+            font-size: 1.5rem;
+        }
+        
+        .header-content p {
+            font-size: 0.85rem;
+        }
+
+        .toolbar-card {
+            padding: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+    }
 </style>
 @endpush
 
