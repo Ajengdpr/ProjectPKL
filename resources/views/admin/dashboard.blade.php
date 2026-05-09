@@ -144,108 +144,108 @@
   </div>
 
 {{-- STAT CARDS --}}
-<div class="row g-3 match-height">
-    <div class="col">
+<div class="row g-2 g-md-3 match-height mb-4">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.users.index') }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-primary-subtle text-primary p-2 rounded-3 me-2">
                         <i class="bi bi-people-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $totalPegawai }}</div>
+                    <div class="fs-4 fw-bold">{{ $totalPegawai }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Total Pegawai</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Total Pegawai</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'hadir']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-success-subtle text-success p-2 rounded-3 me-2">
                         <i class="bi bi-check-circle-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $hadir }}</div>
+                    <div class="fs-4 fw-bold">{{ $hadir }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Hadir</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Hadir</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'terlambat']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-warning-subtle text-warning p-2 rounded-3 me-2">
                         <i class="bi bi-clock-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $terlambat }}</div>
+                    <div class="fs-4 fw-bold">{{ $terlambat }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Terlambat</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Terlambat</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'sakit']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-info-subtle text-info p-2 rounded-3 me-2">
                         <i class="bi bi-heart-pulse-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $sakit }}</div>
+                    <div class="fs-4 fw-bold">{{ $sakit }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Sakit</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Sakit</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'izin']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-primary-subtle text-primary p-2 rounded-3 me-2">
                         <i class="bi bi-card-list fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $izin }}</div>
+                    <div class="fs-4 fw-bold">{{ $izin }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Izin</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Izin</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'cuti']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-warning-subtle text-warning p-2 rounded-3 me-2">
                         <i class="bi bi-calendar-x-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $cuti }}</div>
+                    <div class="fs-4 fw-bold">{{ $cuti }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Cuti</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Cuti</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'Tugas Luar']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-secondary-subtle text-secondary p-2 rounded-3 me-2">
                         <i class="bi bi-briefcase-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $tugas_luar }}</div>
+                    <div class="fs-4 fw-bold">{{ $tugas_luar }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Tugas Luar</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Tugas Luar</div>
             </div>
         </a>
     </div>
-    <div class="col">
+    <div class="col-6 col-sm-4 col-md-3 col-lg">
         <a href="{{ route('admin.absensi.index', ['from'=>$date,'to'=>$date,'status'=>'alpha']) }}" class="text-decoration-none text-reset h-100">
-            <div class="app-card p-3 d-flex flex-column h-100">
-                <div class="d-flex align-items-center">
+            <div class="app-card p-2 p-md-3 d-flex flex-column h-100 shadow-sm border-0">
+                <div class="d-flex align-items-center mb-1">
                     <div class="bg-danger-subtle text-danger p-2 rounded-3 me-2">
                         <i class="bi bi-x-circle-fill fs-5"></i>
                     </div>
-                    <div class="fs-2 fw-bold">{{ $alpha }}</div>
+                    <div class="fs-4 fw-bold">{{ $alpha }}</div>
                 </div>
-                <div class="small text-body-secondary mt-auto">Tanpa Keterangan</div>
+                <div class="small text-body-secondary mt-auto" style="font-size: 0.7rem;">Alpha</div>
             </div>
         </a>
     </div>

@@ -37,6 +37,16 @@
         color: white;
     }
 
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            padding: 1.5rem;
+            text-align: center;
+            gap: 1.25rem;
+            border-radius: 16px;
+        }
+    }
+
     .header-content h3 {
         font-weight: 800;
         margin: 0;
@@ -58,6 +68,12 @@
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         padding: 1.5rem;
         margin-bottom: var(--section-gap);
+    }
+
+    @media (max-width: 768px) {
+        .toolbar-card {
+            padding: 1rem;
+        }
     }
 
     .form-label {
@@ -110,6 +126,13 @@
     /* Table Calendar */
     .table-calendar { border-collapse: separate; border-spacing: 4px; }
     .table-calendar td { border: 1px solid #f0f0f0 !important; border-radius: 8px; overflow: hidden; }
+    
+    @media (max-width: 576px) {
+        .table-calendar td { height: 55px !important; }
+        .table-calendar .fw-bold { font-size: 0.75rem !important; }
+        .table-calendar .badge { font-size: 0.45rem !important; }
+    }
+    
     .border-bottom-dotted { border-bottom: 1px dotted #dee2e6; }
 </style>
 @endpush

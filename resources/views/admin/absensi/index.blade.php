@@ -25,7 +25,7 @@
     /* Modern Header */
     .header-section {
         background: linear-gradient(135deg, #0d6efd 0%, #003d99 100%);
-        padding: 2.5rem 3rem;
+        padding: 2rem;
         border-radius: 24px;
         border: none;
         box-shadow: 0 10px 25px rgba(0, 61, 153, 0.15);
@@ -34,6 +34,15 @@
         align-items: center;
         margin-bottom: var(--section-gap);
         color: white;
+    }
+
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+            padding: 1.5rem;
+        }
     }
 
     .header-content h3 {

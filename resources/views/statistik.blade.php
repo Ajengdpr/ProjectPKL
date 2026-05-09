@@ -105,6 +105,22 @@ $adaData = array_sum($rekapData) > 0;
         box-shadow: 0 10px 25px rgba(0, 61, 153, 0.1);
     }
 
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            gap: 1.25rem;
+            text-align: center;
+            padding: 1.25rem;
+        }
+        .header-section .d-flex {
+            width: 100%;
+            justify-content: center;
+        }
+        .month-picker-box {
+            flex: 1;
+        }
+    }
+
     .header-content h3 { font-weight: 800; margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
     .header-content p { margin: 0; color: rgba(255,255,255,0.8); font-size: 0.85rem; }
 
@@ -127,6 +143,13 @@ $adaData = array_sum($rekapData) > 0;
 
     .table-calendar { border-collapse: separate; border-spacing: 4px; }
     .table-calendar td { border: 1px solid #f0f0f0 !important; border-radius: 8px; overflow: hidden; }
+    
+    @media (max-width: 576px) {
+        .table-calendar td { height: 55px !important; }
+        .table-calendar .fw-bold { font-size: 0.75rem !important; }
+        .table-calendar .small { font-size: 0.45rem !important; }
+    }
+    
     .border-bottom-dotted { border-bottom: 1px dotted #dee2e6; }
 </style>
 

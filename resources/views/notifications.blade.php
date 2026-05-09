@@ -33,6 +33,31 @@
         color: white;
     }
 
+    @media (max-width: 768px) {
+        .header-section {
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 16px;
+        }
+        .notif-list-item {
+            padding: 1.25rem;
+            gap: 1rem;
+        }
+        .notif-icon-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+        .notif-info h6 { font-size: 0.95rem; }
+        .notif-info p { font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .notif-info .d-flex.justify-content-between.align-items-center {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+    }
+
     .header-content h3 {
         font-weight: 800;
         margin: 0;

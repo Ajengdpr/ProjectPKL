@@ -276,6 +276,12 @@
         font-size: 0.8rem;
     }
 
+    @media (max-width: 576px) {
+        .table-modern thead th { font-size: 0.6rem; padding: 0.5rem; }
+        .table-modern tbody td, .table-modern tfoot td { font-size: 0.65rem; padding: 0.5rem; }
+        .bidang-name { font-size: 0.7rem !important; }
+    }
+
     .table-modern tfoot tr {
         font-weight: 700;
         background: #f8fafc;

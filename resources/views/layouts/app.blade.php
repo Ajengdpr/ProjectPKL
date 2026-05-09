@@ -87,6 +87,43 @@
       body.sidebar-toggled .app-sidebar { transform: translateX(0); }
       body.sidebar-toggled .sidebar-overlay { display: none; }
     }
+
+    /* Bottom Nav (Mobile Only) */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      z-index: 1030;
+      border-top: 1px solid #eee;
+    }
+    .bottom-nav .nav-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0;
+      font-size: 0.65rem;
+      color: #64748b;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .bottom-nav .nav-link i {
+      font-size: 1.25rem;
+      margin-bottom: 2px;
+    }
+    .bottom-nav .nav-link.active {
+      color: var(--brand);
+    }
+    
+    @media (max-width: 991px) {
+      .bottom-nav { display: block; }
+      .has-bottom-nav { padding-bottom: 70px !important; }
+      main { padding-bottom: 70px !important; }
+      .navbar-brand { font-size: 1.1rem; }
+    }
   </style>
 
   @stack('head')
