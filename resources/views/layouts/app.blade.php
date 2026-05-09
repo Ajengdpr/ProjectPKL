@@ -118,8 +118,8 @@
     $isAtasan = in_array($u->level, ['kabid', 'kadin']);
 
     $avatar = $u->foto ? asset('storage/'.$u->foto).'?v='.time() : asset('img/default-avatar.jpg');
-    $profileRouteName = $isAdmin ? 'admin.settings.index' : 'account';
-    $profileRouteParams = $isAdmin ? ['tab' => 'account'] : [];
+    $profileRouteName = $isAdmin ? 'admin.account' : 'account';
+    $profileRouteParams = [];
     $unread = (method_exists($u, 'unreadNotifications') && \Illuminate\Support\Facades\Schema::hasTable('notifications'))
         ? $u->unreadNotifications()->count()
         : 0;
@@ -147,7 +147,7 @@
       @endif
 
       {{-- Profile Pill --}}
-      <a href="{{ route($profileRouteName, $profileRouteParams) }}" class="d-flex align-items-center gap-2 text-decoration-none bg-white bg-opacity-10 py-1 ps-3 pe-1 rounded-pill border border-white border-opacity-10 transition-all hover-bg-opacity-20">
+      <a href="{{ route($profileRouteName, $profileRouteParams) }}" class="profile-pill d-flex align-items-center gap-2 text-decoration-none bg-white bg-opacity-10 py-1 ps-3 pe-1 rounded-pill border border-white border-opacity-10 transition-all hover-bg-opacity-20">
         <div class="text-end d-none d-md-block">
           <div class="fw-bold text-white small" style="line-height: 1.2;">{{ \Illuminate\Support\Str::title($u->nama) }}</div>
           <div class="text-white-50" style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{{ \Illuminate\Support\Str::title(str_replace('_', ' ', $u->level ?: ($u->role === 'admin' ? 'Admin' : 'Pegawai'))) }}</div>
@@ -163,6 +163,21 @@
     background-color: rgba(255, 255, 255, 0.2) !important;
   }
   .fw-800 { font-weight: 800; }
+
+  /* Responsive Navbar Profile Pill */
+  @media (max-width: 576px) {
+    .profile-pill .text-end {
+      display: none !important;
+    }
+    .profile-pill {
+      padding-left: 0.5rem !important;
+      padding-right: 0.25rem !important;
+      gap: 0 !important;
+    }
+    .navbar-brand {
+      font-size: 1.1rem;
+    }
+  }
 </style>
 
 {{-- Sidebar --}}
