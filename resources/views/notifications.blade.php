@@ -156,6 +156,66 @@
         color: #e2e8f0;
         margin-bottom: 1.5rem;
     }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .header-section {
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-content h3 {
+            font-size: 1.5rem;
+        }
+
+        .notif-list-item {
+            padding: 1.25rem 1rem;
+            gap: 1rem;
+        }
+
+        .notif-icon-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+        }
+
+        .notif-info h6 {
+            font-size: 1rem;
+        }
+
+        .notif-info p {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .notif-info .d-flex.justify-content-between.align-items-center {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+
+        .notif-info .d-flex.gap-2 {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .notif-info .d-flex.gap-2 > * {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn-attachment-modern, .notif-info button, .notif-info .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .unread-indicator {
+            left: 0.35rem;
+        }
+    }
 </style>
 @endpush
 
