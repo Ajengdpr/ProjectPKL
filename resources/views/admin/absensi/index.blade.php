@@ -195,6 +195,33 @@
         background: var(--primary-blue);
         border-radius: 10px;
     }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            border-radius: 20px;
+        }
+        
+        .header-content h3 {
+            font-size: 1.4rem;
+        }
+
+        .header-content p {
+            font-size: 0.85rem;
+        }
+
+        .header-section .btn {
+            width: 100%;
+        }
+
+        .toolbar-card {
+            padding: 1rem;
+        }
+    }
 </style>
 @endpush
 
