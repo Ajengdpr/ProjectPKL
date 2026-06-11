@@ -30,8 +30,8 @@ class AdminStatistikController extends Controller
         $adaData = false;
 
         $poinConfig = Setting::get('poin', [
-            'hadir' => 1, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0,
-            'cuti' => 0, 'tugas_luar' => 0, 'alpha' => -1
+            'Hadir' => 1, 'Terlambat' => 0, 'Izin' => 0, 'Sakit' => 0,
+            'Cuti' => 0, 'Tugas Luar' => 0, 'alpha' => -1
         ]);
         $statusColors = [
             'Hadir' => '#36A2EB', 'Izin' => '#FFCE56', 'Cuti' => '#9966FF',
@@ -45,8 +45,9 @@ class AdminStatistikController extends Controller
             if ($selectedUser) {
                 // Logika Kalkulasi (Duplikasi dari AbsensiController@statistik)
                 $poinKeyMap = [
-                    'Hadir' => 'hadir', 'Terlambat' => 'terlambat', 'Izin' => 'izin',
-                    'Sakit' => 'sakit', 'Cuti' => 'cuti', 'Tugas Luar' => 'tugas_luar', 'alpha' => 'alpha',
+                    'Hadir' => 'Hadir', 'Terlambat' => 'Terlambat', 'Izin' => 'Izin',
+                    'Sakit' => 'Sakit', 'Cuti' => 'Cuti', 'Tugas Luar' => 'Tugas Luar',
+                    'Tanpa Keterangan' => 'alpha',
                 ];
 
                 $carbonBulan = Carbon::parse($bulan.'-01', $tz);
@@ -87,9 +88,8 @@ class AdminStatistikController extends Controller
                             $rekapData['Tanpa Keterangan']++;
                             $totalPoin += (int)($poinConfig['alpha'] ?? 0);
                         } else {
-                            // Ambil label status yang benar dari key (handle lowercase from admin edit)
-                            $sKey = strtolower(str_replace(' ', '_', $absen->status));
-                            $label = $allStatuses[$sKey] ?? $absen->status;
+                            // Ambil label status yang benar
+                            $label = $absen->status;
                             
                             if (isset($rekapData[$label])) {
                                 $rekapData[$label]++;
@@ -99,7 +99,7 @@ class AdminStatistikController extends Controller
                             
                             // Hitung poin HANYA jika sudah Approved
                             if ($absen->is_approved) {
-                                $pKey = $poinKeyMap[$label] ?? $sKey;
+                                $pKey = $poinKeyMap[$label] ?? $label;
                                 if (isset($poinConfig[$pKey])) {
                                     if ($label === 'Terlambat' && empty(trim($absen->alasan ?? ''))) {
                                         $totalPoin += (int)($poinConfig['alpha'] ?? 0);

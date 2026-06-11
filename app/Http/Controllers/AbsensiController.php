@@ -125,8 +125,8 @@ class AbsensiController extends Controller
         // KALKULASI POIN BULANAN LIVE UNTUK DASHBOARD (LOGIKA BARU)
         // =================================================================
         $poinConfig = Setting::get('poin', [
-            'hadir'      => 1, 'terlambat'  => 0, 'izin'       => 0,
-            'sakit'      => 0, 'cuti'       => 0, 'tugas_luar' => 0, 'alpha' => -1
+            'Hadir'      => 1, 'Terlambat'  => 0, 'Izin'       => 0,
+            'Sakit'      => 0, 'Cuti'       => 0, 'Tugas Luar' => 0, 'alpha' => -1
         ]);
         $cutoffTime = config('absensi.cutoff', '16:00:00');
 
@@ -140,8 +140,8 @@ class AbsensiController extends Controller
         
         $totalPoinBulanan = 0;
         $poinKeyMap = [
-            'Hadir'       => 'hadir', 'Terlambat'   => 'terlambat', 'Izin'        => 'izin',
-            'Sakit'       => 'sakit', 'Cuti'        => 'cuti', 'Tugas Luar'  => 'tugas_luar', 'alpha' => 'alpha',
+            'Hadir'       => 'Hadir', 'Terlambat'   => 'Terlambat', 'Izin'        => 'Izin',
+            'Sakit'       => 'Sakit', 'Cuti'        => 'Cuti', 'Tugas Luar'  => 'Tugas Luar', 'alpha' => 'alpha',
         ];
 
         for ($i = 1; $i <= $maxHari; $i++) {
@@ -298,12 +298,14 @@ class AbsensiController extends Controller
         $user  = $request->user();
         $tz    = 'Asia/Makassar';
         $today = now($tz)->toDateString();
+        $deviceId = $request->input('device_id');
 
         // Validasi
         $statusInput = $request->input('status');
         $data = $request->validate([
             'status' => ['required', 'string'],
             'alasan' => ['nullable', 'string', 'max:255'],
+            'device_id' => ['nullable', 'string'], // Tambahkan validasi device_id
             'berkas' => [
                 in_array($statusInput, ['Izin', 'Sakit', 'Cuti', 'Tugas Luar']) ? 'required' : 'nullable',
                 'file', // Bisa berupa gambar atau dokumen
@@ -315,6 +317,21 @@ class AbsensiController extends Controller
         $status = trim($data['status']);
         if (!in_array($status, self::ALLOWED_STATUSES, true)) {
             return back()->withErrors('Status tidak valid.');
+        }
+
+        // ==========================================================
+        // STRICTOR DEVICE LOCKING: Cegah joki (1 device = 1 absen per hari)
+        // ==========================================================
+        if (!$deviceId) {
+            return redirect()->route('dashboard')->with('err', 'Keamanan Device tidak terdeteksi. Pastikan JavaScript aktif.');
+        }
+
+        $deviceAlreadyUsedToday = Absensi::where('device_id', $deviceId)
+            ->whereDate('tanggal', $today)
+            ->exists();
+
+        if ($deviceAlreadyUsedToday) {
+            return redirect()->route('dashboard')->with('err', 'Dilarang absen lebih dari satu kali dengan device yang sama.');
         }
 
         // Cek jika sudah ada absen non-alpha yang disetujui
@@ -379,18 +396,19 @@ class AbsensiController extends Controller
         $absen->is_approved = $isApproved;
         $absen->alasan      = $data['alasan'] ?? null;
         $absen->berkas      = $berkasPath;
+        $absen->device_id   = $deviceId;
         $absen->save();
 
         // Update Poin HANYA jika otomatis approved (Hadir/Terlambat)
         if ($isApproved) {
             $poinConfig = Setting::get('poin', [
-                'hadir'      => 1, 'terlambat'  => -3, 'izin'       => 0,
-                'sakit'      => 0, 'cuti'       => 0, 'tugas_luar' => 0, 'alpha'      => -5
+                'Hadir'      => 1, 'Terlambat'  => -3, 'Izin'       => 0,
+                'Sakit'      => 0, 'Cuti'       => 0, 'Tugas Luar' => 0, 'alpha'      => -5
             ]);
             
             $delta = 0;
             $poinKeyMap = [
-                'Hadir' => 'hadir', 'Terlambat' => 'terlambat',
+                'Hadir' => 'Hadir', 'Terlambat' => 'Terlambat',
             ];
 
             $key = $poinKeyMap[$status] ?? null;
@@ -492,13 +510,13 @@ class AbsensiController extends Controller
 
         // Update Poin setelah disetujui
         $poinConfig = Setting::get('poin', [
-            'hadir'      => 1, 'terlambat'  => -3, 'izin'       => 0,
-            'sakit'      => 0, 'cuti'       => 0, 'tugas_luar' => 0, 'alpha'      => -5
+            'Hadir'      => 1, 'Terlambat'  => -3, 'Izin'       => 0,
+            'Sakit'      => 0, 'Cuti'       => 0, 'Tugas Luar' => 0, 'alpha'      => -5
         ]);
 
         $poinKeyMap = [
-            'Hadir'      => 'hadir', 'Terlambat'  => 'terlambat', 'Izin'       => 'izin',
-            'Sakit'      => 'sakit', 'Cuti'       => 'cuti', 'Tugas Luar' => 'tugas_luar',
+            'Hadir'      => 'Hadir', 'Terlambat'  => 'Terlambat', 'Izin'       => 'Izin',
+            'Sakit'      => 'Sakit', 'Cuti'       => 'Cuti', 'Tugas Luar' => 'Tugas Luar',
         ];
 
         $key = $poinKeyMap[$absensi->status] ?? null;
@@ -617,11 +635,22 @@ class AbsensiController extends Controller
         // --------------------------------------------
 
         // Ambil pengaturan poin & hari libur
-        $poinConfig = Setting::get('poin', ['hadir'=>1, 'terlambat'=>0, 'izin'=>0, 'sakit'=>0, 'cuti'=>0, 'tugas_luar'=>0, 'alpha'=>-1]);
+        $poinConfig = Setting::get('poin', [
+            'Hadir' => 1, 'Terlambat' => 0, 'Izin' => 0,
+            'Sakit' => 0, 'Cuti' => 0, 'Tugas Luar' => 0, 'alpha' => -1
+        ]);
         $statusConfig = Setting::get('status', ['hari_libur' => '']);
         $hariLibur = explode("\n", str_replace("\r", "", $statusConfig['hari_libur'] ?? ''));
         $cutoffTime = config('absensi.cutoff', '16:00:00');
-        $poinKeyMap = ['Hadir'=>'hadir', 'Terlambat'=>'terlambat', 'Izin'=>'izin', 'Sakit'=>'sakit', 'Cuti'=>'cuti', 'Tugas Luar'=>'tugas_luar', 'alpha'=>'alpha'];
+        $poinKeyMap = [
+            'Hadir' => 'Hadir',
+            'Terlambat' => 'Terlambat',
+            'Izin' => 'Izin',
+            'Sakit' => 'Sakit',
+            'Cuti' => 'Cuti',
+            'Tugas Luar' => 'Tugas Luar',
+            'Tanpa Keterangan' => 'alpha'
+        ];
 
         // Tentukan rentang hari
         $carbonBulan = Carbon::parse($bulan.'-01', $tz);

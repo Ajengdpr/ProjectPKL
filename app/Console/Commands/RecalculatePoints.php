@@ -19,8 +19,8 @@ class RecalculatePoints extends Command
         $tz = config('app.timezone', 'Asia/Makassar');
         
         $poinConfig = Setting::get('poin', [
-            'hadir' => 1, 'terlambat' => -3, 'izin' => 0,
-            'sakit' => 0, 'cuti' => 0, 'tugas_luar' => 0, 'alpha' => -5
+            'Hadir' => 1, 'Terlambat' => -3, 'Izin' => 0,
+            'Sakit' => 0, 'Cuti' => 0, 'Tugas Luar' => 0, 'alpha' => -5
         ]);
         
         $statusConfig = Setting::get('status', ['hari_libur' => '']);
@@ -30,8 +30,8 @@ class RecalculatePoints extends Command
         $jamConfig = array_merge(['batas_hadir' => '08:00:00'], Setting::get('jam', []));
         
         $poinKeyMap = [
-            'Hadir' => 'hadir', 'Terlambat' => 'terlambat', 'Izin' => 'izin',
-            'Sakit' => 'sakit', 'Cuti' => 'cuti', 'Tugas Luar' => 'tugas_luar', 'alpha' => 'alpha'
+            'Hadir' => 'Hadir', 'Terlambat' => 'Terlambat', 'Izin' => 'Izin',
+            'Sakit' => 'Sakit', 'Cuti' => 'Cuti', 'Tugas Luar' => 'Tugas Luar', 'alpha' => 'alpha'
         ];
 
         $carbonBulan = Carbon::parse($bulan . '-01', $tz);

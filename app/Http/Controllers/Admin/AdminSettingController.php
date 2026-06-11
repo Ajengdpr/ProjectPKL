@@ -14,12 +14,12 @@ class AdminSettingController extends Controller
         $user = $request->user();
 
         $poin   = Setting::get('poin', [
-            'hadir'=>1,
-            'terlambat'=>0,
-            'izin'=>0,
-            'sakit'=>0,
-            'cuti'=>0,
-            'tugas_luar'=>0,
+            'Hadir'=>1,
+            'Terlambat'=>0,
+            'Izin'=>0,
+            'Sakit'=>0,
+            'Cuti'=>0,
+            'Tugas Luar'=>0,
             'alpha'=>-1
         ]);
 

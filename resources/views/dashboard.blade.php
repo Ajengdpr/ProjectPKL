@@ -509,6 +509,7 @@
         <div class="modal-content shadow-lg border-0">
             <form method="POST" action="{{ route('absen.store') }}" onsubmit="return lockSubmit(this)" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" name="device_id" id="deviceIdField">
                 <div class="modal-header border-0 p-4 pb-0">
                     <h5 class="fw-bold mb-0">Input Absensi</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -560,9 +561,18 @@
             alert(message);
             return;
         }
+        
+        const bgColor = type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-danger');
+        const textColor = type === 'success' ? 'text-success' : (type === 'warning' ? 'text-warning' : 'text-danger');
+        const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-dark alert-dismissible fade show border-0 shadow-lg rounded-4 p-3 mb-2`;
-        alertDiv.innerHTML = `<strong><i class="bi bi-info-circle me-2"></i></strong> ${message}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>`;
+        alertDiv.className = `alert ${bgColor} alert-dismissible fade show border-0 shadow-lg rounded-4 p-3 mb-2`;
+        alertDiv.innerHTML = `<div class="d-flex align-items-center gap-2">
+            <i class="bi ${icon} fs-5"></i>
+            <div class="fw-bold">${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
         container.appendChild(alertDiv);
         setTimeout(() => {
             try {
@@ -570,7 +580,7 @@
             } catch (e) {
                 alertDiv.remove();
             }
-        }, 4000);
+        }, 5000);
     }
 
     const officeLat = {{ $office['lat'] }};
@@ -612,6 +622,14 @@
             updateLocationUI('Gagal Lokasi', null, null);
         }, { enableHighAccuracy: true });
     }
+
+    // Handle Laravel Session Messages
+    @if(session('err'))
+        showCustomAlert("{{ session('err') }}", "danger");
+    @endif
+    @if(session('ok'))
+        showCustomAlert("{{ session('ok') }}", "success");
+    @endif
 
     function setStatus(s){
         const field = document.getElementById('statusField');
@@ -671,6 +689,10 @@
     });
 
     function lockSubmit(form){
+        // Populate Device ID
+        const dId = localStorage.getItem('device_id');
+        document.getElementById('deviceIdField').value = dId;
+
         // Validasi Akhir sebelum submit
         const fInput = document.getElementById('fileInput');
         if (fInput && fInput.files && fInput.files[0]) {

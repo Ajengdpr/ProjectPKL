@@ -297,6 +297,15 @@ const database = firebase.database();
 
 @auth
 <script>
+  // Device Identification (Anti-Joki)
+  (function() {
+    if (!localStorage.getItem('device_id')) {
+      const uuid = window.crypto.randomUUID() || Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('device_id', uuid);
+    }
+  })();
+</script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
   const sidebar = document.getElementById('appSidebar');
   const overlay = document.getElementById('sidebarOverlay');

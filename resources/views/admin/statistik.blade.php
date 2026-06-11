@@ -157,12 +157,12 @@ if(Carbon::parse($bulan.'-01')->format('Y-m') < $now->format('Y-m')){
 }
 
 $poinKeyMap = [
-    'Hadir'            => 'hadir',
-    'Terlambat'        => 'terlambat',
-    'Izin'             => 'izin',
-    'Sakit'            => 'sakit',
-    'Cuti'             => 'cuti',
-    'Tugas Luar'       => 'tugas_luar',
+    'Hadir'            => 'Hadir',
+    'Terlambat'        => 'Terlambat',
+    'Izin'             => 'Izin',
+    'Sakit'            => 'Sakit',
+    'Cuti'             => 'Cuti',
+    'Tugas Luar'       => 'Tugas Luar',
     'Tanpa Keterangan' => 'alpha',
 ];
 @endphp

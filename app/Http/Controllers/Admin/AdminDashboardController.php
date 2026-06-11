@@ -200,12 +200,12 @@ class AdminDashboardController extends Controller
         }
         
         $poinConfig = Setting::get('poin', [
-            'hadir'      => 1,
-            'terlambat'  => -3,
-            'izin'       => 0,
-            'sakit'      => 0,
-            'cuti'       => 0,
-            'tugas_luar' => 0,
+            'Hadir'      => 1,
+            'Terlambat'  => -3,
+            'Izin'       => 0,
+            'Sakit'      => 0,
+            'Cuti'       => 0,
+            'Tugas Luar' => 0,
             'alpha'      => -5
         ]);
 
@@ -260,21 +260,21 @@ class AdminDashboardController extends Controller
                 $status = $absen->status;
                 
                 if ($status === 'Hadir') {
-                    $points += (int)($poinConfig['hadir'] ?? 1);
+                    $points += (int)($poinConfig['Hadir'] ?? 1);
                 } elseif ($status === 'Terlambat') {
                     if (empty(trim($absen->alasan ?? ''))) {
                         $points += (int)($poinConfig['alpha'] ?? -5);
                     } else {
-                        $points += (int)($poinConfig['terlambat'] ?? -3);
+                        $points += (int)($poinConfig['Terlambat'] ?? -3);
                     }
                 } elseif ($status === 'Izin') {
-                    $points += (int)($poinConfig['izin'] ?? 0);
+                    $points += (int)($poinConfig['Izin'] ?? 0);
                 } elseif ($status === 'Sakit') {
-                    $points += (int)($poinConfig['sakit'] ?? 0);
+                    $points += (int)($poinConfig['Sakit'] ?? 0);
                 } elseif ($status === 'Cuti') {
-                    $points += (int)($poinConfig['cuti'] ?? 0);
+                    $points += (int)($poinConfig['Cuti'] ?? 0);
                 } elseif ($status === 'Tugas Luar') {
-                    $points += (int)($poinConfig['tugas_luar'] ?? 0);
+                    $points += (int)($poinConfig['Tugas Luar'] ?? 0);
                 } elseif ($status === 'alpha') {
                     $points += (int)($poinConfig['alpha'] ?? -5);
                 }
